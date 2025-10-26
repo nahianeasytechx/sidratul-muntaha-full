@@ -17,15 +17,15 @@
     									<div class="footer_about_text ">
     										<p class="">Sidratul Muntaha</p>
     									</div>
-										
-    						<div class="footer_social">
-    							<ul>
-    								<li><a href="#"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
-    								<li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
-    								<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
 
-    							</ul>
-    						</div>
+    									<div class="footer_social">
+    										<ul>
+    											<li><a href="#"><i class="fa fa-youtube" aria-hidden="true"></i></a></li>
+    											<li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
+    											<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+
+    										</ul>
+    									</div>
     								</div>
     							</a>
     						</div>
@@ -42,22 +42,14 @@
     							<li><a href="about.php">About us</a></li>
     							<li><a href="activities.php">Activities</a></li>
     							<li><a href="donation-fund.php">Donate Categories</a></li>
+    							<li><a href="donation-fund.php">Scholarship</a></li>
+    							<li><a href="volunteer.php">Join as Volunteer</a></li>
 
     						</ul>
     					</div>
     				</div>
 
-    				<div class="col-4 col-md-6  col-lg-3 footer_col">
-    					<div class="footer_links">
-    						<div class="footer_title">Useful Links</div>
-    						<ul class="footer_list">
-    							<li><a href="gallery.php">Gallery</a></li>
-    							<li><a href="notice.php">Notice</a></li>
-    							<li><a href="contact.php">Contact</a></li>
-    							<li><a href="donate.php">Donate</a></li>
-    						</ul>
-    					</div>
-    				</div>
+
 
     				<div class=" col-md-6  col-lg-3 footer_col">
     					<div class="footer_contact">
@@ -77,6 +69,26 @@
     							</div>
     						</div>
     					</div>
+    				</div>
+    				<div class="col-4 col-md-6  col-lg-3 footer_col">
+
+    						<div class="footer_title">Newsletter</div>
+    						<div class="newsletter">
+
+    							<br>
+    							<p>Don't miss out thousands of great deals &amp; promotions.</p>
+    							<br>
+    							<form>
+    								<div class="form-group">
+    									<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email"><br>
+    									<button style="color: #fff; background: green" type="submit" class="btn">Subscribe</button>
+    									<br><br><br>
+    							
+    								</div>
+    							</form>
+    						</div>
+    				
+						
     				</div>
     			</div>
     		</div>

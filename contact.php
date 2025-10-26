@@ -57,6 +57,12 @@ $page_title = 'Contact'; // Set the page title
 											<div class="contact_info_title">Email:</div>
 											<div class="contact_info_line">yourmail@gmail.com</div>
 										</div>
+										<div class="contact-socials d-flex align-items-center ">
+											<i class="fa fa-facebook" aria-hidden="true"></i>
+											<i class="fa fa-youtube-play" aria-hidden="true"></i>
+											<i class="fa fa-instagram" aria-hidden="true"></i>
+											<i class="fa fa-twitter-square" aria-hidden="true"></i>
+										</div>
 									</div>
 								</div>
 							</div>

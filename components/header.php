@@ -130,6 +130,15 @@ require 'database/dbConnection.php';
 		<link rel="stylesheet" type="text/css" href="styles/courses_responsive.css">
 	<?php
 	}
+	 else if ($current_page == 'volunteer.php') {
+	?>
+		<title>Sidratul Muntaha Foundation</title>
+		<meta name="description" content="Give from the heart. Sidratul Muntaha Foundation uses your donations to support the poor, fund education, and spread kindness through service.">
+
+		<link rel="stylesheet" type="text/css" href="styles/courses.css">
+		<link rel="stylesheet" type="text/css" href="styles/courses_responsive.css">
+	<?php
+	}
 
 	?>
 

@@ -1103,6 +1103,16 @@ p {
     background: #05A657;
 }
 
+.contact-socials i{
+    margin-right: 15px;
+    font-size: 25px;
+    color:#008E48;
+
+}
+.contact-socials i:hover{
+    color: #06CC6B;
+    transition: all ease-in-out .3s;
+}
 /* ========================================
    11. NOTICE/NEWS
    ======================================== */
@@ -1283,7 +1293,9 @@ p {
     border-color: #02BD61;
     box-shadow: 0 0 0 3px rgba(2, 189, 97, 0.1);
 }
-
+.form-group select{
+    padding: 0 10px;
+}
 .form-select {
     width: 100%;
     padding: 12px 15px;
@@ -1546,12 +1558,25 @@ p {
 /* Join Section */
 .join {
     position: absolute;
-    top: -41%;
-    left: 0%;
+    top: -25%;
+    left: 0;
+    right: 0;
     background: transparent;
-    width: 100%;
 }
+.course_search_form > div::after {
+    background: #06CC6B;
+    width: 96%;
+    left: 6px;
+}
+.course_search_form > div {
+    width: calc((100% - 284px) / 2);
 
+}
+.btn-margin .button {
+    width: auto;
+    cursor: pointer;
+    width: 98%;
+}
 .join .button a {
     padding: 0 24px;
     line-height: 47px;
@@ -1561,7 +1586,16 @@ p {
     text-transform: uppercase;
     white-space: nowrap;
 }
-
+.btn-margin .button {
+    border-radius: 10px;
+    border: 0;
+    height: 50px;
+}
+.button_arrow {
+    border-radius: 10px;
+    right: 0;
+    height: 98%;
+    }
 .join .section_subtitle {
     color: #fff;
 }
@@ -1603,7 +1637,136 @@ p {
 .join-btn:hover {
     background: #E8B65D;
 }
+.footer-newsletter input{
+width: 100%;
+border: none;
+outline: none;
+padding: 10px 15px;
+margin:10px 0;
+border-radius: 10px;
 
+}
+.footer-newsletter button{
+width: 100%;
+border: none;
+outline: none;
+padding: 10px 15px;
+margin:10px 0;
+border-radius: 10px;
+
+}
+/* volunteer page  start */
+.volunteer-page {
+    background-color: #f8f9fa;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.section-description {
+    font-size: 1.1rem;
+    color: #6c757d;
+    line-height: 1.8;
+}
+
+.volunteer-benefits {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.benefit-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.benefit-item:last-child {
+    border-bottom: none;
+}
+
+.opportunity-card {
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.opportunity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important;
+}
+
+.volunteer-card {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.card-header-custom {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    padding: 2rem;
+    text-align: center;
+}
+
+.card-header-custom h4 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: white;
+}
+.card-header-custom p {
+    color: white;
+}
+
+.section-heading {
+    color: #28a745;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #28a745;
+}
+
+.required {
+    color: #dc3545;
+}
+
+.volunteer-interests {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.form-check {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.info-box {
+    background-color: #e7f3ff;
+    border-left: 4px solid #0d6efd;
+    padding: 1rem;
+    border-radius: 5px;
+}
+
+.terms-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.terms-text a {
+    color: #28a745;
+    text-decoration: none;
+}
+
+.terms-text a:hover {
+    text-decoration: underline;
+}
+/* volunteer page  end*/
 /* ========================================
    14. MEDIA QUERIES
    ======================================== */
@@ -1629,6 +1792,7 @@ p {
     .nav-donate-btn {
         font-size: 10px;
     }
+
 }
 
 /* ========================================
@@ -1695,6 +1859,9 @@ p {
     .featured_banner_content p {
         font-size: 14px;
     }
+.course_input {
+    width: 96%;
+}
 
     /* About Section */
     .border-bottom {
@@ -1777,21 +1944,26 @@ p {
     /* Join Section */
     .join {
         position: absolute;
-        top: -16%;
+        top: -32%;
         left: 0%;
         background: transparent;
         width: 100%;
     }
 
-    .join-input {
-        width: 58%;
-        border-top-left-radius: 10px;
-        border-bottom-left-radius: 10px;
-        border: none;
-        outline: none;
-        padding: 5px 20px;
-    }
 
+.btn-margin .button {
+    width: 98%;
+    margin-top: 10px;
+    margin-left: 4px;
+}
+
+
+.button_arrow {
+    border-radius: 10px;
+    top: 7px;
+    right: -4px;
+    height: 87%;
+}
     /* Footer */
     .footer {
         padding-top: 174px;
@@ -1869,19 +2041,29 @@ p {
     .program-details {
         margin: 40px 0;
     }
-
+.course_search_form > div {
+    width: 100%;
+}
     /* Join Section */
     .join {
         position: absolute;
-        top: -13%;
+        top: -66%;
         left: 0%;
         background: transparent;
         width: 100%;
     }
-
+.button_arrow {
+    border-radius: 10px;
+    top: 8px;
+    right: 0px;
+    height: 87%;
+}
     /* Footer */
     .footer {
         padding-top: 218px;
+    }
+        .volunteer-interests {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1917,7 +2099,9 @@ p {
         width: 100%;
         height: 89vh;
     }
-
+.home .slide{
+    
+}
     /* Featured Banner */
     .featured_background_wrapper {
         min-height: 300px;
@@ -1994,14 +2178,13 @@ p {
         padding: 1rem;
     }
 
-    /* Join Section - FIXED */
-    .join {
-        position: absolute;
-        top: -16%;  /* Changed from -69% */
-        left: 3%;
-        background: transparent;
-        width: 100%;
-    }
+.join {
+    position: absolute;
+    top: -66%;
+    left: 3%;
+    background: transparent;
+    width: 95%;
+}
 
     .join-bg {
         background-image: url("images/join bg.png");
@@ -2120,14 +2303,13 @@ p {
     }
 
     /* Join Section */
-    .join {
-        position: absolute;
-        top: -16%;
-        left: 3%;
-        background: transparent;
-        width: 100%;
-    }
-
+.join {
+    position: absolute;
+    top: -64%;
+    left: 3%;
+    background: transparent;
+    width: 95%;
+}
     /* Footer */
     .footer {
         padding-top: 228px;

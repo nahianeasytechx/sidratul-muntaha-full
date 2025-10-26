@@ -137,6 +137,18 @@
 		<script src="js/courses.js"></script>
 	<?php
 	}
+	else if ($current_page == 'volunteer.php') {
+	?>
+		<!-- Courses -->
+		<script src="js/jquery-3.2.1.min.js"></script>
+		<script src="styles/bootstrap4/popper.js"></script>
+		<script src="styles/bootstrap4/bootstrap.min.js"></script>
+		<script src="plugins/easing/easing.js"></script>
+		<script src="plugins/parallax-js-master/parallax.min.js"></script>
+		<script src="js/donationFund.js"></script>
+		<script src="js/courses.js"></script>
+	<?php
+	}
 	?>
 			<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 	<script src="js/lanToggle.js"></script>

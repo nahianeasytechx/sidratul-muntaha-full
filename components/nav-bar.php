@@ -49,14 +49,6 @@
 										?>>
         								<a href="contact.php">Contact</a>
         							</li>
-        							<li
-        								<?php
-										if ($current_page == 'contact.php') {
-											echo 'class="active"';
-										}
-										?>>
-        								<a href="contact.php">Scholarship</a>
-        							</li>
 
         							<li
         								<?php

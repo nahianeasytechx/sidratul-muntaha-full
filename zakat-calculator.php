@@ -225,10 +225,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['calculate_zakat'])) {
             </div>
             <!-- Liabilities Section -->
             <h3 class="section-title">Pay Your Zakat Amount</h3>
-            <div class="form-group">
-                <label for="pay_zakat_amount">Enter Amount</label>
+<div class="form-group">
+                    <label for="pay_zakat_amount">Enter Amount</label>
                 <input type="number" name="pay_zakat_amount" id="pay_zakat_amount" class="form-control" step="0.01" placeholder="Enter your zakat amount">
-            </div>
+   <br>
+                <label for="zakat_category">Select Zakat Category</label>
+    <select name="zakat_category" id="zakat_category" class="form-control">
+        <option value="" disabled selected>-- Select Category --</option>
+        <option value="zakat_mal">Zakat on Wealth (Zakat al-Mal)</option>
+        <option value="zakat_fitr">Zakat al-Fitr</option>
+        <option value="zakat_gold">Zakat on Gold</option>
+        <option value="zakat_silver">Zakat on Silver</option>
+        <option value="zakat_business">Zakat on Business Assets</option>
+        <option value="zakat_savings">Zakat on Savings</option>
+        <option value="zakat_livestock">Zakat on Livestock</option>
+        <option value="zakat_agriculture">Zakat on Agricultural Produce</option>
+        <option value="other">Other</option>
+    </select>
+</div>
             <div class="button-group" style="margin:40px 0 10px 0;">
                 <a href="" class="btn-calculate text-decoration-none text-white text-center">Pay Zakat Now</a>
             </div>
