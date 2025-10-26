@@ -40,9 +40,7 @@
                             <div class="btn-margin">
                                 <button type="button" class="button w-100" style=".btn-margin .btn:hover{background:#ccc}">
                                     <span>Donate</span>
-                                    <span class="button_arrow">
-                                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                                    </span>
+
                                 </button>
                             </div>
                         </form>

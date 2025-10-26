@@ -1,17 +1,35 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Zakat Collection List';
-?>
-<?php require './components/header.php'; ?>
+require './components/header.php';
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
+// ✅ Sample Data Array (replace with DB data later)
+$donations = [
+    ["id" => 1, "name" => "Md. Rahim Uddin", "phone" => "+880 1712-345678", "address" => "Mirpur, Dhaka", "amount" => 5000, "trx" => "TRX123456789", "category" => "education", "month" => "10"],
+    ["id" => 2, "name" => "Fatima Khatun", "phone" => "+880 1812-987654", "address" => "Banani, Dhaka", "amount" => 10000, "trx" => "TRX987654321", "category" => "health", "month" => "10"],
+    ["id" => 3, "name" => "Kamal Hossain", "phone" => "+880 1912-456789", "address" => "Chittagong City", "amount" => 15000, "trx" => "TRX456789123", "category" => "emergency", "month" => "09"],
+    ["id" => 4, "name" => "Ayesha Siddika", "phone" => "+880 1612-789456", "address" => "Uttara, Dhaka", "amount" => 3000, "trx" => "TRX789456123", "category" => "food", "month" => "08"],
+    ["id" => 5, "name" => "Ibrahim Khan", "phone" => "+880 1512-321654", "address" => "Rajshahi", "amount" => 7500, "trx" => "TRX321654987", "category" => "general", "month" => "09"],
+    ["id" => 6, "name" => "Nasrin Akter", "phone" => "+880 1712-654321", "address" => "Barisal", "amount" => 2000, "trx" => "TRX654321789", "category" => "health", "month" => "08"],
+    ["id" => 7, "name" => "Mizanur Rahman", "phone" => "+880 1812-147258", "address" => "Sylhet", "amount" => 12000, "trx" => "TRX147258369", "category" => "education", "month" => "07"],
+    ["id" => 8, "name" => "Sultana Begum", "phone" => "+880 1912-963852", "address" => "Khulna", "amount" => 4500, "trx" => "TRX963852741", "category" => "food", "month" => "10"],
+    ["id" => 9, "name" => "Abdul Jabbar", "phone" => "+880 1612-852963", "address" => "Gazipur", "amount" => 20000, "trx" => "TRX852963147", "category" => "emergency", "month" => "09"],
+];
+
+// ✅ Calculate stats
+$totalDonations = count($donations);
+$totalAmount = array_sum(array_column($donations, 'amount'));
+$thisMonth = date('m');
+$thisMonthAmount = array_sum(array_map(fn($d) => $d['month'] === $thisMonth ? $d['amount'] : 0, $donations));
+$totalDonors = count(array_unique(array_column($donations, 'name')));
+?>
+
 <div class="content-wrapper">
     <div class="donation-list">
+
         <!-- Page Header -->
         <div class="page-header">
-            <div class="w-100 d-flex flex-wrap justify-content-between  gap-3">
+            <div class="w-100 d-flex flex-wrap justify-content-between gap-3">
                 <div class="d-flex justify-content-between gap-3">
                     <div class="icon-box">
                         <i class="fa-solid fa-hand-holding-dollar"></i>
@@ -26,71 +44,57 @@ $page_title = 'Zakat Collection List';
                         </nav>
                     </div>
                 </div>
-
-
             </div>
         </div>
 
-        <!-- Statistics Cards -->
+        <!-- ✅ Statistics Cards -->
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-card-content">
-                    <div class="stat-icon total">
-                        <i class="fa-solid fa-hand-holding-dollar"></i>
-                    </div>
+                    <div class="stat-icon total"><i class="fa-solid fa-hand-holding-dollar"></i></div>
                     <div>
                         <div class="text-muted small mb-1">Total Collection</div>
-                        <h3 class="mb-0">245</h3>
+                        <h3 class="mb-0"><?= $totalDonations ?></h3>
                     </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-content">
-                    <div class="stat-icon active">
-                        <i class="fa-solid fa-dollar-sign"></i>
-                    </div>
+                    <div class="stat-icon active"><i class="fa-solid fa-dollar-sign"></i></div>
                     <div>
                         <div class="text-muted small mb-1">Total Amount</div>
-                        <h3 class="mb-0">৳ 2,45,000</h3>
+                        <h3 class="mb-0">৳ <?= number_format($totalAmount) ?></h3>
                     </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-content">
-                    <div class="stat-icon expired">
-                        <i class="fa-solid fa-calendar-day"></i>
-                    </div>
+                    <div class="stat-icon expired"><i class="fa-solid fa-calendar-day"></i></div>
                     <div>
                         <div class="text-muted small mb-1">This Month</div>
-                        <h3 class="mb-0">৳ 45,000</h3>
+                        <h3 class="mb-0">৳ <?= number_format($thisMonthAmount) ?></h3>
                     </div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-content">
-                    <div class="stat-icon draft">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
+                    <div class="stat-icon draft"><i class="fa-solid fa-users"></i></div>
                     <div>
                         <div class="text-muted small mb-1">Total Donors</div>
-                        <h3 class="mb-0">180</h3>
+                        <h3 class="mb-0"><?= $totalDonors ?></h3>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="filter-card">
+        <!-- ✅ Filters -->
+        <div class="filter-card mt-4">
             <div class="filter-title mb-3">
-                <i class="fa-solid fa-filter me-2"></i>
-                Filters & Search
+                <i class="fa-solid fa-filter me-2"></i> Filters & Search
             </div>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <div class="search-box">
-                        <!-- <i class="fa-solid fa-magnifying-glass"></i> -->
-                        <input type="text" class="form-control" placeholder="Search by donor name, phone or transaction ID..." id="searchInput">
-                    </div>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by donor name, phone or transaction ID...">
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" id="categoryFilter">
@@ -131,126 +135,109 @@ $page_title = 'Zakat Collection List';
             </div>
         </div>
 
-        <!-- Donations Table -->
-        <div class="card shadow-sm">
+        <!-- ✅ Donation Table -->
+        <div class="card shadow-sm mt-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="donationTable">
                         <thead class="table-header">
                             <tr>
-                                <th style="width: 80px;">Serial No.</th>
-                                <th style="width: 200px;">Donor Name</th>
-                                <th style="width: 160px;">Phone</th>
-                                <th style="width: 140px;">Amount</th>
-                                <th style="width: 180px;">Transaction ID</th>
-   
+                                <th>Serial No.</th>
+                                <th>Donor Name</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Amount</th>
+                                <th>Transaction ID</th>
+                                <th>Invoice</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td><strong>#001</strong></td>
-                                <td>Md. Rahim Uddin</td>
-                                <td><small>+880 1712-345678</small></td>
-                                <td><strong>৳ 5,000</strong></td>
-                                <td><code>TRX123456789</code></td>
-                            </tr>
-                            <!-- Repeat similar structure for other rows -->
-
-
-
-                        <tbody>
-                            <tr>
-                                <td><strong>#001</strong></td>
-                                <td>Md. Rahim Uddin</td>
-                                <td><small>+880 1712-345678</small></td>
-                                <td><strong>৳ 5,000</strong></td>
-                                <td><code>TRX123456789</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#002</strong></td>
-                                <td>Fatima Khatun</td>
-                                <td><small>+880 1812-987654</small></td>
-                                <td><strong>৳ 10,000</strong></td>
-                                <td><code>TRX987654321</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#003</strong></td>
-                                <td>Kamal Hossain</td>
-                                <td><small>+880 1912-456789</small></td>
-                                <td><strong>৳ 15,000</strong></td>
-                                <td><code>TRX456789123</code></td>
-
-                            </tr>
-                            <tr>
-                                <td><strong>#004</strong></td>
-                                <td>Ayesha Siddika</td>
-                                <td><small>+880 1612-789456</small></td>
-                                <td><strong>৳ 3,000</strong></td>
-                                <td><code>TRX789456123</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#005</strong></td>
-                                <td>Ibrahim Khan</td>
-                                <td><small>+880 1512-321654</small></td>
-                                <td><strong>৳ 7,500</strong></td>
-                                <td><code>TRX321654987</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#006</strong></td>
-                                <td>Nasrin Akter</td>
-                                <td><small>+880 1712-654321</small></td>
-                                <td><strong>৳ 2,000</strong></td>
-                                <td><code>TRX654321789</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#007</strong></td>
-                                <td>Mizanur Rahman</td>
-                                <td><small>+880 1812-147258</small></td>
-                                <td><strong>৳ 12,000</strong></td>
-                                <td><code>TRX147258369</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#008</strong></td>
-                                <td>Sultana Begum</td>
-                                <td><small>+880 1912-963852</small></td>
-                                <td><strong>৳ 4,500</strong></td>
-                                <td><code>TRX963852741</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>#009</strong></td>
-                                <td>Abdul Jabbar</td>
-                                <td><small>+880 1612-852963</small></td>
-                                <td><strong>৳ 20,000</strong></td>
-                                <td><code>TRX852963147</code></td>
-                            </tr>
+                            <?php foreach ($donations as $d): ?>
+                                <tr data-category="<?= $d['category'] ?>" data-month="<?= $d['month'] ?>" data-amount="<?= $d['amount'] ?>">
+                                    <td><strong>#<?= str_pad($d['id'], 3, '0', STR_PAD_LEFT) ?></strong></td>
+                                    <td><?= htmlspecialchars($d['name']) ?></td>
+                                    <td><small><?= htmlspecialchars($d['phone']) ?></small></td>
+                                    <td><?= htmlspecialchars($d['address']) ?></td>
+                                    <td><strong>৳ <?= number_format($d['amount']) ?></strong></td>
+                                    <td><code><?= htmlspecialchars($d['trx']) ?></code></td>
+                                    <td>
+                                        <a href="zakat-list-invoice.php?id=<?= $d['id'] ?>" class="btn btn-sm btn-success" target="_blank" style="font-size: 0.875rem; padding: 0.25rem 0.5rem;">
+                                            <i class="fa-solid fa-file-invoice me-1"></i>Invoice
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-
     </div>
 </div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
 
+<!-- ✅ JS Filtering & Sorting -->
 <script>
-    function viewDonation(id) {
-        window.location.href = 'view-donation.php?id=' + id;
-    }
+const searchInput = document.getElementById("searchInput");
+const categoryFilter = document.getElementById("categoryFilter");
+const monthFilter = document.getElementById("monthFilter");
+const amountFilter = document.getElementById("amountFilter");
+const sortFilter = document.getElementById("sortFilter");
+const tableRows = document.querySelectorAll("#donationTable tbody tr");
 
-    function editDonation(id) {
-        window.location.href = 'edit-donation.php?id=' + id;
-    }
+function filterTable() {
+    const search = searchInput.value.toLowerCase();
+    const category = categoryFilter.value;
+    const month = monthFilter.value;
+    const amount = amountFilter.value;
 
-    function deleteDonation(id) {
-        if (confirm('Are you sure you want to delete this donation record?')) {
-            alert('Donation #' + id + ' deleted successfully!');
+    tableRows.forEach(row => {
+        const name = row.children[1].innerText.toLowerCase();
+        const phone = row.children[2].innerText.toLowerCase();
+        const trx = row.children[5].innerText.toLowerCase();
+        const rowCategory = row.dataset.category;
+        const rowMonth = row.dataset.month;
+        const rowAmount = parseInt(row.dataset.amount);
+
+        let visible = true;
+
+        if (search && !name.includes(search) && !phone.includes(search) && !trx.includes(search)) visible = false;
+        if (category !== "all" && rowCategory !== category) visible = false;
+        if (month !== "all" && rowMonth !== month) visible = false;
+
+        if (amount !== "all") {
+            const [min, max] = amount.split("-");
+            if (amount.includes("+") && rowAmount < parseInt(min)) visible = false;
+            else if (max && (rowAmount < parseInt(min) || rowAmount > parseInt(max))) visible = false;
         }
-    }
-</script>
 
+        row.style.display = visible ? "" : "none";
+    });
+}
+
+function sortTable() {
+    const sortValue = sortFilter.value;
+    const tbody = document.querySelector("#donationTable tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    rows.sort((a, b) => {
+        const aAmount = parseInt(a.dataset.amount);
+        const bAmount = parseInt(b.dataset.amount);
+        const aId = parseInt(a.children[0].innerText.replace("#", ""));
+        const bId = parseInt(b.children[0].innerText.replace("#", ""));
+
+        if (sortValue === "highest") return bAmount - aAmount;
+        if (sortValue === "lowest") return aAmount - bAmount;
+        if (sortValue === "oldest") return aId - bId;
+        return bId - aId; // newest default
+    });
+
+    tbody.innerHTML = "";
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+[searchInput, categoryFilter, monthFilter, amountFilter].forEach(el => el.addEventListener("input", filterTable));
+sortFilter.addEventListener("change", sortTable);
+</script>
 
 <?php require './components/footer.php'; ?>

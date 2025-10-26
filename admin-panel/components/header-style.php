@@ -1785,7 +1785,8 @@ margin-left: auto;
 /* Equal height consistency */
 .donation-list .action-buttons .btn-warning,
 .donation-list .action-buttons .btn-info,
-.donation-list .action-buttons .btn-danger {
+.donation-list .action-buttons .btn-danger
+ {
  height: 36px;
 }
 .donation-list .badge {

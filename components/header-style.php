@@ -1011,6 +1011,7 @@ p {
     border: 1px solid #ccc;
     border-radius: 20px;
     padding: 10px;
+    margin-bottom: 79px;
 }
 
 .tab::after {
@@ -2047,7 +2048,7 @@ border-radius: 10px;
     /* Join Section */
     .join {
         position: absolute;
-        top: -66%;
+        top: -14%;
         left: 0%;
         background: transparent;
         width: 100%;
@@ -2125,6 +2126,12 @@ border-radius: 10px;
     .buttons .btn {
         width: 100%;
     }
+    .tabs-rounded {
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 10px;
+    margin-bottom: 79px;
+}
 
     /* Donation Form */
     .donate-form-bg {
@@ -2180,7 +2187,7 @@ border-radius: 10px;
 
 .join {
     position: absolute;
-    top: -66%;
+    top: -24%;
     left: 3%;
     background: transparent;
     width: 95%;
@@ -2305,7 +2312,7 @@ border-radius: 10px;
     /* Join Section */
 .join {
     position: absolute;
-    top: -64%;
+    top: -26%;
     left: 3%;
     background: transparent;
     width: 95%;
