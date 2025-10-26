@@ -141,7 +141,7 @@ $page_title = 'Activities Details'; // Set the page title
 <!-- Program details end  -->
 
  <!-- Donate card start  -->
-  <div
+  <!-- <div
  data-aos="fade-up" 
   class="container">
 	<div class="d-flex justify-content-center align-items-center">
@@ -155,7 +155,7 @@ $page_title = 'Activities Details'; // Set the page title
 		</div>
 	
 	</div>
-  </div>
+  </div> -->
  <!-- Donate card end  -->
 
 
@@ -168,5 +168,5 @@ $page_title = 'Activities Details'; // Set the page title
 <!--========================================================================-->
 <!---------------------------- Your Content End Here ------------------------->
 <!--========================================================================-->
-
+<?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?>

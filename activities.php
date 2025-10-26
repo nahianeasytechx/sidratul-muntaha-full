@@ -56,14 +56,11 @@ $page_title = 'Activities'; // Set the page title
 			</div>
 </div>
 
-
-
-
 		</div>
 	</div>
 
 <!--========================================================================-->
 <!---------------------------- Your Content End Here ------------------------->
 <!--========================================================================-->
-
+<?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?>

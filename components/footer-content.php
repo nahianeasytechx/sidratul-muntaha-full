@@ -1,6 +1,5 @@
     <div class="footer-full-content">
-    	<!-- Join -->
-    	<?php require './components/join-platform-text.php'; ?>
+
     	<!-- Footer Content -->
     	<footer class="footer">
 
@@ -8,7 +7,7 @@
     			<div class="row">
 
     				<!-- About -->
-    				<div class="col-4 col-md-6  col-lg-3 footer_col">
+    				<div class="col-12 col-md-6  col-lg-3 footer_col">
     					<div class="footer_about">
     						<div class="logo_container">
     							<a href="index.php">
@@ -34,7 +33,7 @@
     					</div>
     				</div>
 
-    				<div class="col-4 col-md-6  col-lg-3 footer_col">
+    				<div class="col-12 col-md-6  col-lg-3 footer_col">
     					<div class="footer_links">
     						<div class="footer_title">Quick menu</div>
     						<ul class="footer_list">
@@ -51,7 +50,7 @@
 
 
 
-    				<div class=" col-md-6  col-lg-3 footer_col">
+    				<div class="col-12  col-md-6  col-lg-3 footer_col">
     					<div class="footer_contact">
     						<div class="footer_title">Contact Us</div>
     						<div class="footer_contact_info">
@@ -70,7 +69,7 @@
     						</div>
     					</div>
     				</div>
-    				<div class="col-4 col-md-6  col-lg-3 footer_col">
+    				<div class="col-12  col-md-6  col-lg-3 footer_col">
 
     						<div class="footer_title">Newsletter</div>
     						<div class="newsletter">

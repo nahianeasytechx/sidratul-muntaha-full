@@ -4,22 +4,22 @@ $page_title = 'Home'; // Set the page title
 ?>
 <?php require './components/header.php'; ?>
 <style>
-
-
 	.footer {
 		width: 100%;
 		background: #0F2920;
 		color: #fff;
-		padding-top: 174px;
+		padding-top: 60px;
 		padding-bottom: 50px;
 	}
-.join {
-    position: absolute;
-    top: -47%;
-    left: 0;
-    right: 0;
-    background: transparent;
-}
+
+	.join {
+		position: absolute;
+		top: -47%;
+		left: 0;
+		right: 0;
+		background: transparent;
+	}
+
 	@media(max-width:991px) {
 		.join-input {
 			width: 58%;
@@ -86,17 +86,20 @@ $page_title = 'Home'; // Set the page title
 		margin-bottom: 30px;
 		color: #fff;
 	}
-.featured_content {
-    padding-left: 50px;
-    padding-top: 32px;
-    padding-right: 50px;
-    padding-bottom: 41px;
-    background: #f2f1f8;
-}
-.button_arrow {
-    border-radius: 0px;
-    top: 0px;
-}
+
+	.featured_content {
+		padding-left: 50px;
+		padding-top: 32px;
+		padding-right: 50px;
+		padding-bottom: 41px;
+		background: #f2f1f8;
+	}
+
+	.button_arrow {
+		border-radius: 0px;
+		top: 0px;
+	}
+
 	.buttons {
 		display: flex;
 		gap: 15px;
@@ -113,31 +116,36 @@ $page_title = 'Home'; // Set the page title
 		border-radius: 10px;
 		font-weight: 600px;
 	}
-.featured_footer {
-    margin-top: 30px;
-}
-	.featured_footer i{
+
+	.featured_footer {
+		margin-top: 30px;
+	}
+
+	.featured_footer i {
 		font-size: 25px;
 		margin: 10px;
 	}
-	.featured_footer i:hover{
+
+	.featured_footer i:hover {
 		color: #008E48;
 		transition: all ease-in-out .3s;
 		cursor: pointer;
-		
+
 	}
+
 	/* Remove the custom button styles since we're using existing .btn classes */
 
 	/* Responsive Design */
 	@media(max-width: 1199px) {
-.featured_content {
-    padding-left: 50px;
-    padding-top: 82px;
-    padding-right: 50px;
-    padding-bottom: 41px;
-    background: #f2f1f8;
-}
+		.featured_content {
+			padding-left: 50px;
+			padding-top: 82px;
+			padding-right: 50px;
+			padding-bottom: 41px;
+			background: #f2f1f8;
+		}
 	}
+
 	@media(max-width: 991px) {
 		.featured_background_wrapper {
 			min-height: 350px;
@@ -150,26 +158,28 @@ $page_title = 'Home'; // Set the page title
 		.featured_banner_content p {
 			font-size: 14px;
 		}
+
 		.button_arrow {
-    border-radius: 10px;
-    top: 0px;
-    right: 0px;
-    height: 100%;
-}
+			border-radius: 10px;
+			top: 0px;
+			right: 0px;
+			height: 100%;
+		}
 	}
 
 
 	@media(max-width: 575px) {
 		.home_slider_background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 89%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center center;
-}
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 89%;
+			background-repeat: no-repeat;
+			background-size: cover;
+			background-position: center center;
+		}
+
 		.featured_background_wrapper {
 			min-height: 300px;
 		}
@@ -201,9 +211,10 @@ $page_title = 'Home'; // Set the page title
 		.featured_banner_content {
 			top: 47%;
 		}
+
 		.home_buttons {
-    margin-top: 50px;
-}
+			margin-top: 50px;
+		}
 	}
 </style>
 <!--=======================================================================-->
@@ -228,12 +239,12 @@ $page_title = 'Home'; // Set the page title
 								<div class="home_content text-center">
 
 									<div class="home_text">
-										<div class="home_title">Sidratul Muntaha Foundation</div>
+										<div class="home_title">Mosque Project</div>
 										<div class="home_subtitle">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare. Registration Number: .</div>
 									</div>
 									<div class="home_buttons">
-										<div class="button home_button"><a href="#">Know more<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
-										<div class="button home_button"><a href="#">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="donate.php">Donate Now<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="activities.php">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
 									</div>
 								</div>
 							</div>
@@ -245,7 +256,7 @@ $page_title = 'Home'; // Set the page title
 			<!-- Slider Item -->
 			<div class="owl-item">
 				<!-- Background image artist https://unsplash.com/@benwhitephotography -->
-				<div class="home_slider_background" style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),url(images/Banner.jpg);background-repeat:no-repeat;background-position:center;"></div>
+				<div class="home_slider_background" style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),url(images/school.jpg);background-repeat:no-repeat;background-position:center;"></div>
 				<div class="home_container">
 					<div class="container">
 						<div class="row">
@@ -253,12 +264,12 @@ $page_title = 'Home'; // Set the page title
 								<div class="home_content text-center">
 
 									<div class="home_text">
-										<div class="home_title">Sidratul Muntaha Foundation</div>
+										<div class="home_title">School Project</div>
 										<div class="home_subtitle">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare. Registration Number: .</div>
 									</div>
 									<div class="home_buttons">
-										<div class="button home_button"><a href="#">Know more<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
-										<div class="button home_button"><a href="#">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="donate.php">Donate Now<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="activities.php">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
 									</div>
 								</div>
 							</div>
@@ -270,7 +281,7 @@ $page_title = 'Home'; // Set the page title
 			<!-- Slider Item -->
 			<div class="owl-item">
 				<!-- Background image artist https://unsplash.com/@benwhitephotography -->
-				<div class="home_slider_background" style="background-image:linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),url(images/Bannertwo.jpg)"></div>
+				<div class="home_slider_background" style="background-image:linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),url(images/hospital.jpg)"></div>
 				<div class="home_container">
 					<div class="container">
 						<div class="row">
@@ -278,12 +289,12 @@ $page_title = 'Home'; // Set the page title
 								<div class="home_content text-center">
 
 									<div class="home_text">
-										<div class="home_title">Sidratul Muntaha Foundation</div>
+										<div class="home_title">Hospital Porject</div>
 										<div class="home_subtitle">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare. Registration Number: .</div>
 									</div>
 									<div class="home_buttons">
-										<div class="button home_button"><a href="#">Know more<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
-										<div class="button home_button"><a href="#">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="donate.php">Donate Now<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="activities.php">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
 									</div>
 								</div>
 							</div>
@@ -306,8 +317,8 @@ $page_title = 'Home'; // Set the page title
 										<div class="home_subtitle">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare. Registration Number: .</div>
 									</div>
 									<div class="home_buttons">
-										<div class="button home_button"><a href="#">Know more<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
-										<div class="button home_button"><a href="#">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="donate.php">Donate Now<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
+										<div class="button home_button"><a href="activities.php">All Activities<div class="button_arrow"><i class="fa fa-angle-right" aria-hidden="true"></i></div></a></div>
 									</div>
 								</div>
 							</div>
@@ -675,5 +686,6 @@ $page_title = 'Home'; // Set the page title
 <!--========================================================================-->
 <!---------------------------- Your Content End Here ------------------------->
 <!--========================================================================-->
-
+<!-- Join -->
+<?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?>

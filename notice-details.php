@@ -97,5 +97,5 @@ $page_title = 'Notice Details'; // Set the page title
 <!--========================================================================-->
 <!---------------------------- Your Content End Here ------------------------->
 <!--========================================================================-->
-
+<?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?>

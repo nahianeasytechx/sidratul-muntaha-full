@@ -654,7 +654,6 @@ p {
 
 .course_button .button_arrow {
     background: #05A657;
-    border-radius: 10px;
 }
 
 .course_button:hover .button_arrow {
@@ -1500,7 +1499,7 @@ p {
     width: 100%;
     background: #0F2920;
     color: #fff;
-    padding-top: 174px;
+    padding-top: 60px;
     padding-bottom: 50px;
 }
 
@@ -1553,7 +1552,7 @@ p {
 }
 
 .footer-full-content {
-    margin-top: 200px;
+    margin-top: 0px;
 }
 
 /* Join Section */
@@ -1592,13 +1591,10 @@ p {
     border: 0;
     height: 50px;
 }
-.button_arrow {
-    border-radius: 10px;
-    right: 0;
-    height: 98%;
-    }
-.join .section_subtitle {
+
+ .donation-form-card .section_subtitle p{
     color: #fff;
+    text-align: center;
 }
 
 .join-bg {
@@ -1959,15 +1955,10 @@ border-radius: 10px;
 }
 
 
-.button_arrow {
-    border-radius: 10px;
-    top: 7px;
-    right: -4px;
-    height: 87%;
-}
+
     /* Footer */
     .footer {
-        padding-top: 174px;
+        padding-top: 60px;
     }
 
     .footer img {
@@ -2053,12 +2044,7 @@ border-radius: 10px;
         background: transparent;
         width: 100%;
     }
-.button_arrow {
-    border-radius: 10px;
-    top: 8px;
-    right: 0px;
-    height: 87%;
-}
+
     /* Footer */
     .footer {
         padding-top: 218px;
