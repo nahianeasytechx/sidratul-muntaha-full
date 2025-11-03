@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['calculate_zakat'])) {
 
     </div>
 </div>
-<div class="container mx-auto">
+<div class="container mx-auto py-5">
     <div class="section_title">
         <h2>
             Simplifying your Zakat calculation

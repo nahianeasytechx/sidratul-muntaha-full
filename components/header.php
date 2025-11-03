@@ -7,7 +7,7 @@ require 'database/dbConnection.php';
 <head>
 	<base href="<?= $site_url ?>" />
 	<!-- Favicon -->
-	<link rel="icon" type="image/x-icon" href="images/sidratul logo.png" />
+	<link rel="icon" type="image/x-icon" href="images/s-icon.png" />
 
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">

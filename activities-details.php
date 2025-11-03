@@ -37,134 +37,200 @@ $page_title = 'Activities Details'; // Set the page title
 	</div>
 </div>
 
-<!-- Program details start  -->
-<div class="container  ">
-	<div class="row mt-5 ">
-		<div class="col-md-12 col-lg-6 program-details">
-			<h2>Program Details</h2>
-			<img src="images/act1.webp" alt="" class="w-75 rounded-5">
-			<p class="fs-6 fw-bold py-2">Sidratul Skill Development Institute is an institution for self-development and skill enhancement. This affiliate of the As-Sunnah Foundation, registered with the National Skill Development Authority, was established in 2022. Since its inception, it has been working to bring information technology and technical education to all levels of society, with the goal of eliminating unemployment and creating employment opportunities.</p>
-			<p>The specialty of this institute is that it provides computer, information technology, and various technical training courses in a completely separate environment and with suitable curricula for both men and women. There are also special scholarships for talented and underprivileged students, enabling them to receive training free of charge.</p>
-			<p>By developing skilled human resources, this institute has already started to solidify its position as an effective tool for alleviating the country's unemployment problem and fostering self-employment</p>
-		</div>
-		<div 
-		data-aos="fade-up"
-		class="col-md-12 col-lg-6">
-			<div class="p-4 card-bg">
-				<h4>Project Goals & Objectives</h4>
-				<ul>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Skill Enhancement
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Unemployment Alleviation
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Employment Creation
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Sustainable Poverty Reduction
-					</li>
-				</ul>
-			</div>
-			<div class="mt-4 p-4 card-bg">
-				<h4>Expenditure Sectors</h4>
-				<ul>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Land purchase for the institute
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Construction of the institute's infrastructure
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Smart Tailoring and Fashion Design
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-				Procurement of equipment
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-				Covering accommodation and food costs for trainees through scholarships
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-				Management expenses
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Driving Training
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Chef and Kitchen Management
-					</li>
-				</ul>
+<style>
+/* Program Details */
+.program-details h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2rem;
+}
 
-			</div>
-			<div class="mt-4 p-4 card-bg">
-				<h4>Expenditure Sectors</h4>
-				<ul>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Land purchase for the institute
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Construction of the institute's infrastructure
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Procurement of equipment
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-						Covering accommodation and food costs for trainees through scholarship
-					</li>
-					<li class="d-flex gap-2 fs-6">
-						<i class="fa fa-check-circle-o" aria-hidden="true"></i>
-	Management expenses
-					</li>
-				</ul>
-			</div>
-		</div>
+.program-details img {
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
 
-	</div>
+.program-details img:hover {
+    transform: translateY(-5px);
+}
+
+.program-details p {
+    color: #475569;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+.program-details p.fw-bold {
+    color: #1e293b;
+}
+
+/* Card Background */
+.card-bg {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card-bg:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+.card-bg h4 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+.card-bg ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.card-bg ul li {
+    padding: 0.75rem 0;
+    color: #475569;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.card-bg ul li:last-child {
+    border-bottom: none;
+}
+
+.card-bg ul li:hover {
+    padding-left: 0.5rem;
+    color: #1e293b;
+}
+
+.card-bg ul li i {
+    color: #10b981;
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+}
+
+/* Spacing */
+.mt-5 {
+    margin-top: 4rem !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .program-details h2 {
+        font-size: 1.75rem;
+    }
+    
+    .card-bg {
+        margin-bottom: 1.5rem;
+    }
+}
+</style>
+
+<!-- Program details start -->
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-12 col-lg-6 program-details">
+            <h2>Program Details</h2>
+            <img src="images/act1.webp" alt="" class="w-75 rounded-5">
+            <p class="fs-6 fw-bold py-2">Sidratul Skill Development Institute is an institution for self-development and skill enhancement. This affiliate of the As-Sunnah Foundation, registered with the National Skill Development Authority, was established in 2022. Since its inception, it has been working to bring information technology and technical education to all levels of society, with the goal of eliminating unemployment and creating employment opportunities.</p>
+            <p>The specialty of this institute is that it provides computer, information technology, and various technical training courses in a completely separate environment and with suitable curricula for both men and women. There are also special scholarships for talented and underprivileged students, enabling them to receive training free of charge.</p>
+            <p>By developing skilled human resources, this institute has already started to solidify its position as an effective tool for alleviating the country's unemployment problem and fostering self-employment</p>
+        </div>
+        <div data-aos="fade-up" class="col-md-12 col-lg-6">
+            <div class="p-4 card-bg">
+                <h4>Project Goals & Objectives</h4>
+                <ul>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Skill Enhancement
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Unemployment Alleviation
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Employment Creation
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Sustainable Poverty Reduction
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-4 p-4 card-bg">
+                <h4>Expenditure Sectors</h4>
+                <ul>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Land purchase for the institute
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Construction of the institute's infrastructure
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Smart Tailoring and Fashion Design
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Procurement of equipment
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Covering accommodation and food costs for trainees through scholarships
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Management expenses
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Driving Training
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Chef and Kitchen Management
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-4 p-4 card-bg">
+                <h4>Expenditure Sectors</h4>
+                <ul>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Land purchase for the institute
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Construction of the institute's infrastructure
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Procurement of equipment
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Covering accommodation and food costs for trainees through scholarship
+                    </li>
+                    <li class="d-flex gap-2 fs-6">
+                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                        Management expenses
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
-<!-- Program details end  -->
-
- <!-- Donate card start  -->
-  <!-- <div
- data-aos="fade-up" 
-  class="container">
-	<div class="d-flex justify-content-center align-items-center">
-		<div class="donate_card_bg">
-	<div class="cardp">
-				<p>Join the effort to alleviate poverty and create employment.</p>
-	</div>
-			<div class="card-btn">
-				<a href="donate.php">Donate Now</a>
-			</div>
-		</div>
-	
-	</div>
-  </div> -->
- <!-- Donate card end  -->
-
-
-  <!-- Course Description End  -->
-
-
-<!-- ADD THIS SCRIPT AT THE BOTTOM, BEFORE THE CLOSING PHP TAG -->
-
-  
+<!-- Program details end -->
 <!--========================================================================-->
 <!---------------------------- Your Content End Here ------------------------->
 <!--========================================================================-->

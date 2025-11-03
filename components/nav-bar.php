@@ -1,4 +1,25 @@
         <!-- Navbar -->
+		<style>
+			.main_nav li a, .nav-donate-btn {
+				font-size: 14px;
+				text-transform: uppercase;
+			}
+			.nav-donate-btn {
+				font-weight: 700;
+			}
+			.nav-zakat-btn {
+				border-color: #05a657;
+				text-transform: uppercase;
+				color: #05a657;
+				font-size: 14px;
+				transition: .3s;
+				font-weight: 700;
+			}
+			.nav-zakat-btn:hover {
+				background-color: #05a657;
+				color: #fff;
+			}
+		</style>
         <div class="header_container mx-auto">
         	<div class=" container ">
         		<div class="row">
@@ -8,7 +29,7 @@
         						<a href="index.php">
         							<div class="logo_content ">
         								<div class="logo_img">
-											<img src="images/sidratul logo.png" alt="sidratul logo.png">
+											<img src="images/s-icon.png" alt="sidratul logo.png">
 										</div>
         					
         							</div>
@@ -81,8 +102,8 @@
 
         						</div> -->
 
-        						<div class="nav-zakat-btn d-none d-lg-block m-2">
-        						<a href="zakat-calculator.php" class=" active text-decoration-none">Zakat Calculator </a>
+        						<div class="d-none d-lg-block m-2">
+        							<a href="zakat-calculator.php" class="active text-decoration-none nav-zakat-btn">Zakat Calculator </a>
         						</div>
         						<div class="donate-btn-section d-none d-lg-block">
         							<a href="donate.php" class="nav-donate-btn">Donate</a>

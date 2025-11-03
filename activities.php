@@ -34,13 +34,12 @@ $page_title = 'Activities'; // Set the page title
 	</div>
 
 	<!-- Courses -->
-	<div class="courses">
+	<div class="courses pb-0 mb-0">
 
 
 
 <div class="container">
-	<div class="row courses_row" id="activitiesGrid"></div>
-				<!-- Pagination -->
+			<div class="row courses_row" id="activitiesGrid"></div>
 			<div class="row">
 				<div class="col">
 					<div class="courses_paginations">

@@ -41,7 +41,7 @@ $page_title = 'About'; // Set the page title
 
 <div class="container my-5">
 	<!-- About -->
-	<div class="about">
+	<div class="about mb-0 pb-0">
 		<div class="container">
 
 			<div
@@ -51,14 +51,14 @@ $page_title = 'About'; // Set the page title
 
 				<div class="col-lg-6 mt-3">
 					<div class="about_content">
-						<h3>Our Platform's main goal</h3>
+						<h2><b>Our Platform's Main Goal</b></h2>
 						<div class="about_text">
 							<p>Sidratul Muntaha Foundation is a non-political and non-profit service-oriented organization registered with the government, dedicated to education, Dawah, and overall humanitarian welfare. Its registration number is S-13111/2019. It was founded in 2017 by Sheikh Ahmadullah, who directly oversees its operations as the chairman. This organization follows the footsteps of the teacher of humanity, the messenger of peace and salvation for mankind, the ideal of humanitarian service—Prophet Muhammad (peace and blessings be upon him). It is continuously</p>
 						</div>
 					</div>
 				</div>
 				<div class="col-lg-6 mb-5">
-					<div class="about_image"><img src="images/about_1.jpg" alt=""></div>
+					<div class="about_image text-center"><img src="images/sr-logo.png" width="50%" alt=""></div>
 				</div>
 			</div>
 
