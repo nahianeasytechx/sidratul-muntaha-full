@@ -3,7 +3,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Donate';
 ?>
 <?php require './components/header.php'; ?>
+<style>
+    .form-check img {
+        width: 70px;
+    }
 
+    .custom-border {
+        border: 1px solid #ccc;
+
+    }
+</style>
 
 <!--=======================================================================-->
 <!------------------------ Your Content Start From Here --------------------->
@@ -99,20 +108,32 @@ $page_title = 'Donate';
                                 <label for="yourName" class="form-label">Your Name</label>
                                 <input type="text" class="form-control" id="yourName" name="name" placeholder="Enter your full name">
                             </div>
+                            <!-- Your Mail -->
+                            <div class="mb-3">
+                                <label for="yourmail" class="form-label">Your Mail</label>
+                                <input type="email" class="form-control" id="yourmail" name="name" placeholder="Enter your email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Your Address</label>
+                                <input type="text" class="form-control" id="youraddress" name="youraddress" placeholder="Enter your adderess">
+                            </div>
                             <!-- Category -->
                             <div class="mb-3">
                                 <label for="category" class="form-label">Category</label>
                                 <br>
                                 <select class="w-100 px-4 py-3 rounded-2  category_options" id="category" name="category">
                                     <option value="">-- Select a category --</option>
-                                    <option value="education">Education Support</option>
-                                    <option value="healthcare">Healthcare Aid</option>
-                                    <option value="food">Food & Nutrition</option>
-                                    <option value="food">Food & Nutrition</option>
-                                    <option value="disaster_relief">Disaster Relief</option>
-                                    <option value="orphan_support">Orphan Support</option>
-                                    <option value="mosque_fund">Mosque Fund</option>
-                                    <option value="environment">Environmental Projects</option>
+                                    <option value="mosque-fund">Mosque Project</option>
+                                    <option value="madrasha-fund">Madrasha Project</option>
+                                    <option value="school">School Project</option>
+                                    <option value="hospital">Hospital Project</option>
+                                    <option value="zakat">Zakatul Sadaka</option>
+                                    <option value="disaster-relief">Disaster Relief</option>
+                                    <option value="education-support">Education Support</option>
+                                    <option value="food-financial">Food and Financial Aid Support</option>
+                                    <option value="orphan-homeless">For Orphan and Homeless</option>
+                                    <option value="disaster-relief">Disaster Relief</option>
+                                    <option value="tree-plantation">Tree Plantation</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>
@@ -139,12 +160,35 @@ $page_title = 'Donate';
                                 </label>
                                 <div class="payment-method">
                                     <div class="form-check">
-                                        <input class="form-check-input mt-2" type="radio" name="paymentMethod" id="aamarpay" value="aamarpay" checked>
-                                        <label class="form-check-label d-flex align-items-center " for="aamarpay">
-                                            <span class="badge "><img src="images/ssl logo.png" alt=""></span>
+                                        <div class="d-flex p-1">
+                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="sslcommerz" value="sslcommerz" checked>
+                                            <label class="form-check-label d-flex align-items-center" for="sslcommerz">
+                                                <span class="badge"><img src="images/ssl logo.png" alt=""></span>
+                                            </label>
+                                        </div>
 
-                                        </label>
+                                        <div class="d-flex p-1">
+                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="bkash" value="bkash">
+                                            <label class="form-check-label d-flex align-items-center" for="bkash">
+                                                <span class="badge"><img src="images/bkash.png" alt=""></span>
+                                            </label>
+                                        </div>
+
+                                        <div class="d-flex p-1">
+                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="nagad" value="nagad">
+                                            <label class="form-check-label d-flex align-items-center" for="nagad">
+                                                <span class="badge"><img src="images/nogod.png" alt=""></span>
+                                            </label>
+                                        </div>
+
+                                        <div class="d-flex p-1">
+                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="paypal" value="paypal">
+                                            <label class="form-check-label d-flex align-items-center" for="paypal">
+                                                <span class="badge"><img src="images/paypal.png" alt=""></span>
+                                            </label>
+                                        </div>
                                     </div>
+
                                 </div>
                             </div>
 
@@ -158,7 +202,7 @@ $page_title = 'Donate';
                             </div>
 
                             <!-- Donate Button -->
-                            <button type="submit" class="my-3 btn btn-success btn-donate w-100">
+                            <button type="submit" class=" my-3 btn btn-success btn-donate w-100">
                                 <i class="bi bi-heart-fill me-2"></i>
                                 <span>Donate Now</span>
                             </button>

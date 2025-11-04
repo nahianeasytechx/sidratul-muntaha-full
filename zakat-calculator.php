@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['calculate_zakat'])) {
                 <!-- Calculation Basis -->
                 <div class="form-group">
                     <label for="calculation_basis">Select Calculation Basis</label>
-                    <select name="calculation_basis" id="calculation_basis" class="form-select">
+                    <select name="calculation_basis" id="calculation_basis" class="form-select form-control">
                         <option value="gold" <?php echo (!isset($_POST['calculation_basis']) || $_POST['calculation_basis'] == 'gold') ? 'selected' : ''; ?>>Gold</option>
                         <option value="silver" <?php echo (isset($_POST['calculation_basis']) && $_POST['calculation_basis'] == 'silver') ? 'selected' : ''; ?>>Silver</option>
                     </select>

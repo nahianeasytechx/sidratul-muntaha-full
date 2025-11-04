@@ -19,6 +19,7 @@
 				background-color: #05a657;
 				color: #fff;
 			}
+
 		</style>
         <div class="header_container mx-auto">
         	<div class=" container ">
@@ -27,7 +28,7 @@
         				<div class=" header_content d-flex flex-col align-items-center justify-content-between">
         					<div class="logo_container">
         						<a href="index.php">
-        							<div class="logo_content ">
+        							<div class="logo_content mt-1">
         								<div class="logo_img">
 											<img src="images/s-icon.png" alt="sidratul logo.png">
 										</div>
@@ -84,8 +85,9 @@
 
 
         						<div class="donate-btn-section d-lg-none">
-        							<a href="donate.php" class="nav-donate-btn">Donate</a>
+        							<a href="zakat-calculator.php" class="nav-donate-btn">Zakat Calculator</a>
         						</div>
+
         						<!-- Hamburger -->
 
         						<div class="hamburger menu_mm">

@@ -19,6 +19,7 @@ $page_title = 'Home';
 		display: flex;
 		align-items: center;
 		justify-content: center;
+
 	}
 
 	.hero-bg {
@@ -42,7 +43,7 @@ $page_title = 'Home';
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background: linear-gradient(135deg, rgba(15, 41, 32, 0.85) 0%, rgba(0, 142, 72, 0.75) 100%);
+		background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.03) 100%);
 		z-index: 1;
 	}
 
@@ -51,8 +52,11 @@ $page_title = 'Home';
 		z-index: 2;
 		max-width: 900px;
 		padding: 0 30px;
+		padding-left: 20px;
 		text-align: center;
 		animation: fadeInUp 1s ease;
+
+
 	}
 
 	@keyframes fadeInUp {
@@ -60,6 +64,7 @@ $page_title = 'Home';
 			opacity: 0;
 			transform: translateY(40px);
 		}
+
 		to {
 			opacity: 1;
 			transform: translateY(0);
@@ -102,8 +107,9 @@ $page_title = 'Home';
 	.hero-buttons {
 		display: flex;
 		gap: 20px;
-		justify-content: center;
+		justify-content: start;
 		flex-wrap: wrap;
+		justify-content: center;
 	}
 
 	.hero-btn {
@@ -174,8 +180,9 @@ $page_title = 'Home';
 	/* Modern Featured Section */
 	.modern-featured {
 		padding: 50px 0;
-		background:rgb(248, 250, 249);
+		background: rgb(248, 250, 249);
 	}
+
 	.unified-card {
 		background: #fff;
 		border-radius: 24px;
@@ -183,6 +190,7 @@ $page_title = 'Home';
 		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 		transition: all 0.4s ease;
 	}
+
 	.unified-card:hover {
 		transform: translateY(-5px);
 		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
@@ -199,18 +207,20 @@ $page_title = 'Home';
 	}
 
 	.featured-right {
-		background: #f9fafb;
+		background: #84848426;
 		min-height: 400px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		border: 2px solid #f9f9f9
 	}
 
 	.social-icons {
 		display: flex;
 		gap: 15px;
 	}
+
 	.social-icon {
 		width: 45px;
 		height: 45px;
@@ -224,18 +234,26 @@ $page_title = 'Home';
 		transition: all 0.3s ease;
 		text-decoration: none;
 	}
+
 	.social-icon:hover {
 		transform: translateY(-5px);
 		box-shadow: 0 8px 20px rgba(0, 168, 84, 0.4);
 	}
 
+
+	@media screen and (min-width: 1199px) {}
+
 	/* Responsive */
 	@media (max-width: 991px) {
-		.featured-left, .featured-right {
+
+
+		.featured-left,
+		.featured-right {
 			border-radius: 0;
 			min-height: auto;
 			padding: 40px 20px !important;
 		}
+
 		.unified-card {
 			flex-direction: column;
 		}
@@ -605,6 +623,11 @@ $page_title = 'Home';
 
 <!-- Modern Hero Slider -->
 <div class="modern-hero">
+	<!-- Home Slider Nav -->
+	<div class="home_slider_nav_container d-flex flex-row align-items-start justify-content-between">
+		<div class="home_slider_nav home_slider_prev trans_200"><i class="fa fa-angle-left" aria-hidden="true"></i></div>
+		<div class="home_slider_nav home_slider_next trans_200"><i class="fa fa-angle-right" aria-hidden="true"></i></div>
+	</div>
 	<div class="owl-carousel owl-theme home_slider">
 		<!-- Slide 1 -->
 		<div class="hero-slide">
@@ -668,11 +691,13 @@ $page_title = 'Home';
 				</div>
 			</div>
 		</div>
+
 	</div>
 </div>
 
 <!-- Modern Featured Section (Single Card Layout) -->
 <div class="modern-featured">
+
 	<div class="container" data-aos="fade-up">
 		<div class="featured-card unified-card px-3">
 			<div class="row g-0 align-items-center">
@@ -680,7 +705,7 @@ $page_title = 'Home';
 				<div class="col-lg-6 p-5 featured-left">
 					<h2 class="fw-bold mb-3" style="font-size: 2rem; color: #fff; font-weight: 800;">Sidratul Muntaha Foundation</h2>
 					<p class="mb-4" style="color: #f1f1f1; font-size: 1rem; line-height: 1.7;">
-						Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare. 
+						Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare.
 						Registration Number: S-14117/2024.
 					</p>
 					<div class="d-flex flex-wrap" style="gap: 20px">
@@ -720,6 +745,12 @@ $page_title = 'Home';
 					</div>
 					<h3>Education</h3>
 					<p>Establishing and managing madrasas with an integrated syllabus of religious and general education to produce distinguished Islamic scholars and contemporary da'wah practitioners.</p>
+					<div class="text-center mt-5" data-aos="fade-up">
+						<a href="about.php" class="see-all-btn">
+							See More
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
 				</div>
 			</div>
 			<div class="col-lg-4 col-md-6 mb-4">
@@ -729,6 +760,12 @@ $page_title = 'Home';
 					</div>
 					<h3>Service</h3>
 					<p>Empowering the poor, providing relief for flood victims, installing water purification plants, tree plantation, distributing winter clothing, Iftar meals, and organizing inclusive Qurbani programs.</p>
+					<div class="text-center mt-5" data-aos="fade-up">
+						<a href="about.php" class="see-all-btn">
+							See More
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
 				</div>
 			</div>
 			<div class="col-lg-4 col-md-6 mb-4">
@@ -738,15 +775,16 @@ $page_title = 'Home';
 					</div>
 					<h3>Dawah</h3>
 					<p>Online-based da'wah, writing and publishing Islamic books, conducting religious study circles, and organizing training programs and workshops for Islamic outreach.</p>
+					<div class="text-center mt-5" data-aos="fade-up">
+						<a href="about.php" class="see-all-btn">
+							See More
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
-		<div class="text-center mt-5" data-aos="fade-up">
-			<a href="about.php" class="see-all-btn">
-				Learn More About Us
-				<i class="fa fa-arrow-right"></i>
-			</a>
-		</div>
+
 	</div>
 </div>
 

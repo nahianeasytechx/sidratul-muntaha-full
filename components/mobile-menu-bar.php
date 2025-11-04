@@ -2,7 +2,7 @@
 <div class="mobile-menu-overlay"></div>
 
 <!-- Mobile Menu -->
-<div class="menu menu_mm modern_mobile_menu">
+<div class="menu menu_mm modern_mobile_menu overflow-y-scroll">
 	<div class="menu_header d-flex align-items-center justify-content-between">
 		<a href="index.php" class="d-flex align-items-center logo_container">
 			<img src="images/sr-logo.png" alt="Sidratul Muntaha" class="menu_logo">

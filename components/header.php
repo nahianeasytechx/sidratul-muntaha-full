@@ -112,7 +112,20 @@ require 'database/dbConnection.php';
 		<link rel="stylesheet" type="text/css" href="styles/news.css">
 		<link rel="stylesheet" type="text/css" href="styles/news_responsive.css">
 	<?php
-	} else if ($current_page == 'donation-fund.php') {
+	} 
+	 else if ($current_page == 'scholarship.php') {
+	?>
+
+		<title>Donate Now – Sidratul Muntaha Foundation</title>
+		<meta name="description" content="Donate to Sidratul Muntaha Foundation and make a lasting impact through charity, education, healthcare, and community welfare programs.">
+		
+		<link rel="stylesheet" type="text/css" href="styles/news.css">
+		<link rel="stylesheet" type="text/css" href="styles/news_responsive.css">
+	<?php
+	} 
+	
+	
+	else if ($current_page == 'donation-fund.php') {
 	?>
 		<title>Sidratul Muntaha Foundation</title>
 		<meta name="description" content="Give from the heart. Sidratul Muntaha Foundation uses your donations to support the poor, fund education, and spread kindness through service.">
