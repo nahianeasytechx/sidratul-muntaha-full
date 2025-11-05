@@ -2133,8 +2133,6 @@ top: 50%;
              height: 89vh;
          }
 
-         .home .slide {}
-
          /* Featured Banner */
          .featured_background_wrapper {
              min-height: 300px;
