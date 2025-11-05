@@ -28,7 +28,7 @@ $page_title = 'Dashboard'; // Set the page title
             <i class="fa-solid fa-hand-holding-dollar"></i>
           </div>
           <div>
-            <p class="stat-card-label">Donations Ammount</p>
+            <p class="stat-card-label">Donations Amount</p>
             <h3 class="stat-card-value">20000</h3>
           </div>
         </div>
@@ -97,7 +97,7 @@ $page_title = 'Dashboard'; // Set the page title
             <i class="fa-solid fa-arrows-rotate"></i>
           </div>
           <div>
-            <p class="stat-card-label">Upcoming Activities</p>
+            <p class="stat-card-label">Recent Activities</p>
             <h3 class="stat-card-value">12</h3>
           </div>
         </div>
@@ -134,170 +134,59 @@ $page_title = 'Dashboard'; // Set the page title
         </div>
         <p class="quick-action-title">Add Activity</p>
       </button>
-      <!-- Add Activity -->
+      
+      <!-- Add Donation -->
       <button class="quick-action-card" onclick="window.location.href='../donate.php'">
         <div class="quick-action-icon add-activity">
           <i class="fa-solid fa-hand-holding-medical"></i>
         </div>
         <p class="quick-action-title">Add Donation</p>
       </button>
-
-
     </div>
+
     <!-- Bottom Tables Section -->
     <div class="container-fluid mt-5">
       <div class="row g-4 mt-4">
-
-        <!-- Latest Activities Table -->
-        <div class="col-lg-4 col-md-6">
-          <div class="table-card shadow-sm">
-            <div class="table-header">
-              <h5><i class="fa-solid fa-calendar-check me-2"></i>Latest Activities</h5>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>SL</th>
-                    <th>Title</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Tree Plantation</td>
-                    <td>Oct 08, 2025</td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>Blood Donation Camp</td>
-                    <td>Oct 06, 2025</td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>Charity Run</td>
-                    <td>Oct 05, 2025</td>
-                  </tr>
-                  <tr>
-                    <td>4</td>
-                    <td>Community Cleaning</td>
-                    <td>Oct 03, 2025</td>
-                  </tr>
-                  <tr>
-                    <td>5</td>
-                    <td>Education Drive</td>
-                    <td>Oct 01, 2025</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="d-flex justify-content-end bg-white">
-              <a href="all-activities.php" class="table-btn">See All</a>
-            </div>
-          </div>
-        </div>
-
         <!-- Recent Donations Table -->
-        <div class="col-lg-4 col-md-6">
-          <div class="table-card shadow-sm">
-            <div class="table-header">
-              <h5><i class="fa-solid fa-hand-holding-heart me-2"></i>Recent Donations</h5>
+        <div class="col-12">
+          <div class="card p-3 shadow-sm">
+            <div class="card-body">
+              <h1 class="chart-title mb-1">Recent Donations</h1>
+              <p class="text-muted">List of latest donations (Last 3 entries)</p><br>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>SL</th>
+                      <th>Donor Name</th>
+                      <th>Phone</th>
+                      <th>Category</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Transaction ID</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="donationTableBody">
+                    <!-- Data will be populated by JavaScript -->
+                    <tr>
+                      <td colspan="8" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Loading...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>SL</th>
-                    <th>Donor</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Rahim Uddin</td>
-                    <td>$100</td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>Mahmud Hasan</td>
-                    <td>$200</td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>Jannat Ara</td>
-                    <td>$75</td>
-                  </tr>
-                  <tr>
-                    <td>4</td>
-                    <td>Rafi Khan</td>
-                    <td>$120</td>
-                  </tr>
-                  <tr>
-                    <td>5</td>
-                    <td>Sadia Islam</td>
-                    <td>$90</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="d-flex justify-content-end bg-white">
-              <a href="donation-list.php" class="table-btn">See All</a>
+            <div class="card-footer bg-transparent">
+              <a href="donation-list.php" class="btn btn-dark w-100">
+                <i class="fa-solid fa-list me-2"></i>See All Donations
+              </a>
             </div>
           </div>
         </div>
-
-        <!-- Recent Notices Table -->
-        <div class="col-lg-4 col-md-6">
-          <div class="table-card shadow-sm">
-            <div class="table-header">
-              <h5><i class="fa-solid fa-flag me-2"></i>Recent Notices</h5>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>SL</th>
-                    <th>Title</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Office Closed Notice</td>
-                    <td><span class="px-3 rounded-1  badge-text  text-white bg-success">Active</span></td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>Donation Drive</td>
-                    <td><span class="px-3 rounded-1 badge-text  text-white bg-danger">Expired</span></td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>Website Maintenance</td>
-                    <td><span class="px-3 rounded-1 badge-text   text-white bg-danger">Expired</span></td>
-                  </tr>
-                  <tr>
-                    <td>4</td>
-                    <td>Team Meeting</td>
-                    <td><span class="px-3 rounded-1  badge-text  text-white bg-success">Active</span></td>
-                  </tr>
-                  <tr>
-                    <td>5</td>
-                    <td>Blood Camp Alert</td>
-                    <td><span class=" px-3 rounded-1 badge-text  text-white bg-success ">Active</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="d-flex justify-content-end bg-white">
-              <a href="all-notice.php" class="table-btn">See All</a>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
@@ -305,5 +194,9 @@ $page_title = 'Dashboard'; // Set the page title
 <!--------------------------->
 <!-- END MAIN AREA -->
 <!--------------------------->
+
+<!-- Add these scripts before footer -->
+<script src="js/donationData.js"></script>
+<script src="js/dashboardDonations.js"></script>
 
 <?php require './components/footer.php'; ?>

@@ -4,6 +4,12 @@ $page_title = 'About'; // Set the page title
 ?>
 <?php require './components/header.php'; ?>
 <style>
+.about {
+padding-top: 0;
+}
+.tabs-rounded {
+    margin-bottom: 50px;
+}
 	@media(max-width:575px) {
 		.parallax-window {
 			min-height: 290px;

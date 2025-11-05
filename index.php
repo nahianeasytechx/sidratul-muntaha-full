@@ -54,23 +54,46 @@ $page_title = 'Home';
 		padding: 0 30px;
 		padding-left: 20px;
 		text-align: center;
-		animation: fadeInUp 1s ease;
+		animation: fadeLeft 1s ease;
 
 
 	}
+	.hero-content .hero-title{
+		animation: fadeLeft 0.5s ease;
+	}
+	.hero-content .hero-subtitle{
+		animation: fadeLeft 1s ease;
+	}
+	.hero-content .hero-buttons{
+		animation: fadeLeft 1.5s ease;
+	}
 
-	@keyframes fadeInUp {
+	@keyframes fadeLeft {
 		from {
 			opacity: 0;
-			transform: translateY(40px);
+			transform: translateX(-50px);
 		}
 
 		to {
 			opacity: 1;
-			transform: translateY(0);
+			transform: translateX(0);
 		}
 	}
 
+	@media(max-width:575px)
+{
+		@keyframes fadeLeft {
+		from {
+			opacity: 0;
+			transform: translateX(-20px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+}
 	.hero-badge {
 		display: inline-block;
 		padding: 8px 24px;
@@ -633,7 +656,7 @@ $page_title = 'Home';
 		<div class="hero-slide">
 			<div class="hero-bg" style="background-image: url(images/Banner3.jpg);"></div>
 			<div class="hero-overlay"></div>
-			<div class="hero-content">
+			<div class="hero-content" >
 				<!-- <div class="hero-badge">BUILDING FUTURES</div> -->
 				<h1 class="hero-title">Mosque Project</h1>
 				<p class="hero-subtitle">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare.</p>
@@ -651,10 +674,10 @@ $page_title = 'Home';
 		</div>
 
 		<!-- Slide 2 -->
-		<div class="hero-slide">
+		<div class="hero-slide" >
 			<div class="hero-bg" style="background-image: url(images/Bannertwo.jpg);"></div>
 			<div class="hero-overlay"></div>
-			<div class="hero-content">
+			<div class="hero-content" >
 				<!-- <div class="hero-badge">EMPOWERING MINDS</div> -->
 				<h1 class="hero-title">School Project</h1>
 				<p class="hero-subtitle">Establishing educational excellence through integrated religious and general education, creating the next generation of Islamic scholars and leaders.</p>
@@ -675,7 +698,7 @@ $page_title = 'Home';
 		<div class="hero-slide">
 			<div class="hero-bg" style="background-image: url(images/bannerfour.jpg);"></div>
 			<div class="hero-overlay"></div>
-			<div class="hero-content">
+			<div class="hero-content" >
 				<!-- <div class="hero-badge">HEALING HEARTS</div> -->
 				<h1 class="hero-title">Hospital Project</h1>
 				<p class="hero-subtitle">Providing compassionate healthcare and medical support to those in need, ensuring wellness and dignity for every member of our community.</p>

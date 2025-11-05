@@ -1,4 +1,4 @@
-<div class="my-5 px-3">
+<div class="mb-5 px-3">
     <div
         data-aos="fade-up"
         data-aos-delay="200"

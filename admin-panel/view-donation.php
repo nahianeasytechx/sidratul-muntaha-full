@@ -30,7 +30,8 @@ $previous_donations = [
 <!--------------------------->
 <!-- START MAIN AREA -->
 <!--------------------------->
-<div class="content-wrapper">
+<div class="view-donation">
+    <div class="content-wrapper">
     <div class="view-donation-wrapper">
         <!-- Back Button -->
         <a href="donation-list.php" class="back-button">
@@ -202,6 +203,7 @@ $previous_donations = [
             </button>
         </div>
     </div>
+</div>
 </div>
 <!--------------------------->
 <!-- END MAIN AREA -->

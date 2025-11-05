@@ -29,9 +29,8 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
 
         <!-- Page Header -->
         <div class="page-header">
-            <div class="w-100 d-flex flex-wrap justify-content-between gap-3">
+            <div class="w-100 d-flex align-items-start  justify-content-between gap-3">
                 <div class="d-flex gap-3">
-                    <div class="icon-box"><i class="fa-solid fa-hand-holding-dollar"></i></div>
                     <div>
                         <h1>Donation List</h1>
                         <nav aria-label="breadcrumb">

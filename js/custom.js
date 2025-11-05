@@ -157,7 +157,7 @@ $(document).ready(function()
 				items:1,
 				loop:true,
 				autoplay:true,
-				autoplayTimeout:8000,
+				autoplayTimeout:3000,
 				dots:false,
 				nav:false,
 				smartSpeed:1200

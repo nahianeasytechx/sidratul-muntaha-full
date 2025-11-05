@@ -129,7 +129,7 @@ $admin_username = $_SESSION['admin'] ?? 'Admin';
       <!-- partial:partials/_navbar.php -->
       <?php include('navbar.php'); ?>
       <!-- partial -->
-      <div class="container-fluid  page-body-wrapper">
+      <div class="  page-body-wrapper">
         
         <!-- partial:partials/_sidebar.php -->
         <?php include('sidebar.php'); ?>

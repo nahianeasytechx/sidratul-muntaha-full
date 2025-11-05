@@ -7,7 +7,12 @@ $page_title = 'Activities'; // Set the page title
 <!--=======================================================================-->
 <!------------------------ Your Content Start From Here --------------------->
 <!--=======================================================================-->
+<style>
+	.course{
+		margin-bottom: 30px;
+	}
 
+</style>
     <!-- Home banner-->
 	<div class="home">
 		<!-- Background image artist https://unsplash.com/@thepootphotographer -->
@@ -39,18 +44,10 @@ $page_title = 'Activities'; // Set the page title
 
 
 <div class="container">
-			<div class="row courses_row" id="activitiesGrid"></div>
+			<div class="row courses_row" id="activitiesGrid" data-aos="fade-up"></div>
 			<div class="row">
 				<div class="col">
-					<div class="courses_paginations">
-						<ul>
-							<li class="active"><a href="#">01</a></li>
-							<li><a href="#">02</a></li>
-							<li><a href="#">03</a></li>
-							<li><a href="#">04</a></li>
-							<li><a href="#">05</a></li>
-						</ul>
-					</div>
+
 				</div>
 			</div>
 </div>

@@ -12,6 +12,22 @@ $page_title = 'Donate';
         border: 1px solid #ccc;
 
     }
+    .donate-page{
+        margin: 50px;
+    }
+.section-title {
+margin-top: 0;
+    }
+
+    .section-description {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #555;}
+ @media (max-width: 575px) {
+        .donate-page{
+            margin: 70px;
+        }
+    }
 </style>
 
 <!--=======================================================================-->
@@ -108,14 +124,22 @@ $page_title = 'Donate';
                                 <label for="yourName" class="form-label">Your Name</label>
                                 <input type="text" class="form-control" id="yourName" name="name" placeholder="Enter your full name">
                             </div>
+                                                        <!-- Phone  -->
+                            <div class="mb-3">
+                                <label for="contact" class="form-label">
+                                    Phone
+                                    <i class="bi bi-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="We'll send the receipt to this contact"></i>
+                                </label>
+                                <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter phone number ">
+                            </div>
                             <!-- Your Mail -->
                             <div class="mb-3">
-                                <label for="yourmail" class="form-label">Your Mail</label>
+                                <label for="yourmail" class="form-label">Your Email</label>
                                 <input type="email" class="form-control" id="yourmail" name="name" placeholder="Enter your email">
                             </div>
                             <div class="mb-3">
                                 <label for="address" class="form-label">Your Address</label>
-                                <input type="text" class="form-control" id="youraddress" name="youraddress" placeholder="Enter your adderess">
+                                <textarea type="text" class="form-control" id="youraddress" name="youraddress" placeholder="Enter your adderess"></textarea>
                             </div>
                             <!-- Category -->
                             <div class="mb-3">
@@ -130,22 +154,14 @@ $page_title = 'Donate';
                                     <option value="zakat">Zakatul Sadaka</option>
                                     <option value="disaster-relief">Disaster Relief</option>
                                     <option value="education-support">Education Support</option>
-                                    <option value="food-financial">Food and Financial Aid Support</option>
-                                    <option value="orphan-homeless">For Orphan and Homeless</option>
+                                    <option value="orphan-homeless">Food & Financial Aid Support  For Orphan & Homeless</option>
                                     <option value="disaster-relief">Disaster Relief</option>
-                                    <option value="tree-plantation">Tree Plantation</option>
+                                    <option value="tree-plantation">Planted Tree</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>
 
-                            <!-- Phone  -->
-                            <div class="mb-3">
-                                <label for="contact" class="form-label">
-                                    Phone
-                                    <i class="bi bi-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="We'll send the receipt to this contact"></i>
-                                </label>
-                                <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter phone number ">
-                            </div>
+
 
                             <!-- Donate on behalf of -->
                             <div class="mb-3">
