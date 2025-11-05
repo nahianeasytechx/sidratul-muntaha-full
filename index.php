@@ -3,724 +3,1046 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Home';
 ?>
 <?php require './components/header.php'; ?>
+
 <style>
-	/* Modern Hero Slider Styles */
-	.modern-hero {
-		position: relative;
-		height: 100vh;
-		min-height: 600px;
-		overflow: hidden;
+	/* ==========================================================================
+   BASE STYLES (Desktop First - Default)
+   ========================================================================== */
+
+/* New Slider Styles */
+.modern-hero {
+	position: relative;
+	min-height: 100vh;
+	overflow: hidden;
+}
+
+.slider-container {
+	width: 100%;
+	height: 100vh;
+	min-height: 600px;
+	position: relative;
+	overflow: hidden;
+}
+
+.slider {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.slide {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	z-index: 1;
+	transition: opacity 0.5s ease;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.slide.active {
+	opacity: 1;
+	z-index: 2;
+	pointer-events: auto;
+}
+
+.slide img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 8s ease-in-out;
+}
+
+.slide.active img {
+	transform: scale(1.1);
+}
+
+.slide-content {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	padding: 60px 30px;
+	background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 100%);
+	color: white;
+	opacity: 0;
+	transition: opacity 0.7s ease;
+}
+
+.slide.active .slide-content {
+	opacity: 1;
+	transition-delay: 0.3s;
+}
+
+/* Slide title and description */
+.slide-title {
+	transform: translateX(-50px);
+	opacity: 0;
+	transition: transform 1s ease, opacity 1s ease;
+	transition-delay: 0.4s;
+	font-size: 64px;
+	font-weight: 800;
+	margin-bottom: 24px;
+	color: #fff;
+	text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	line-height: 1.2;
+}
+
+.slide-description {
+	transform: translateX(50px);
+	opacity: 0;
+	transition: transform 1s ease, opacity 1s ease;
+	transition-delay: 0.6s;
+	font-size: 20px;
+	color: rgba(255, 255, 255, 0.95);
+	margin-bottom: 40px;
+	line-height: 1.7;
+	max-width: 700px;
+}
+
+.slide-buttons {
+	transform: translateY(50px);
+	opacity: 0;
+	transition: transform 1s ease, opacity 1s ease;
+	transition-delay: 0.8s;
+	display: flex;
+	gap: 20px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.slide.active .slide-title,
+.slide.active .slide-description,
+.slide.active .slide-buttons {
+	transform: translate(0, 0);
+	opacity: 1;
+}
+
+button:focus {
+	outline: none;
+	outline: 0px auto -webkit-focus-ring-color;
+}
+
+.hero-btn {
+	padding: 16px 40px;
+	font-size: 16px;
+	font-weight: 700;
+	border-radius: 12px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	position: relative;
+	overflow: hidden;
+}
+
+.hero-btn-primary {
+	background: #008E48;
+	color: #fff;
+	box-shadow: 0 8px 24px rgba(0, 142, 72, 0.4);
+}
+
+.hero-btn-primary:hover {
+	background: #00a854;
+	transform: translateY(-3px);
+	box-shadow: 0 12px 32px rgba(0, 142, 72, 0.5);
+	color: #fff;
+}
+
+.hero-btn-secondary {
+	background: rgba(255, 255, 255, 0.15);
+	backdrop-filter: blur(10px);
+	color: #fff;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.hero-btn-secondary:hover {
+	background: rgba(255, 255, 255, 0.25);
+	transform: translateY(-3px);
+	color: #fff;
+}
+
+/* Navigation arrows */
+.navigation {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 20;
+	pointer-events: none;
+}
+
+.nav-btn {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	background-color: #008E48;
+	color: #fff;
+	border: none;
+	outline: none;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.5rem;
+	transition: all 0.3s ease;
+	pointer-events: auto;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	z-index: 30;
+}
+
+.nav-btn.prev {
+	left: 20px;
+}
+
+.nav-btn.next {
+	right: 20px;
+}
+
+/* Dots indicators */
+.dots-container {
+	display: flex;
+	justify-content: center;
+	position: absolute;
+	bottom: 40px;
+	width: 100%;
+	z-index: 40;
+}
+
+.dot {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	margin: 0 5px;
+	background-color: rgba(255, 255, 255, 0.5);
+	cursor: pointer;
+	transition: all 0.3s ease;
+	display: none;
+}
+
+.dot.active {
+	width: 40px;
+	border-radius: 6px;
+	background-color: white;
+}
+
+/* Animation keyframes for transitions */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
 	}
-
-	.hero-slide {
-		position: relative;
-		height: 100vh;
-		min-height: 600px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-
-	}
-
-	.hero-bg {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-size: cover;
-		background-position: center;
-		transition: transform 0.6s ease;
-	}
-
-	.hero-slide:hover .hero-bg {
-		transform: scale(1.05);
-	}
-
-	.hero-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.03) 100%);
-		z-index: 1;
-	}
-
-	.hero-content {
-		position: relative;
-		z-index: 2;
-		max-width: 900px;
-		padding: 0 30px;
-		padding-left: 20px;
-		text-align: center;
-		animation: fadeLeft 1s ease;
-
-
-	}
-	.hero-content .hero-title{
-		animation: fadeLeft 0.5s ease;
-	}
-	.hero-content .hero-subtitle{
-		animation: fadeLeft 1s ease;
-	}
-	.hero-content .hero-buttons{
-		animation: fadeLeft 1.5s ease;
-	}
-
-	@keyframes fadeLeft {
-		from {
-			opacity: 0;
-			transform: translateX(-50px);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateX(0);
-		}
-	}
-
-	@media(max-width:575px)
-{
-		@keyframes fadeLeft {
-		from {
-			opacity: 0;
-			transform: translateX(-20px);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateX(0);
-		}
+	to {
+		opacity: 1;
 	}
 }
-	.hero-badge {
-		display: inline-block;
-		padding: 8px 24px;
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(10px);
-		border-radius: 50px;
-		color: #fff;
-		font-size: 14px;
-		font-weight: 600;
-		letter-spacing: 1px;
-		margin-bottom: 30px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
+
+@keyframes slideInRight {
+	from {
+		transform: translateX(50px);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes slideInLeft {
+	from {
+		transform: translateX(-50px);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes zoomIn {
+	from {
+		transform: scale(1.2);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+@keyframes slideInUp {
+	from {
+		transform: translateY(50px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+/* Transition effect classes */
+.transition-fade .slide-content {
+	animation: fadeIn 1s forwards;
+}
+
+.transition-slideRight .slide-content {
+	animation: slideInRight 1s forwards;
+}
+
+.transition-slideLeft .slide-content {
+	animation: slideInLeft 1s forwards;
+}
+
+.transition-zoom .slide-content {
+	animation: zoomIn 1s forwards;
+}
+
+.transition-slideUp .slide-content {
+	animation: slideInUp 1s forwards;
+}
+
+/* Modern Featured Section */
+.modern-featured {
+	padding: 50px 0;
+	background: rgb(248, 250, 249);
+}
+
+.unified-card {
+	background: #fff;
+	border-radius: 24px;
+	overflow: hidden;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+	transition: all 0.4s ease;
+}
+
+.unified-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.featured-left {
+	background: linear-gradient(135deg, #0F2920 0%, #00a854 100%);
+	min-height: 400px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	border-top-left-radius: 24px;
+	border-bottom-left-radius: 24px;
+}
+
+.featured-right {
+	background: #84848426;
+	min-height: 400px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid #f9f9f9;
+}
+
+.social-icons {
+	display: flex;
+	gap: 15px;
+}
+
+.social-icon {
+	width: 45px;
+	height: 45px;
+	border-radius: 50%;
+	background: #00a854;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	font-size: 18px;
+	transition: all 0.3s ease;
+	text-decoration: none;
+}
+
+.social-icon:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 8px 20px rgba(0, 168, 84, 0.4);
+}
+
+/* Mission Cards */
+.mission-section {
+	padding: 100px 0;
+	background: #fff;
+}
+
+.section-header {
+	text-align: center;
+	margin-bottom: 70px;
+}
+
+.section-badge {
+	display: inline-block;
+	padding: 8px 20px;
+	background: rgba(0, 142, 72, 0.1);
+	color: #008E48;
+	border-radius: 50px;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 1px;
+	margin-bottom: 20px;
+}
+
+.section-title {
+	font-size: 48px;
+	font-weight: 800;
+	color: #0F2920;
+	margin-bottom: 20px;
+}
+
+.section-subtitle {
+	font-size: 18px;
+	color: #6c757d;
+	max-width: 700px;
+	margin: 0 auto;
+}
+
+.mission-card {
+	background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+	border-radius: 20px;
+	padding: 50px 35px;
+	text-align: center;
+	transition: all 0.4s ease;
+	border: 2px solid transparent;
+	height: 100%;
+}
+
+.mission-card:hover {
+	background: #fff;
+	border-color: #008E48;
+	transform: translateY(-10px);
+	box-shadow: 0 20px 50px rgba(0, 142, 72, 0.15);
+}
+
+.mission-icon {
+	width: 80px;
+	height: 80px;
+	border-radius: 20px;
+	background: linear-gradient(135deg, #008E48 0%, #00a854 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto 30px;
+	font-size: 36px;
+	color: #fff;
+	transition: all 0.4s ease;
+}
+
+.mission-card:hover .mission-icon {
+	transform: rotateY(360deg);
+}
+
+.mission-card h3 {
+	font-size: 28px;
+	font-weight: 700;
+	color: #0F2920;
+	margin-bottom: 20px;
+}
+
+.mission-card p {
+	color: #6c757d;
+	line-height: 1.8;
+	font-size: 16px;
+}
+
+/* Activities Slider */
+.activities-section {
+	padding: 100px 0;
+	background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.course {
+	background: #fff;
+	border-radius: 20px;
+	overflow: hidden;
+	transition: all 0.4s ease;
+}
+
+.course:hover {
+	transform: translateY(-10px);
+}
+
+.course_image {
+	position: relative;
+	overflow: hidden;
+	height: 250px;
+}
+
+.course_image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.6s ease;
+}
+
+.course:hover .course_image img {
+	transform: scale(1.15);
+}
+
+.course_body {
+	padding: 30px;
+}
+
+.course_tag {
+	display: inline-block;
+	padding: 6px 16px;
+	background: rgba(0, 142, 72, 0.1);
+	color: #008E48;
+	border-radius: 20px;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.course_title h3 {
+	font-size: 24px;
+	font-weight: 700;
+	color: #0F2920;
+	margin: 20px 0 15px;
+}
+
+.course_title h3 a {
+	color: #0F2920;
+	text-decoration: none;
+	transition: color 0.3s ease;
+	font-size: 24px;
+	font-weight: 800;
+}
+
+.course_title h3 a:hover {
+	color: #008E48;
+}
+
+.course_text {
+	color: #6c757d;
+	line-height: 1.7;
+	font-size: 15px;
+}
+
+/* Projects Section */
+.projects-section {
+	padding: 50px 0;
+	background: #fff;
+}
+
+.project-card {
+	background: #fff;
+	border-radius: 20px;
+	overflow: hidden;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+	transition: all 0.4s ease;
+	margin-bottom: 30px;
+}
+
+.project-card:hover {
+	transform: translateY(-10px);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+.project-img {
+	position: relative;
+	height: 280px;
+	overflow: hidden;
+}
+
+.project-img img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.6s ease;
+}
+
+.project-card:hover .project-img img {
+	transform: scale(1.1);
+}
+
+.project-body {
+	padding: 35px;
+}
+
+.project-title {
+	font-size: 26px;
+	font-weight: 700;
+	color: #0F2920;
+	margin-bottom: 15px;
+}
+
+.project-text {
+	color: #6c757d;
+	line-height: 1.7;
+	margin-bottom: 25px;
+	font-size: 15px;
+}
+
+.project-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 32px;
+	background: linear-gradient(135deg, #008E48 0%, #00a854 100%);
+	color: #fff;
+	text-decoration: none;
+	border-radius: 12px;
+	font-weight: 700;
+	transition: all 0.3s ease;
+}
+
+.project-btn:hover {
+	transform: translateX(5px);
+	box-shadow: 0 8px 20px rgba(0, 142, 72, 0.3);
+	color: #fff;
+}
+
+.see-all-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px 48px;
+	background: transparent;
+	color: #008E48;
+	border: 2px solid #008E48;
+	text-decoration: none;
+	border-radius: 12px;
+	font-weight: 700;
+	font-size: 16px;
+	transition: all 0.3s ease;
+}
+
+.see-all-btn:hover {
+	background: #008E48;
+	color: #fff;
+	transform: translateY(-3px);
+	box-shadow: 0 8px 20px rgba(0, 142, 72, 0.3);
+}
+
+/* Associates Section */
+.associates-section {
+	padding: 80px 0;
+	background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.associates-grid {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 50px;
+	flex-wrap: wrap;
+}
+
+.associate-logo {
+	height: 80px;
+	width: auto;
+	opacity: 0.7;
+	transition: all 0.3s ease;
+	filter: grayscale(100%);
+}
+
+.associate-logo:hover {
+	opacity: 1;
+	transform: scale(1.1);
+	filter: grayscale(0%);
+}
+
+/* Footer Styles */
+.footer {
+	width: 100%;
+	background: #0F2920;
+	color: #fff;
+	padding-top: 60px;
+	padding-bottom: 50px;
+}
+
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES - Bootstrap Breakpoint Order
+   ========================================================================== */
+
+/* 
+ * Bootstrap Breakpoints Reference:
+ * xs: <576px (Extra small devices - phones)
+ * sm: ≥576px (Small devices - landscape phones)
+ * md: ≥768px (Medium devices - tablets)
+ * lg: ≥992px (Large devices - desktops)
+ * xl: ≥1200px (Extra large devices - large desktops)
+ * xxl: ≥1400px (Extra extra large devices)
+ */
+
+/* XX-Large devices (larger desktops, 1400px and up) */
+@media (max-width: 1400px) {
+	/* Add styles for extra large screens if needed */
+}
+
+/* X-Large devices (large desktops, 1200px and up) */
+@media (max-width: 1200px) {
+	.slide-title {
+		font-size: 45px;
+	}
+}
+
+/* Large devices (desktops, less than 1200px) */
+@media (max-width: 1199.98px) {
+	/* Add styles for large tablets/small desktops if needed */
+}
+
+/* Medium devices (tablets, less than 992px) */
+@media (max-width: 991.98px) {
+	.modern-hero {
+		min-height: 50vh;
+		margin-top: 61px;
 	}
 
-	.hero-title {
-		font-size: 64px;
-		font-weight: 800;
-		color: #fff;
-		margin-bottom: 24px;
-		line-height: 1.2;
-		text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-	}
-
-	.hero-subtitle {
-		font-size: 20px;
-		color: rgba(255, 255, 255, 0.95);
-		margin-bottom: 40px;
-		line-height: 1.7;
-		max-width: 700px;
-		margin-left: auto;
-		margin-right: auto;
-	}
-
-	.hero-buttons {
-		display: flex;
-		gap: 20px;
-		justify-content: start;
-		flex-wrap: wrap;
-		justify-content: center;
-	}
-
-	.hero-btn {
-		padding: 16px 40px;
-		font-size: 16px;
-		font-weight: 700;
-		border-radius: 12px;
-		text-decoration: none;
-		transition: all 0.3s ease;
-		display: inline-flex;
-		align-items: center;
-		gap: 10px;
-		position: relative;
-		overflow: hidden;
-	}
-
-	.hero-btn-primary {
-		background: #008E48;
-		color: #fff;
-		box-shadow: 0 8px 24px rgba(0, 142, 72, 0.4);
-	}
-
-	.hero-btn-primary:hover {
-		background: #00a854;
-		transform: translateY(-3px);
-		box-shadow: 0 12px 32px rgba(0, 142, 72, 0.5);
-		color: #fff;
-	}
-
-	.hero-btn-secondary {
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(10px);
-		color: #fff;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-	}
-
-	.hero-btn-secondary:hover {
-		background: rgba(255, 255, 255, 0.25);
-		transform: translateY(-3px);
-		color: #fff;
-	}
-
-	.hero-slider-dots {
-		position: absolute;
-		bottom: 40px;
-		left: 50%;
-		transform: translateX(-50%);
-		z-index: 3;
-		display: flex;
-		gap: 12px;
-	}
-
-	.hero-dot {
-		width: 12px;
-		height: 12px;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.4);
-		cursor: pointer;
-		transition: all 0.3s ease;
-	}
-
-	.hero-dot.active {
-		width: 40px;
-		border-radius: 6px;
-		background: #fff;
-	}
-
-	/* Modern Featured Section */
-	.modern-featured {
-		padding: 50px 0;
-		background: rgb(248, 250, 249);
-	}
-
-	.unified-card {
-		background: #fff;
-		border-radius: 24px;
-		overflow: hidden;
-		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-		transition: all 0.4s ease;
-	}
-
-	.unified-card:hover {
-		transform: translateY(-5px);
-		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-	}
-
-	.featured-left {
-		background: linear-gradient(135deg, #0F2920 0%, #00a854 100%);
+	.slider-container {
+		height: 60vh;
 		min-height: 400px;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		border-top-left-radius: 24px;
-		border-bottom-left-radius: 24px;
 	}
 
-	.featured-right {
-		background: #84848426;
-		min-height: 400px;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		border: 2px solid #f9f9f9
+	.slider {
+		height: 350px;
 	}
-
-	.social-icons {
-		display: flex;
-		gap: 15px;
+	.slide-title {
+		font-size: 42px;
 	}
-
-	.social-icon {
-		width: 45px;
-		height: 45px;
-		border-radius: 50%;
-		background: #00a854;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: #fff;
-		font-size: 18px;
-		transition: all 0.3s ease;
-		text-decoration: none;
-	}
-
-	.social-icon:hover {
-		transform: translateY(-5px);
-		box-shadow: 0 8px 20px rgba(0, 168, 84, 0.4);
-	}
-
-
-	@media screen and (min-width: 1199px) {}
-
-	/* Responsive */
-	@media (max-width: 991px) {
-
-
-		.featured-left,
-		.featured-right {
-			border-radius: 0;
-			min-height: auto;
-			padding: 40px 20px !important;
-		}
-
-		.unified-card {
-			flex-direction: column;
-		}
-	}
-
-	/* Mission Cards */
-	.mission-section {
-		padding: 100px 0;
-		background: #fff;
-	}
-
-	.section-header {
-		text-align: center;
-		margin-bottom: 70px;
-	}
-
-	.section-badge {
-		display: inline-block;
-		padding: 8px 20px;
-		background: rgba(0, 142, 72, 0.1);
-		color: #008E48;
-		border-radius: 50px;
-		font-size: 14px;
-		font-weight: 700;
-		letter-spacing: 1px;
-		margin-bottom: 20px;
+	.nav-btn {
+		display: none;
 	}
 
 	.section-title {
-		font-size: 48px;
-		font-weight: 800;
-		color: #0F2920;
-		margin-bottom: 20px;
-	}
-
-	.section-subtitle {
-		font-size: 18px;
-		color: #6c757d;
-		max-width: 700px;
-		margin: 0 auto;
-	}
-
-	.mission-card {
-		background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-		border-radius: 20px;
-		padding: 50px 35px;
-		text-align: center;
-		transition: all 0.4s ease;
-		border: 2px solid transparent;
-		height: 100%;
-	}
-
-	.mission-card:hover {
-		background: #fff;
-		border-color: #008E48;
-		transform: translateY(-10px);
-		box-shadow: 0 20px 50px rgba(0, 142, 72, 0.15);
-	}
-
-	.mission-icon {
-		width: 80px;
-		height: 80px;
-		border-radius: 20px;
-		background: linear-gradient(135deg, #008E48 0%, #00a854 100%);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin: 0 auto 30px;
 		font-size: 36px;
-		color: #fff;
-		transition: all 0.4s ease;
 	}
 
-	.mission-card:hover .mission-icon {
-		transform: rotateY(360deg);
-	}
-
-	.mission-card h3 {
-		font-size: 28px;
-		font-weight: 700;
-		color: #0F2920;
-		margin-bottom: 20px;
-	}
-
-	.mission-card p {
-		color: #6c757d;
-		line-height: 1.8;
-		font-size: 16px;
-	}
-
-	/* Activities Slider - Keep Original */
-	.activities-section {
-		padding: 100px 0;
-		background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
-	}
-
-	.course {
-		background: #fff;
-		border-radius: 20px;
-		overflow: hidden;
-		/* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); */
-		transition: all 0.4s ease;
-	}
-
-	.course:hover {
-		transform: translateY(-10px);
-		/* box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12); */
-	}
-
-	.course_image {
-		position: relative;
-		overflow: hidden;
-		height: 250px;
-	}
-
-	.course_image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transition: transform 0.6s ease;
-	}
-
-	.course:hover .course_image img {
-		transform: scale(1.15);
-	}
-
-	.course_body {
-		padding: 30px;
-	}
-
-	.course_tag {
-		display: inline-block;
-		padding: 6px 16px;
-		background: rgba(0, 142, 72, 0.1);
-		color: #008E48;
-		border-radius: 20px;
-		font-size: 13px;
-		font-weight: 700;
-	}
-
-	.course_title h3 {
-		font-size: 24px;
-		font-weight: 700;
-		color: #0F2920;
-		margin: 20px 0 15px;
-	}
-
-	.course_title h3 a {
-		color: #0F2920;
-		text-decoration: none;
-		transition: color 0.3s ease;
-		font-size: 24px;
-		font-weight: 800;
-	}
-
-	.course_title h3 a:hover {
-		color: #008E48;
-	}
-
-	.course_text {
-		color: #6c757d;
-		line-height: 1.7;
-		font-size: 15px;
-	}
-
-	/* Projects Section */
-	.projects-section {
-		padding: 50px 0;
-		background: #fff;
-	}
-
-	.project-card {
-		background: #fff;
-		border-radius: 20px;
-		overflow: hidden;
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-		transition: all 0.4s ease;
-		margin-bottom: 30px;
-	}
-
-	.project-card:hover {
-		transform: translateY(-10px);
-		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
-	}
-
-	.project-img {
-		position: relative;
-		height: 280px;
-		overflow: hidden;
-	}
-
-	.project-img img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transition: transform 0.6s ease;
-	}
-
-	.project-card:hover .project-img img {
-		transform: scale(1.1);
-	}
-
-	.project-body {
+	.featured-card-body {
 		padding: 35px;
 	}
 
-	.project-title {
-		font-size: 26px;
-		font-weight: 700;
-		color: #0F2920;
-		margin-bottom: 15px;
+	.featured-left,
+	.featured-right {
+		border-radius: 0;
+		min-height: auto;
+		padding: 40px 20px !important;
 	}
 
-	.project-text {
-		color: #6c757d;
-		line-height: 1.7;
-		margin-bottom: 25px;
-		font-size: 15px;
+	.unified-card {
+		flex-direction: column;
 	}
 
-	.project-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 10px;
-		padding: 14px 32px;
-		background: linear-gradient(135deg, #008E48 0%, #00a854 100%);
-		color: #fff;
-		text-decoration: none;
-		border-radius: 12px;
-		font-weight: 700;
-		transition: all 0.3s ease;
+	.mission-card {
+		padding: 35px 25px;
+	}
+}
+
+/* Small devices (landscape phones, less than 768px) */
+@media (max-width: 767.98px) {
+	.slider-container {
+		height: 70vh;
+	}
+}
+
+/* Extra small devices (portrait phones, less than 576px) */
+@media (max-width: 575.98px) {
+	.modern-hero {
+		min-height: 50vh;
 	}
 
-	.project-btn:hover {
-		transform: translateX(5px);
-		box-shadow: 0 8px 20px rgba(0, 142, 72, 0.3);
-		color: #fff;
+	.slider-container {
+		height: 52vh;
+		min-height: 400px;
 	}
 
-	.see-all-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 10px;
-		padding: 16px 48px;
-		background: transparent;
-		color: #008E48;
-		border: 2px solid #008E48;
-		text-decoration: none;
-		border-radius: 12px;
-		font-weight: 700;
-		font-size: 16px;
-		transition: all 0.3s ease;
+	.slider {
+		height: 100%;
 	}
 
-	.see-all-btn:hover {
+	.nav-btn {
+		width: 40px;
+		height: 40px;
+		font-size: 1.2rem;
 		background: #008E48;
 		color: #fff;
-		transform: translateY(-3px);
-		box-shadow: 0 8px 20px rgba(0, 142, 72, 0.3);
 	}
 
-	/* Associates Section */
-	.associates-section {
-		padding: 80px 0;
-		background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+	.nav-btn.prev {
+		left: 10px;
 	}
 
-	.associates-grid {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 50px;
-		flex-wrap: wrap;
+	.nav-btn.next {
+		right: 10px;
 	}
 
-	.associate-logo {
-		height: 80px;
-		width: auto;
-		opacity: 0.7;
-		transition: all 0.3s ease;
-		filter: grayscale(100%);
+	.slide-title {
+		font-size:32px;
 	}
 
-	.associate-logo:hover {
-		opacity: 1;
-		transform: scale(1.1);
-		filter: grayscale(0%);
+	.slide-description {
+		font-size: 16px;
 	}
 
-	/* Responsive */
-	@media(max-width: 991px) {
-		.hero-title {
-			font-size: 42px;
-		}
-
-		.hero-subtitle {
-			font-size: 16px;
-		}
-
-		.section-title {
-			font-size: 36px;
-		}
-
-		.featured-card-body {
-			padding: 35px;
-		}
-
-		.mission-card {
-			padding: 35px 25px;
-		}
-
-		.modern-hero {
-			height: auto;
-			min-height: 500px;
-		}
-
-		.hero-slide {
-			height: auto;
-			min-height: 500px;
-		}
+	.slide-buttons {
+		margin-top: 10px;
+		transform: translateY(50px);
+		gap: 20px;
+		flex-wrap: nowrap;
 	}
 
-	@media(max-width: 575px) {
-		.hero-title {
-			font-size: 32px;
-		}
-
-		.hero-subtitle {
-			font-size: 15px;
-		}
-
-		.hero-buttons {
-			flex-direction: column;
-		}
-
-		.hero-btn {
-			width: 100%;
-			justify-content: center;
-		}
-
-		.section-title {
-			font-size: 28px;
-		}
-
-		.featured-img-wrapper {
-			height: 300px;
-		}
-
-		.mission-card {
-			margin-bottom: 20px;
-		}
-
-		.project-img {
-			height: 220px;
-		}
+	.hero-btn {
+		padding: 10px 10px;
 	}
 
-	/* Footer Styles */
-	.footer {
-		width: 100%;
-		background: #0F2920;
-		color: #fff;
-		padding-top: 60px;
-		padding-bottom: 50px;
+	.section-title {
+		font-size: 28px;
 	}
+
+	.featured-img-wrapper {
+		height: 300px;
+	}
+
+	.mission-card {
+		margin-bottom: 20px;
+	}
+
+	.project-img {
+		height: 220px;
+	}
+}
+
+@media (max-width: 399px) {
+	.hero-btn {
+    padding: 12px 93px;
+	font-size: 14px;
+}
+.slide-buttons {
+    flex-wrap: wrap;
+}
+}
 </style>
 
 <!-- Modern Hero Slider -->
 <div class="modern-hero">
-	<!-- Home Slider Nav -->
-	<div class="home_slider_nav_container d-flex flex-row align-items-start justify-content-between">
-		<div class="home_slider_nav home_slider_prev trans_200"><i class="fa fa-angle-left" aria-hidden="true"></i></div>
-		<div class="home_slider_nav home_slider_next trans_200"><i class="fa fa-angle-right" aria-hidden="true"></i></div>
-	</div>
-	<div class="owl-carousel owl-theme home_slider">
-		<!-- Slide 1 -->
-		<div class="hero-slide">
-			<div class="hero-bg" style="background-image: url(images/Banner3.jpg);"></div>
-			<div class="hero-overlay"></div>
-			<div class="hero-content" >
-				<!-- <div class="hero-badge">BUILDING FUTURES</div> -->
-				<h1 class="hero-title">Mosque Project</h1>
-				<p class="hero-subtitle">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare.</p>
-				<div class="hero-buttons pt-3">
-					<a href="donate.php" class="hero-btn hero-btn-primary">
-						Donate Now
-						<i class="fa fa-arrow-right"></i>
-					</a>
-					<a href="activities.php" class="hero-btn hero-btn-secondary">
-						View Activities
-						<i class="fa fa-angle-right"></i>
-					</a>
+	<div class="slider-container">
+		<div class="slider">
+			<div class="slide active transition-fade">
+				<img src="images/Banner3.jpg" alt="Mosque Project">
+				<div class="slide-content">
+					<h1 class="slide-title">Mosque Project</h1>
+					<p class="slide-description">Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare.</p>
+					<div class="slide-buttons">
+						<a href="donate.php" class="hero-btn hero-btn-primary">
+							Donate Now
+							<i class="fa fa-arrow-right"></i>
+						</a>
+						<a href="activities.php" class="hero-btn hero-btn-secondary">
+							View Activities
+							<i class="fa fa-angle-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="slide">
+				<img src="images/Bannertwo.jpg" alt="School Project">
+				<div class="slide-content">
+					<h1 class="slide-title">School Project</h1>
+					<p class="slide-description">Establishing educational excellence through integrated religious and general education, creating the next generation of Islamic scholars and leaders.</p>
+					<div class="slide-buttons">
+						<a href="donate.php" class="hero-btn hero-btn-primary">
+							Donate Now
+							<i class="fa fa-arrow-right"></i>
+						</a>
+						<a href="activities.php" class="hero-btn hero-btn-secondary">
+							View Activities
+							<i class="fa fa-angle-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="slide">
+				<img src="images/bannerfour.jpg" alt="Hospital Project">
+				<div class="slide-content">
+					<h1 class="slide-title">Hospital Project</h1>
+					<p class="slide-description">Providing compassionate healthcare and medical support to those in need, ensuring wellness and dignity for every member of our community.</p>
+					<div class="slide-buttons">
+						<a href="donate.php" class="hero-btn hero-btn-primary">
+							Donate Now
+							<i class="fa fa-arrow-right"></i>
+						</a>
+						<a href="activities.php" class="hero-btn hero-btn-secondary">
+							View Activities
+							<i class="fa fa-angle-right"></i>
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Slide 2 -->
-		<div class="hero-slide" >
-			<div class="hero-bg" style="background-image: url(images/Bannertwo.jpg);"></div>
-			<div class="hero-overlay"></div>
-			<div class="hero-content" >
-				<!-- <div class="hero-badge">EMPOWERING MINDS</div> -->
-				<h1 class="hero-title">School Project</h1>
-				<p class="hero-subtitle">Establishing educational excellence through integrated religious and general education, creating the next generation of Islamic scholars and leaders.</p>
-				<div class="hero-buttons pt-3">
-					<a href="donate.php" class="hero-btn hero-btn-primary">
-						Donate Now
-						<i class="fa fa-arrow-right"></i>
-					</a>
-					<a href="activities.php" class="hero-btn hero-btn-secondary">
-						View Activities
-						<i class="fa fa-angle-right"></i>
-					</a>
-				</div>
-			</div>
+		<div class="navigation">
+			<button class="nav-btn prev">&lt;</button>
+			<button class="nav-btn next">&gt;</button>
 		</div>
 
-		<!-- Slide 3 -->
-		<div class="hero-slide">
-			<div class="hero-bg" style="background-image: url(images/bannerfour.jpg);"></div>
-			<div class="hero-overlay"></div>
-			<div class="hero-content" >
-				<!-- <div class="hero-badge">HEALING HEARTS</div> -->
-				<h1 class="hero-title">Hospital Project</h1>
-				<p class="hero-subtitle">Providing compassionate healthcare and medical support to those in need, ensuring wellness and dignity for every member of our community.</p>
-				<div class="hero-buttons pt-3">
-					<a href="donate.php" class="hero-btn hero-btn-primary">
-						Donate Now
-						<i class="fa fa-arrow-right"></i>
-					</a>
-					<a href="activities.php" class="hero-btn hero-btn-secondary">
-						View Activities
-						<i class="fa fa-angle-right"></i>
-					</a>
-				</div>
-			</div>
+		<div class="dots-container">
+			<!-- Dots will be added dynamically with JavaScript -->
 		</div>
-
 	</div>
 </div>
 
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		// Select elements
+		const slider = document.querySelector('.slider');
+		const slides = document.querySelectorAll('.slide');
+		const prevBtn = document.querySelector('.prev');
+		const nextBtn = document.querySelector('.next');
+		const dotsContainer = document.querySelector('.dots-container');
+
+		// Variables
+		let currentIndex = 0;
+		let autoSlideInterval;
+		const autoSlideDelay = 3000; // 3 seconds
+
+		// Available transition effects
+		const transitionEffects = ['fade', 'slideRight', 'slideLeft', 'zoom', 'slideUp'];
+
+		// Initialize - make first slide active
+		slides[0].classList.add('active');
+		slides[0].classList.add(`transition-${transitionEffects[0]}`);
+
+		// Create dot indicators
+		slides.forEach((_, index) => {
+			const dot = document.createElement('div');
+			dot.classList.add('dot');
+			if (index === 0) dot.classList.add('active');
+			dot.addEventListener('click', () => showSlide(index));
+			dotsContainer.appendChild(dot);
+		});
+
+		// Get all dots
+		const dots = document.querySelectorAll('.dot');
+
+		// Main function to show a slide
+		function showSlide(index) {
+			// Handle index boundaries
+			if (index < 0) index = slides.length - 1;
+			if (index >= slides.length) index = 0;
+
+			// Skip if already on this slide
+			if (index === currentIndex) return;
+
+			// Remove active class from all slides and dots
+			slides.forEach(slide => {
+				slide.classList.remove('active');
+				slide.classList.remove('transition-fade', 'transition-slideRight',
+					'transition-slideLeft', 'transition-zoom', 'transition-slideUp');
+			});
+
+			dots.forEach(dot => dot.classList.remove('active'));
+
+			// Apply random transition effect
+			const randomEffect = transitionEffects[Math.floor(Math.random() * transitionEffects.length)];
+			slides[index].classList.add(`transition-${randomEffect}`);
+
+			// Activate the new slide and dot
+			slides[index].classList.add('active');
+			dots[index].classList.add('active');
+
+			// Update the current index
+			currentIndex = index;
+
+			// Reset auto slide timer
+			resetAutoSlide();
+		}
+
+		// Next slide function
+		function nextSlide() {
+			showSlide(currentIndex + 1);
+		}
+
+		// Previous slide function
+		function prevSlide() {
+			showSlide(currentIndex - 1);
+		}
+
+		// Start auto slide
+		function startAutoSlide() {
+			autoSlideInterval = setInterval(nextSlide, autoSlideDelay);
+		}
+
+		// Reset auto slide timer
+		function resetAutoSlide() {
+			clearInterval(autoSlideInterval);
+			startAutoSlide();
+		}
+
+		// Event listeners
+		prevBtn.addEventListener('click', prevSlide);
+		nextBtn.addEventListener('click', nextSlide);
+
+		// Touch events for mobile swipe
+		let touchStartX = 0;
+		let touchEndX = 0;
+
+		slider.addEventListener('touchstart', (e) => {
+			touchStartX = e.changedTouches[0].screenX;
+			// Pause auto slide while touching
+			clearInterval(autoSlideInterval);
+		});
+
+		slider.addEventListener('touchend', (e) => {
+			touchEndX = e.changedTouches[0].screenX;
+			handleSwipe();
+			// Restart auto slide after touch
+			startAutoSlide();
+		});
+
+		function handleSwipe() {
+			const swipeThreshold = 50;
+			if (touchEndX < touchStartX - swipeThreshold) {
+				nextSlide(); // Swipe left -> next slide
+			} else if (touchEndX > touchStartX + swipeThreshold) {
+				prevSlide(); // Swipe right -> prev slide
+			}
+		}
+
+		// Pause auto slide on hover
+		slider.addEventListener('mouseenter', () => {
+			clearInterval(autoSlideInterval);
+		});
+
+		slider.addEventListener('mouseleave', () => {
+			startAutoSlide();
+		});
+
+		// Keyboard navigation
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'ArrowLeft') {
+				prevSlide();
+			} else if (e.key === 'ArrowRight') {
+				nextSlide();
+			}
+		});
+
+		// Initialize auto slide
+		startAutoSlide();
+	});
+</script>
+
 <!-- Modern Featured Section (Single Card Layout) -->
 <div class="modern-featured">
-
 	<div class="container" data-aos="fade-up">
 		<div class="featured-card unified-card px-3">
 			<div class="row g-0 align-items-center">
@@ -807,7 +1129,6 @@ $page_title = 'Home';
 				</div>
 			</div>
 		</div>
-
 	</div>
 </div>
 
@@ -944,8 +1265,6 @@ $page_title = 'Home';
 					</div>
 				</div>
 			</div>
-
-
 			<div class="col-lg-4 col-md-6">
 				<div class="project-card">
 					<div class="project-img">
@@ -961,7 +1280,6 @@ $page_title = 'Home';
 					</div>
 				</div>
 			</div>
-
 		</div>
 		<div class="text-center mt-5" data-aos="fade-up">
 			<a href="donation-fund.php" class="see-all-btn">
