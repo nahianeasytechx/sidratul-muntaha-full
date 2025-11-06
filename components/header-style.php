@@ -1003,6 +1003,7 @@ top: 50%;
 
      .breadcrumbs ul li {
          color: #02BD61;
+         
      }
 
      .breadcrumbs ul li a:hover {

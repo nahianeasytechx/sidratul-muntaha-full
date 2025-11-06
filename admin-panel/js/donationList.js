@@ -1,9 +1,9 @@
 function viewDonation(id) {
-    window.location.href = 'view-donation.php?id=' + id;
+    window.location.href = 'view-donation-fund.php?id=' + id;
 }
 
 function editDonation(id) {
-    window.location.href = 'edit-donation.php?id=' + id;
+    window.location.href = 'edit-donation-category?id=' + id;
 }
 
 function deleteDonation(id) {

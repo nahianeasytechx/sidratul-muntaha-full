@@ -132,7 +132,7 @@ if (isset($_GET['delete'])) {
 
               <div class="text-center mt-4">
                 <button type="submit" name="<?php echo $edit_category ? 'update_category' : 'add_category'; ?>" 
-                        class="btn btn-gradient-dark px-4 fw-semibold">
+                        class="btn btn-success px-4 fw-semibold">
                   <?php echo $edit_category ? 'Update Category' : 'Add Category'; ?>
                 </button>
                 <?php if ($edit_category): ?>
@@ -219,6 +219,9 @@ if (isset($_GET['delete'])) {
 </div>
 
 <style>
+.page-title-section .breadcrumb {
+border: none;
+}
 .table td, .table th { vertical-align: middle; }
 .btn-outline-primary, .btn-outline-info, .btn-outline-danger {
   border-radius: 8px;

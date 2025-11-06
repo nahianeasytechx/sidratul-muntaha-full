@@ -61,7 +61,7 @@ $page_title = 'Edit Donation Category';
 
             <!-- Submit Button -->
             <div class="form-group mt-4 text-end">
-              <button type="submit" class="btn btn-submit">Update Category</button>
+              <button type="submit" class="btn btn-submit btn-success">Update Category</button>
             </div>
 
           </form>

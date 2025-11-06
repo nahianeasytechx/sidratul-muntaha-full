@@ -93,6 +93,12 @@
         <i class="mdi mdi-clipboard-outline menu-icon"></i>
       </a>
     </li>
+        <li class="nav-item">
+      <a class="nav-link" href="scholarship-application-list.php">
+        <span class="menu-title">Scholarship List</span>
+        <i class="mdi mdi-clipboard-outline menu-icon"></i>
+      </a>
+    </li>
     <li class="nav-item">
       <a class="nav-link" href="settings.php">
         <span class="menu-title">Settings</span>

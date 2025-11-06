@@ -76,7 +76,7 @@ $page_title = 'Zakat Invoice';
     }
 
     .invoice-table thead {
-        background: #0F2920;
+      background-color:#008E48 ;
         color: #fff;
     }
 
@@ -150,7 +150,7 @@ $page_title = 'Zakat Invoice';
     }
 
     .print-btn {
-        background: #0F2920;
+        background: #008E48;
         color: #fff;
         padding: 12px 30px;
         border: none;
@@ -171,7 +171,7 @@ $page_title = 'Zakat Invoice';
     .invoice-type-badge {
         display: inline-block;
         padding: 8px 20px;
-        background: #0F2920;
+    background: #008E48;
         color: #fff;
         border-radius: 5px;
         font-weight: 600;
@@ -239,7 +239,7 @@ $page_title = 'Zakat Invoice';
         }
 
         .invoice-logo img {
-            max-width: 120px;
+            max-width: 300px;
         }
 
         .invoice-details {
@@ -348,7 +348,7 @@ $page_title = 'Zakat Invoice';
     <div class="invoice-container">
     <div class="invoice-header">
         <div class="invoice-logo">
-            <img src="images/sidratul logo.png" alt="Sidratul Muntaha Foundation">
+            <img src="../images/sidratulnewLogo1__1_-removebg-preview.png" alt="Sidratul Muntaha Foundation">
         </div>
         <div class="invoice-title">
             <h1>INVOICE</h1>
@@ -430,9 +430,6 @@ $page_title = 'Zakat Invoice';
         </div>
     </div>
 
-    <div class="islamic-quote">
-        "Take from their wealth a charity to cleanse them and purify them" - (Quran 9:103)
-    </div>
 
     <div class="invoice-footer">
         <p>Jazakallah Khair for fulfilling your Zakat obligation!</p>

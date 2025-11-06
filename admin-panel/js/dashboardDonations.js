@@ -53,11 +53,11 @@ function renderDashboardDonations() {
                 <td>${formattedDate}</td>
                 <td><code class="text-muted small">${donation.trx}</code></td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary" 
-                            onclick="viewDonation(${donation.id})" 
+                    <a class="btn btn-sm  bg-success text-white" 
+                                href = 'view-donation-fund.php?id=' + id;" 
                             title="View Details">
                         <i class="fa-solid fa-eye"></i>
-                    </button>
+                    </a>
                 </td>
             </tr>
         `;
@@ -69,7 +69,7 @@ function renderDashboardDonations() {
  * @param {number} id - Donation ID
  */
 function viewDonation(id) {
-    window.location.href = `view-donation.php?id=${id}`;
+    window.location.href = `view-donation-fund.php?id=${id}`;
 }
 
 // ============================================

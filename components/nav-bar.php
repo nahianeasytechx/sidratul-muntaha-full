@@ -19,7 +19,14 @@
 				background-color: #05a657;
 				color: #fff;
 			}
-
+.logo_img img{
+	min-width: 160px
+}
+@media(max-width:460px){
+	.logo_img img{
+	width: 150px
+}
+}
 		</style>
         <div class="header_container mx-auto">
         	<div class=" container ">
@@ -30,7 +37,7 @@
         						<a href="index.php">
         							<div class="logo_content mt-1">
         								<div class="logo_img">
-											<img src="images/s-icon.png" alt="sidratul logo.png">
+											<img src="images/sidratulnewLogo1__1_-removebg-preview.png" alt="sidratul logo.png" >
 										</div>
         					
         							</div>

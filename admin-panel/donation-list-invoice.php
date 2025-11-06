@@ -76,7 +76,7 @@ $page_title = 'Donation Invoice';
     }
 
     .invoice-table thead {
-        background: #0F2920;
+        background: #008E48;
         color: #fff;
     }
 
@@ -230,7 +230,7 @@ $page_title = 'Donation Invoice';
         }
 
         .invoice-logo img {
-            max-width: 120px;
+           width: 300px;
         }
 
         .invoice-details {
@@ -333,7 +333,7 @@ $page_title = 'Donation Invoice';
     <div class="invoice-container">
     <div class="invoice-header">
         <div class="invoice-logo">
-            <img src="images/sidratul logo.png" alt="Sidratul Muntaha Foundation">
+            <img src="../images/sidratulnewLogo1__1_-removebg-preview.png" alt="Sidratul Muntaha Foundation" class="">
         </div>
         <div class="invoice-title">
             <h1>INVOICE</h1>
