@@ -1,27 +1,357 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']); // Get the current page name
-$page_title = 'Edit Notice'; // Set the page title
+$current_page = basename($_SERVER['PHP_SELF']);
+$page_title = 'Edit Notice';
+require './components/header.php';
 ?>
-<?php require './components/header.php'; ?>
 
+<style>
+    /* Page Header Styling */
+    .page-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    }
 
+    .page-header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
+    .page-header .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .page-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.3s ease;
+    }
+
+    .page-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item+.breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Cancel Button in Header */
+    .btn-cancel-header {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel-header:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Card Styling */
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa, #ffffff) !important;
+        border-bottom: 2px solid #e9ecef;
+        border-radius: 16px 16px 0 0 !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+
+    .card-header h5 {
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-header h5 i {
+        color: #10b981;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Form Controls */
+    .form-label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control,
+    .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.65rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
+        outline: none;
+    }
+
+    textarea.form-control {
+        min-height: 200px;
+        resize: vertical;
+    }
+
+    .form-text {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+
+    .text-danger {
+        color: #ef4444 !important;
+    }
+
+    /* File Item Styling */
+    .file-item {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef !important;
+        border-radius: 12px;
+        padding: 1rem !important;
+        transition: all 0.3s ease;
+    }
+
+    .file-item:hover {
+        border-color: #10b981 !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    }
+
+    .file-item .fw-semibold {
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .file-item .text-muted {
+        color: #94a3b8 !important;
+        font-size: 0.85rem;
+    }
+
+    /* Alert Styling */
+    .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 1rem;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        color: #1e40af;
+    }
+
+    .alert-info i {
+        color: #1e40af;
+    }
+
+    /* Status Card Special Styling */
+    .card.border-primary {
+        border: 2px solid #10b981 !important;
+    }
+
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    .card-header.bg-primary h6 {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    /* Quick Tips List */
+    .card-body ul {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .card-body ul li {
+        position: relative;
+        padding-left: 1.5rem;
+        color: #475569;
+    }
+
+    .card-body ul li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #10b981;
+        font-weight: 700;
+    }
+
+    /* Notice Details Card */
+    .card-body .fw-bold {
+        color: #1e293b;
+        font-size: 1rem;
+    }
+
+    .card-body .form-label.text-muted {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b !important;
+    }
+
+    /* Button Styling */
+    .btn {
+        border-radius: 10px;
+        padding: 0.65rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e9ecef;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f8f9fa;
+        border-color: #cbd5e1;
+        color: #475569;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-danger {
+        background: white;
+        color: #ef4444;
+        border: 2px solid #fee2e2;
+    }
+
+    .btn-outline-danger:hover {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        border-color: #ef4444;
+        color: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    .btn i {
+        margin-right: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 991px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .page-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .card-header h5 {
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Icon Colors */
+    .text-primary {
+        color: #2b579a !important;
+    }
+
+    .text-danger.fs-4 {
+        color: #ef4444 !important;
+    }
+</style>
+
 <div class="content-wrapper">
     <div class="edit-notice">
         <!-- Page Header -->
         <div class="page-header">
             <div class="w-100 d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </div>
                     <div>
-                        <h1>Edit Notice</h1>
+                        <h1><i class="fa-solid fa-pen-to-square me-2"></i>Edit Notice</h1>
                         <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
+                            <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
                                 <li class="breadcrumb-item"><a href="all-notices.php" class="text-decoration-none">All Notices</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Edit Notice</li>
@@ -31,8 +361,8 @@ $page_title = 'Edit Notice'; // Set the page title
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" onclick="window.location.href='all-notices.php'">
-                        <i class="fa-solid fa-xmark"></i> Cancel
+                    <button class="btn btn-cancel-header" onclick="window.location.href='all-notice.php'">
+                        <i class="fa-solid fa-xmark me-1"></i> Cancel
                     </button>
                 </div>
             </div>
@@ -44,13 +374,13 @@ $page_title = 'Edit Notice'; // Set the page title
                 <!-- Left Column -->
                 <div class="col-lg-8">
                     <!-- Basic Information Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0">
-                                <i class="fa-solid fa-circle-info me-2"></i>Basic Information
+                                <i class="fa-solid fa-circle-info"></i>Basic Information
                             </h5>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body">
                             <div class="mb-3">
                                 <label for="noticeTitle" class="form-label">Notice Title <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="noticeTitle" name="title" value="Annual General Meeting 2024" required>
@@ -104,13 +434,13 @@ Looking forward to seeing you all there!</textarea>
                     </div>
 
                     <!-- Date & Priority Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0">
-                                <i class="fa-solid fa-calendar-days me-2"></i>Date & Priority
+                                <i class="fa-solid fa-calendar-days"></i>Date & Priority
                             </h5>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="validFrom" class="form-label">Valid From <span class="text-danger">*</span></label>
@@ -149,13 +479,13 @@ Looking forward to seeing you all there!</textarea>
                     </div>
 
                     <!-- Contact Information Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0">
-                                <i class="fa-solid fa-address-card me-2"></i>Contact Information
+                                <i class="fa-solid fa-address-card"></i>Contact Information
                             </h5>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="contactPerson" class="form-label">Contact Person</label>
@@ -181,18 +511,18 @@ Looking forward to seeing you all there!</textarea>
                     </div>
 
                     <!-- Attachments Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0">
-                                <i class="fa-solid fa-paperclip me-2"></i>Attachments
+                                <i class="fa-solid fa-paperclip"></i>Attachments
                             </h5>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body">
                             <!-- Existing Attachments -->
                             <div class="mb-3">
                                 <label class="form-label">Current Attachments</label>
                                 <div class="existing-files">
-                                    <div class="file-item d-flex align-items-center justify-content-between p-3 border rounded mb-2">
+                                    <div class="file-item d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-3">
                                             <i class="fa-solid fa-file-pdf text-danger fs-4"></i>
                                             <div>
@@ -204,7 +534,7 @@ Looking forward to seeing you all there!</textarea>
                                             <i class="fa-solid fa-trash"></i> Remove
                                         </button>
                                     </div>
-                                    <div class="file-item d-flex align-items-center justify-content-between p-3 border rounded mb-2">
+                                    <div class="file-item d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-3">
                                             <i class="fa-solid fa-file-word text-primary fs-4"></i>
                                             <div>
@@ -232,13 +562,13 @@ Looking forward to seeing you all there!</textarea>
                 <!-- Right Column -->
                 <div class="col-lg-4">
                     <!-- Status Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0">
-                                <i class="fa-solid fa-toggle-on me-2"></i>Status
+                                <i class="fa-solid fa-toggle-on"></i>Status
                             </h5>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body">
                             <div class="mb-3">
                                 <label for="noticeStatus" class="form-label">Notice Status <span class="text-danger">*</span></label>
                                 <select class="form-select" id="noticeStatus" name="status" required>
@@ -249,20 +579,20 @@ Looking forward to seeing you all there!</textarea>
                             </div>
 
                             <div class="alert alert-info mb-0">
-                                <i class="fa-solid fa-circle-info me-2"></i>
+                                <i class="fa-solid fa-circle-info"></i>
                                 <small>Setting status to "Active" will publish this notice immediately.</small>
                             </div>
                         </div>
                     </div>
 
                     <!-- Notice ID Card -->
-                    <div class="card shadow-sm mb-4">
+                    <div class="card mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0">
-                                <i class="fa-solid fa-hashtag me-2"></i>Notice Details
+                                <i class="fa-solid fa-hashtag"></i>Notice Details
                             </h5>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label text-muted small">Notice ID</label>
                                 <div class="fw-bold">#NOT-001</div>
@@ -283,14 +613,14 @@ Looking forward to seeing you all there!</textarea>
                     </div>
 
                     <!-- Quick Tips Card -->
-                    <div class="card shadow-sm mb-4 border-primary">
-                        <div class="card-header bg-primary text-white py-3">
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary py-3">
                             <h6 class="mb-0">
                                 <i class="fa-solid fa-lightbulb me-2"></i>Quick Tips
                             </h6>
                         </div>
                         <div class="card-body p-3">
-                            <ul class="mb-0 ps-3 small">
+                            <ul class="mb-0 small">
                                 <li class="mb-2">Use clear and concise titles</li>
                                 <li class="mb-2">Set appropriate priority levels</li>
                                 <li class="mb-2">Include contact information</li>
@@ -301,7 +631,7 @@ Looking forward to seeing you all there!</textarea>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="card shadow-sm">
+                    <div class="card">
                         <div class="card-body p-3">
                             <button type="submit" name="update" class="btn btn-primary w-100 mb-2">
                                 <i class="fa-solid fa-floppy-disk"></i> Update Notice
@@ -319,12 +649,5 @@ Looking forward to seeing you all there!</textarea>
         </form>
     </div>
 </div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
-
-
-
-
 
 <?php require './components/footer.php'; ?>

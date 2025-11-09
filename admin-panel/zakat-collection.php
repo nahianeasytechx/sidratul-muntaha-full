@@ -161,6 +161,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
         padding: 0;
         margin: 8px 0 0 0;
         font-size: 14px;
+        border: none;
     }
 
     /* Filter Section - Updated to match notices styling */
@@ -246,7 +247,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
         box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
     }
 
-    /* Table Styling - Updated to match modern design */
+    /* Table Styling - Fixed scrollbar hover issue */
     .table-card {
         background: #fff;
         border-radius: 20px;
@@ -273,11 +274,13 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
     .table tbody tr {
         transition: all 0.3s ease;
         border-bottom: 1px solid #f1f5f9;
+        position: relative;
     }
 
     .table tbody tr:hover {
         background: #f8fafc;
         transform: translateX(4px);
+        z-index: 1;
     }
 
     .table tbody td {
@@ -286,6 +289,51 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
         border: none;
         color: #475569;
         font-size: 14px;
+        position: relative;
+    }
+
+    /* Custom scrollbar styling to prevent hover conflicts */
+    .table-responsive::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Ensure scrollbar doesn't trigger row hover */
+    .table-responsive {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    /* Alternative hover effect that's less disruptive */
+    @media (hover: hover) {
+        .table tbody tr:hover {
+            background: #f8fafc;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    /* Fallback for touch devices */
+    @media (hover: none) {
+        .table tbody tr:hover {
+            background: #f8fafc;
+            transform: none;
+        }
     }
 
     /* Amount Styling */

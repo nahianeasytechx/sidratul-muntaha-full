@@ -5,7 +5,7 @@
 <div class="menu menu_mm modern_mobile_menu overflow-y-scroll">
 	<div class="menu_header d-flex align-items-center justify-content-between">
 		<a href="index.php" class="d-flex align-items-center logo_container">
-			<img src="images/sr-logo.png" alt="Sidratul Muntaha" class="menu_logo">
+			<img src="images/final-logo.png" alt="Sidratul Muntaha" class="menu_logo">
 			<!-- <p class="mobile_nav_title mb-0 ms-2 fw-semibold text-dark">
 				<b>Sidratul</b><br><b>Muntaha</b>
 			</p> -->
@@ -106,7 +106,7 @@
 		padding-bottom: 12px;
 	}
 	.menu_logo {
-		width: 125px;
+		width: 225px;
 		
 	}
 

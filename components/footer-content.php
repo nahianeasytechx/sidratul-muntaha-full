@@ -14,7 +14,7 @@
                     <div class="footer-section">
                         <div class="footer-logo mb-4">
                             <a href="index.php" class="d-flex align-items-center text-decoration-none">
-                                <img src="images/sidratulnewLogo1__1_-removebg-preview.png" alt="Sidratul Muntaha Logo">
+                                <img src="images/final-logo.png" alt="Sidratul Muntaha Logo">
                             </a>
                         </div>
                         <p class="footer-description mb-4">Empowering communities through compassion and dedication to making a positive difference.</p>

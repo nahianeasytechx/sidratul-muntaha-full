@@ -7,7 +7,7 @@ $current_user = [
     'name' => 'Admin User',
     'email' => 'admin@socialorg.com',
     'phone' => '+880 1234-567890',
-    'profile_photo' => '../img/default-avatar.png',
+    'profile_photo' => '../images/sidratulnewLogo1 (1).jpeg',
     'joined_date' => 'Jan 15, 2024'
 ];
 ?>
@@ -52,6 +52,7 @@ $current_user = [
         padding: 0;
         margin: 8px 0 0 0;
         font-size: 14px;
+        border: none;
     }
 
     /* Settings Cards */

@@ -4,30 +4,393 @@ $page_title = 'Slider Management';
 ?>
 <?php require './components/header.php'; ?>
 
+<style>
+    /* Page Header Styling - Matching donation-list.php */
+    .page-header {
+        background: linear-gradient(135deg, #10b981, #059669);
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    }
 
+    .page-header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .page-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.3s ease;
+        text-decoration: none;
+    }
+
+    .page-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item+.breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Section Headers */
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-header i {
+        color: #10b981;
+        font-size: 1.3rem;
+    }
+
+    /* Card Styling */
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+
+    /* Slider Item Card */
+    .slider-item {
+        background: #f8fafc;
+        overflow: hidden;
+    }
+
+    .slider-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #10b981, #059669);
+    }
+
+
+    .slider-item h4 {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .slider-img {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+
+
+    .slider-info h5 {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .slider-info p {
+        color: #64748b;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* Badge Styles - Matching donation-list.php */
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge.bg-secondary {
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+        color: #475569;
+    }
+
+    .badge.bg-primary {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
+        color: #1e40af;
+    }
+
+    .badge.bg-info {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+        color: #065f46;
+    }
+
+    /* Form Styling */
+    .form-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Custom File Upload */
+    .custum-file-upload {
+        height: 200px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        cursor: pointer;
+        border: 2px dashed #10b981;
+        background-color: #f0fdf4;
+        padding: 1.5rem;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .custum-file-upload:hover {
+        background-color: #dcfce7;
+        border-color: #059669;
+    }
+
+    .custum-file-upload .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custum-file-upload .icon svg {
+        height: 60px;
+        fill: #10b981;
+    }
+
+    .custum-file-upload .text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custum-file-upload .text span {
+        font-weight: 600;
+        color: #059669;
+    }
+
+    .custum-file-upload input {
+        display: none;
+    }
+
+    #imagePreview {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    #previewImg {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Button Styles - Matching donation-list.php */
+    .btn-primary {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        color: white;
+        padding: 0.875rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        background: linear-gradient(135deg, #059669, #047857);
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    /* Character Counter */
+    #charCount {
+        font-weight: 600;
+        color: #10b981;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 2px dashed #e2e8f0;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: #94a3b8;
+        margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 767px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .section-header {
+            font-size: 1.2rem;
+        }
+
+        .slider-item {
+            padding: 1rem !important;
+        }
+
+        .card {
+            padding: 1rem;
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .slider-item,
+    .card {
+        animation: fadeIn 0.5s ease-out;
+    }
+</style>
 
 <!--------------------------->
 <!-- START MAIN AREA -->
 <!--------------------------->
 <div class="content-wrapper">
+    <!-- Page Header -->
     <div class="page-header">
-        <h3 class="page-title">
-            <span class="page-title-icon bg-gradient-primary text-white me-2">
-                <i class="mdi mdi-image-multiple"></i>
-            </span> Slider Management
-        </h3>
+        <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
+            <div class="d-flex gap-3">
+                <div>
+                    <h1><i class="fa-solid fa-image me-2"></i>Slider Management</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Slider Management</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
     </div>
-    <br>
 
     <!-- Display Existing Slider Images -->
     <div class="row">
-        <div class="col-md-7">
-            <h1>Existing Slider Images</h1>
+        <div class="col-lg-7 mb-4">
+            <h2 class="section-header">
+                <i class="fa-solid fa-images"></i>
+                Existing Slider Images
+            </h2>
 
-            <div class="card p-3 rounded-0">
+            <div class="card">
                 <div class="slider-images">
                     <!-- Slider Item 1 -->
-                    <div class="slider-item border rounded p-3 mb-3">
+                    <div class="slider-item p-3 mb-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h4 class="mb-0">Image No: 1</h4>
                             <span class="badge bg-secondary">Order: 1</span>
@@ -59,21 +422,26 @@ $page_title = 'Slider Management';
                         </div>
                     </div>
 
-                    <hr>
-
-
-
+                    <!-- Empty State Example (if no sliders) -->
+                    <!-- <div class="empty-state">
+                        <i class="fa-solid fa-image"></i>
+                        <h3>No Slider Images Yet</h3>
+                        <p>Add your first slider image to get started</p>
+                    </div> -->
                 </div>
             </div>
         </div>
 
-        <div class="col-md-5">
+        <div class="col-lg-5 mb-4">
             <!-- Add New Slider Image -->
             <form action="" method="POST" enctype="multipart/form-data" id="sliderForm">
-                <h1>Add Slider Image</h1>
-                <div class="card p-4 rounded-0">
+                <h2 class="section-header">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    Add Slider Image
+                </h2>
+                <div class="card">
                     <!-- Image Upload -->
-                    <div class="mb-3 d-flex justify-content-center ">
+                    <div class="mb-3  mx-auto">
                         <label class="custum-file-upload" for="file">
                             <div class="icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="" viewBox="0 0 24 24">
@@ -96,7 +464,7 @@ $page_title = 'Slider Management';
 
                     <!-- Title -->
                     <div class="mb-3">
-                        <label for="slider_title" class="form-label fw-bold">
+                        <label for="slider_title" class="form-label">
                             Slider Title <span class="text-danger">*</span>
                         </label>
                         <input
@@ -112,7 +480,7 @@ $page_title = 'Slider Management';
 
                     <!-- Description -->
                     <div class="mb-3">
-                        <label for="slider_description" class="form-label fw-bold">
+                        <label for="slider_description" class="form-label">
                             Description <span class="text-danger">*</span>
                         </label>
                         <textarea
@@ -130,38 +498,56 @@ $page_title = 'Slider Management';
                     </div>
 
 
-
-                    <!-- Button Text (Optional) -->
-                    <div class="mb-3" id="buttonTextSection" style="display: none;">
-                        <label for="button_text" class="form-label fw-bold">
-                            Button Text <span class="text-muted">(Optional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="button_text"
-                            name="button_text"
-                            placeholder="e.g., Learn More, Register Now, Join Us"
-                            maxlength="30">
-                        <small class="text-muted">Default is "Learn More" if left empty</small>
-                    </div>
-
-
-
                     <input class="btn btn-submit w-100" type="submit" name="add_slider" value="Add Slider">
                 </div>
             </form>
         </div>
     </div>
-    <br>
 </div>
 <!--------------------------->
 <!-- END MAIN AREA -->
 <!--------------------------->
 
+<script>
+// Image Preview
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
+});
 
+// Character Counter
+document.getElementById('slider_description').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('charCount').textContent = count;
+    
+    if (count > 200) {
+        document.getElementById('charCount').style.color = '#ef4444';
+    } else {
+        document.getElementById('charCount').style.color = '#10b981';
+    }
+});
 
+// Edit Slider Function
+function editSlider(id) {
+    alert('Edit slider #' + id);
+    // Add your edit logic here
+}
 
-
+// Confirm Delete Function
+function confirmDelete(id) {
+    if (confirm('Are you sure you want to delete this slider? This action cannot be undone.')) {
+        alert('Slider #' + id + ' deleted successfully!');
+        // Add your delete logic here
+        location.reload();
+    }
+}
+</script>
 
 <?php require './components/footer.php'; ?>

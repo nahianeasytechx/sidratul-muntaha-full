@@ -2,768 +2,683 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'All Notices';
 require './components/header.php';
+
+// Sample notice data (replace with DB data later)
+$notices = [
+    ["id" => 1, "title" => "Annual Volunteer Recruitment 2025", "description" => "We are looking for passionate volunteers to join our community programs.", "type" => "recruitment", "category" => "volunteer", "status" => "active", "published_date" => "2025-01-15", "expiry_date" => "2025-06-15", "age_requirement" => "18-35"],
+    ["id" => 2, "title" => "Training Session - December 2024", "description" => "Professional development training for all team members.", "type" => "training", "category" => "training", "status" => "expired", "published_date" => "2024-12-01", "expiry_date" => "2024-12-31", "age_requirement" => "All Ages"],
+    ["id" => 3, "title" => "Upcoming Community Event", "description" => "Planning a major community event for the spring season.", "type" => "event", "category" => "program", "status" => "draft", "published_date" => "2025-11-05", "expiry_date" => null, "age_requirement" => "All Ages"],
+    ["id" => 4, "title" => "Ramadan Program 2025", "description" => "Special programs and activities during the holy month of Ramadan.", "type" => "event", "category" => "program", "status" => "active", "published_date" => "2025-01-20", "expiry_date" => "2025-04-30", "age_requirement" => "All Ages"],
+    ["id" => 5, "title" => "Scholarship Deadline Extension", "description" => "The deadline for scholarship applications has been extended.", "type" => "deadline", "category" => "administrative", "status" => "active", "published_date" => "2025-01-10", "expiry_date" => "2025-03-31", "age_requirement" => "18-30"],
+];
+
+// Statistics
+$totalNotices = count($notices);
+$activeCount = count(array_filter($notices, fn($n) => $n['status'] === 'active'));
+$expiredCount = count(array_filter($notices, fn($n) => $n['status'] === 'expired'));
+$draftCount = count(array_filter($notices, fn($n) => $n['status'] === 'draft'));
 ?>
 
 <style>
-  /* Statistics Cards */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
-  }
+    /* Modern Stats Card Styles */
+    .stats-card {
+        position: relative;
+        padding: 24px;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: visible;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+    }
 
-  .stat-card-modern {
-    position: relative;
-    padding: 28px;
-    border-radius: 20px;
-    background: #fff;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-  }
+    .stats-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
 
-  .stat-card-modern:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  }
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 20px 20px 0 0;
+    }
 
-  .stat-card-modern::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
+    .stats-card:hover::before {
+        opacity: 1;
+    }
 
-  .stat-card-modern:hover::before {
-    opacity: 1;
-  }
+    .stats-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
 
-  .stat-card-modern.total { --gradient-start: #8b5cf6; --gradient-end: #7c3aed; }
-  .stat-card-modern.active { --gradient-start: #10b981; --gradient-end: #059669; }
-  .stat-card-modern.expired { --gradient-start: #ef4444; --gradient-end: #dc2626; }
-  .stat-card-modern.draft { --gradient-start: #f59e0b; --gradient-end: #d97706; }
+    .stats-card:hover .stats-icon {
+        transform: rotate(10deg) scale(1.1);
+    }
 
-  .stat-content-flex {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+    .stats-icon i {
+        font-size: 28px;
+        color: #fff;
+    }
 
-  .stat-info h3 {
-    font-size: 36px;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 8px 0 0 0;
-    line-height: 1;
-  }
+    .stats-content {
+        position: relative;
+        z-index: 1;
+        padding-right: 76px;
+    }
 
-  .stat-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+    .stats-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 12px;
+    }
 
-  .stat-icon-modern {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease;
-  }
+    .stats-value {
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+        line-height: 1.2;
+    }
 
-  .stat-card-modern:hover .stat-icon-modern {
-    transform: rotate(10deg) scale(1.1);
-  }
+    /* Gradient Variants */
+    .stats-gradient-primary {
+        --gradient-start: #8b5cf6;
+        --gradient-end: #7c3aed;
+    }
 
-  .stat-icon-modern i {
-    font-size: 28px;
+    .stats-gradient-success {
+        --gradient-start: #10b981;
+        --gradient-end: #059669;
+    }
+
+    .stats-gradient-warning {
+        --gradient-start: #f59e0b;
+        --gradient-end: #d97706;
+    }
+
+    .stats-gradient-danger {
+        --gradient-start: #ef4444;
+        --gradient-end: #dc2626;
+    }
+
+    /* Page Header Styling */
+    .page-header {
+      background: linear-gradient(135deg, #10b981, #059669);
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+    }
+
+    .page-header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .page-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.3s ease;
+    }
+
+    .page-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item+.breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+.btn-add-new {
+    background: #000;
     color: #fff;
-  }
-
-  /* Filter Card */
-  .filter-section {
-    background: #fff;
-    padding: 28px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    margin-bottom: 32px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-  }
-
-  .filter-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #f1f5f9;
-  }
-
-  .filter-header i {
-    font-size: 20px;
-    color: #8b5cf6;
-  }
-
-  .filter-header h5 {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-  }
-
-  .search-input-wrapper {
-    position: relative;
-  }
-
-  .search-input-wrapper i {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 16px;
-  }
-
-  .search-input-wrapper input {
-    width: 100%;
-    padding: 14px 18px 14px 48px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 15px;
-    transition: all 0.3s ease;
-  }
-
-  .search-input-wrapper input:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-  }
-
-  .filter-select {
-    width: 100%;
-    padding: 14px 18px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 15px;
-    color: #1e293b;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 20px;
-    background-color: #fff;
-    padding-right: 45px;
-  }
-
-  .filter-select:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-  }
-
-  /* Notice Cards */
-  .notice-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .notice-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, var(--accent-color), var(--accent-color-dark));
-  }
-
-  .notice-card:hover {
-    transform: translateX(4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
-  }
-
-  .notice-card.status-active { --accent-color: #10b981; --accent-color-dark: #059669; }
-  .notice-card.status-expired { --accent-color: #ef4444; --accent-color-dark: #dc2626; }
-  .notice-card.status-draft { --accent-color: #f59e0b; --accent-color-dark: #d97706; }
-
-  .notice-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 16px;
-    gap: 16px;
-  }
-
-  .notice-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
-
-  .notice-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    color: #64748b;
-  }
-
-  .meta-item i {
-    color: #8b5cf6;
-    font-size: 14px;
-  }
-
-  .notice-description {
-    color: #475569;
-    font-size: 15px;
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-
-  .notice-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
-  }
-
-  .notice-badges {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .badge-modern {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .badge-active {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    color: #065f46;
-  }
-
-  .badge-expired {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #991b1b;
-  }
-
-  .badge-draft {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #92400e;
-  }
-
-  .badge-type {
-    background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
-    color: #6b21a8;
-  }
-
-  .notice-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .btn-action {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
     border: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
-  .btn-view {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1e40af;
-  }
-
-  .btn-edit {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #92400e;
-  }
-
-  .btn-delete {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #991b1b;
-  }
-
-  .btn-action:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  }
-
-  /* Pagination */
-  .pagination-modern {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 32px;
-  }
-
-  .page-btn {
-    min-width: 40px;
-    height: 40px;
-    padding: 0 12px;
-    border-radius: 10px;
-    border: 2px solid #e2e8f0;
-    background: #fff;
-    color: #64748b;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
     font-weight: 600;
-    cursor: pointer;
     transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .page-btn:hover:not(.disabled):not(.active) {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
-    transform: translateY(-2px);
-  }
-
-  .page-btn.active {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
-  }
-
-  .page-btn.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  /* Empty State */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  }
-
-  .empty-state-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .empty-state-icon i {
-    font-size: 36px;
-    color: #94a3b8;
-  }
-
-  .empty-state h3 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 8px;
-  }
-
-  .empty-state p {
-    color: #64748b;
-    font-size: 16px;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
+}
+    .btn-add-new:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        color: white;
+   background: #fff;
+   color: #000;
     }
 
-    .stat-info h3 {
-      font-size: 28px;
+    /* Filter Card */
+    .filter-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    .stat-icon-modern {
-      width: 50px;
-      height: 50px;
+    .filter-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
     }
 
-    .stat-icon-modern i {
-      font-size: 22px;
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.6rem 1rem;
+        transition: all 0.3s ease;
     }
 
-    .notice-header {
-      flex-direction: column;
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.15);
     }
 
-    .notice-footer {
-      flex-direction: column;
-      gap: 12px;
-      align-items: flex-start;
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
-  }
 
-  /* Animation */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
+    .table-header {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
 
-  .notice-card {
-    animation: fadeIn 0.5s ease;
-  }
+    .table-header th {
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1.2rem 1rem;
+        border: none;
+    }
+    .table thead th {
+    background-color: #10b981 !important;
+color: #fff;
+font-size: 16px;
+}
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table tbody tr:hover {
+        background: #f8fafc;
+        transform: scale(1.01);
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    /* Badge Styles */
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-success {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+    }
+
+    .bg-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    }
+
+    .bg-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    }
+
+    .bg-info {
+        background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+    }
+
+    .bg-secondary {
+        background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    }
+
+    .bg-purple {
+        background: linear-gradient(135deg, #a855f7, #9333ea) !important;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons .btn {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1199px) {
+        .stats-value {
+            font-size: 28px;
+        }
+
+        .stats-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+        .stats-icon i {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .stats-card {
+            padding: 20px;
+        }
+
+        .stats-value {
+            font-size: 24px;
+        }
+
+        .stats-icon {
+            width: 46px;
+            height: 46px;
+            top: 16px;
+            right: 16px;
+        }
+
+        .stats-icon i {
+            font-size: 20px;
+        }
+
+        .table {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Loading Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stats-card,
+    .filter-card,
+    .table-container {
+        animation: fadeIn 0.5s ease-out;
+    }
 </style>
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
 <div class="content-wrapper">
-  <div class="dashboard">
+    <div class="donation-list">
 
-    <!-- Page Title -->
-    <div class="page-title-section">
-      <div class="icon-box">
-        <i class="fa-solid fa-flag"></i>
-      </div>
-      <h1>All Notices</h1>
-    </div>
-
-    <!-- Statistics Grid -->
-    <div class="stats-grid">
-      <div class="stat-card-modern total">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Total Notices</div>
-            <h3 id="totalCount">0</h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-flag"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card-modern active">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Active Notices</div>
-            <h3 id="activeCount">0</h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-circle-check"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card-modern expired">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Expired</div>
-            <h3 id="expiredCount">0</h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-circle-xmark"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card-modern draft">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Drafts</div>
-            <h3 id="draftCount">0</h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-file-pen"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filter Section -->
-    <div class="filter-section">
-      <div class="filter-header">
-        <i class="fa-solid fa-filter"></i>
-        <h5>Filters & Search</h5>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-4">
-          <div class="search-input-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search notices..." id="searchInput">
-          </div>
-        </div>
-        <div class="col-md-2">
-          <select class="filter-select" id="statusFilter">
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="expired">Expired</option>
-            <option value="draft">Draft</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <select class="filter-select" id="typeFilter">
-            <option value="all">All Types</option>
-            <option value="announcement">Announcement</option>
-            <option value="event">Event</option>
-            <option value="meeting">Meeting</option>
-            <option value="deadline">Deadline</option>
-            <option value="recruitment">Recruitment</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <select class="filter-select" id="categoryFilter">
-            <option value="all">All Categories</option>
-            <option value="administrative">Administrative</option>
-            <option value="volunteer">Volunteer</option>
-            <option value="program">Program</option>
-            <option value="training">Training</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <select class="filter-select" id="sortFilter">
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="expiring">Expiring Soon</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Notices List -->
-    <div id="noticesList">
-      <!-- Sample Notice Card -->
-      <div class="notice-card status-active">
-        <div class="notice-header">
-          <div>
-            <h4 class="notice-title">Annual Volunteer Recruitment 2025</h4>
-            <div class="notice-meta">
-              <div class="meta-item">
-                <i class="fa-solid fa-calendar"></i>
-                <span>Published: Jan 15, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-clock"></i>
-                <span>Expires: Jun 15, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-user"></i>
-                <span>Age: 18-35</span>
-              </div>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
+                <div class="d-flex gap-3">
+                    <div>
+                        <h1><i class="fa-solid fa-flag me-2"></i>All Notices</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Notices</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <a class="btn btn-add-new" href="add-notice.php">
+                    <i class="fa-solid fa-plus me-2"></i>Add New Notice
+                </a>
             </div>
-          </div>
         </div>
-        <p class="notice-description">
-          We are looking for passionate volunteers to join our community programs. 
-          This is a great opportunity to make a difference in society and gain valuable experience.
-        </p>
-        <div class="notice-footer">
-          <div class="notice-badges">
-            <span class="badge-modern badge-active">Active</span>
-            <span class="badge-modern badge-type">Recruitment</span>
-          </div>
-          <div class="notice-actions">
-            <button class="btn-action btn-view" title="View">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="btn-action btn-delete" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Sample Expired Notice -->
-      <div class="notice-card status-expired">
-        <div class="notice-header">
-          <div>
-            <h4 class="notice-title">Training Session - December 2024</h4>
-            <div class="notice-meta">
-              <div class="meta-item">
-                <i class="fa-solid fa-calendar"></i>
-                <span>Published: Dec 1, 2024</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-clock"></i>
-                <span>Expired: Dec 31, 2024</span>
-              </div>
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-primary">
+                    <div class="stats-icon">
+                        <i class="fa-solid fa-flag"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Total Notices</h6>
+                        <h2 class="stats-value"><?= $totalNotices ?></h2>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        <p class="notice-description">
-          Professional development training for all team members. Topics include leadership, 
-          communication, and project management skills.
-        </p>
-        <div class="notice-footer">
-          <div class="notice-badges">
-            <span class="badge-modern badge-expired">Expired</span>
-            <span class="badge-modern badge-type">Training</span>
-          </div>
-          <div class="notice-actions">
-            <button class="btn-action btn-view" title="View">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="btn-action btn-delete" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Sample Draft Notice -->
-      <div class="notice-card status-draft">
-        <div class="notice-header">
-          <div>
-            <h4 class="notice-title">Upcoming Community Event</h4>
-            <div class="notice-meta">
-              <div class="meta-item">
-                <i class="fa-solid fa-calendar"></i>
-                <span>Created: Nov 5, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-file-pen"></i>
-                <span>Status: Draft</span>
-              </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-success">
+                    <div class="stats-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Active</h6>
+                        <h2 class="stats-value"><?= $activeCount ?></h2>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        <p class="notice-description">
-          Planning a major community event for the spring season. Details to be finalized soon.
-        </p>
-        <div class="notice-footer">
-          <div class="notice-badges">
-            <span class="badge-modern badge-draft">Draft</span>
-            <span class="badge-modern badge-type">Event</span>
-          </div>
-          <div class="notice-actions">
-            <button class="btn-action btn-view" title="View">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="btn-action btn-delete" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Pagination -->
-    <div class="pagination-modern">
-      <button class="page-btn disabled">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-      <button class="page-btn active">1</button>
-      <button class="page-btn">2</button>
-      <button class="page-btn">3</button>
-      <button class="page-btn">4</button>
-      <button class="page-btn">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-danger">
+                    <div class="stats-icon">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Expired</h6>
+                        <h2 class="stats-value"><?= $expiredCount ?></h2>
+                    </div>
+                </div>
+            </div>
 
-  </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-warning">
+                    <div class="stats-icon">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Drafts</h6>
+                        <h2 class="stats-value"><?= $draftCount ?></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card">
+            <div class="filter-title mb-3">
+                <i class="fa-solid fa-filter me-2"></i>Filters & Search
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="searchInput" placeholder=" Search by title...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="expired">Expired</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="typeFilter">
+                        <option value="all">All Types</option>
+                        <option value="announcement">Announcement</option>
+                        <option value="event">Event</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="deadline">Deadline</option>
+                        <option value="recruitment">Recruitment</option>
+                        <option value="training">Training</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="categoryFilter">
+                        <option value="all">All Categories</option>
+                        <option value="administrative">Administrative</option>
+                        <option value="volunteer">Volunteer</option>
+                        <option value="program">Program</option>
+                        <option value="training">Training</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="sortFilter">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="expiring">Expiring Soon</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notice Table -->
+        <div class="table-container mt-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="noticeTable">
+                    <thead class="table-header">
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Published Date</th>
+                            <th>Expiry Date</th>
+                            <th>Age Requirement</th>
+                            <th colspan="3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($notices as $notice): ?>
+                            <tr data-type="<?= $notice['type'] ?>" data-status="<?= $notice['status'] ?>" data-category="<?= $notice['category'] ?>" data-title="<?= strtolower($notice['title']) ?>">
+                                <td>
+                                    <div>
+                                        <?= $notice['id'] ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="color: #2c3e50;"><?= htmlspecialchars($notice['title']) ?></strong>
+                                    <br>
+                                    <small style="color: #94a3b8;"><?= htmlspecialchars(substr($notice['description'], 0, 60)) ?>...</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-<?=
+                                                            $notice['type'] === 'recruitment' ? 'success' : 
+                                                            ($notice['type'] === 'event' ? 'info' : 
+                                                            ($notice['type'] === 'training' ? 'purple' : 
+                                                            ($notice['type'] === 'deadline' ? 'danger' : 
+                                                            ($notice['type'] === 'meeting' ? 'warning text-dark' : 'primary'))))
+                                                            ?>">
+                                        <i class="fa-solid fa-tag me-1"></i>
+                                        <?= ucfirst($notice['type']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        <i class="fa-solid fa-folder me-1"></i>
+                                        <?= ucfirst($notice['category']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-<?=
+                                                            $notice['status'] === 'active' ? 'success' : 
+                                                            ($notice['status'] === 'draft' ? 'warning text-dark' : 'danger')
+                                                            ?>">
+                                        <i class="fa-solid fa-<?=
+                                                                $notice['status'] === 'active' ? 'circle-check' : 
+                                                                ($notice['status'] === 'draft' ? 'file-pen' : 'circle-xmark')
+                                                                ?> me-1"></i>
+                                        <?= ucfirst($notice['status']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <small style="color: #64748b;">
+                                        <i class="fa-solid fa-calendar me-1"></i>
+                                        <?= date('M d, Y', strtotime($notice['published_date'])) ?>
+                                    </small>
+                                </td>
+                                <td>
+                                    <small style="color: #64748b;">
+                                        <i class="fa-solid fa-clock me-1"></i>
+                                        <?= $notice['expiry_date'] ? date('M d, Y', strtotime($notice['expiry_date'])) : 'N/A' ?>
+                                    </small>
+                                </td>
+                                <td>
+                                    <small style="color: #64748b;">
+                                        <i class="fa-solid fa-user me-1"></i>
+                                        <?= htmlspecialchars($notice['age_requirement']) ?>
+                                    </small>
+                                </td>
+                                <td>
+                                    <a href="view-notice.php?id=<?= $notice['id'] ?>" class="btn btn-sm btn-info d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="View Details">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-sm btn-warning d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    <button onclick="deleteNotice(<?= $notice['id'] ?>)" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
 </div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
 
 <script>
-  // Update statistics (example)
-  document.getElementById('totalCount').textContent = '3';
-  document.getElementById('activeCount').textContent = '1';
-  document.getElementById('expiredCount').textContent = '1';
-  document.getElementById('draftCount').textContent = '1';
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const sortFilter = document.getElementById("sortFilter");
+    const rows = document.querySelectorAll("#noticeTable tbody tr");
 
-  // Search functionality
-  const searchInput = document.getElementById('searchInput');
-  searchInput.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const noticeCards = document.querySelectorAll('.notice-card');
-    
-    noticeCards.forEach(card => {
-      const title = card.querySelector('.notice-title').textContent.toLowerCase();
-      const description = card.querySelector('.notice-description').textContent.toLowerCase();
-      
-      if (title.includes(searchTerm) || description.includes(searchTerm)) {
-        card.style.display = 'block';
-      } else {
-        card.style.display = 'none';
-      }
-    });
-  });
+    function filterTable() {
+        const search = searchInput.value.toLowerCase();
+        const type = typeFilter.value;
+        const status = statusFilter.value;
+        const category = categoryFilter.value;
 
-  // Filter by status
-  const statusFilter = document.getElementById('statusFilter');
-  statusFilter.addEventListener('change', function(e) {
-    const status = e.target.value;
-    const noticeCards = document.querySelectorAll('.notice-card');
-    
-    noticeCards.forEach(card => {
-      if (status === 'all') {
-        card.style.display = 'block';
-      } else {
-        const cardStatus = card.classList.contains(`status-${status}`);
-        card.style.display = cardStatus ? 'block' : 'none';
-      }
-    });
-  });
+        rows.forEach(row => {
+            const title = row.dataset.title;
+            const rowType = row.dataset.type;
+            const rowStatus = row.dataset.status;
+            const rowCategory = row.dataset.category;
+            let visible = true;
+
+            if (search && !title.includes(search)) visible = false;
+            if (type !== "all" && rowType !== type) visible = false;
+            if (status !== "all" && rowStatus !== status) visible = false;
+            if (category !== "all" && rowCategory !== category) visible = false;
+
+            row.style.display = visible ? "" : "none";
+        });
+    }
+
+    function sortTable() {
+        const sortValue = sortFilter.value;
+        const tbody = document.querySelector("#noticeTable tbody");
+        const rowsArr = Array.from(tbody.querySelectorAll("tr"));
+
+        rowsArr.sort((a, b) => {
+            const aId = parseInt(a.children[0].innerText.trim());
+            const bId = parseInt(b.children[0].innerText.trim());
+
+            if (sortValue === "oldest") return aId - bId;
+            if (sortValue === "expiring") {
+                // Sort by expiry date
+                return 0; // Implement expiry date sorting logic here
+            }
+            return bId - aId; // newest
+        });
+
+        tbody.innerHTML = "";
+        rowsArr.forEach(r => tbody.appendChild(r));
+    }
+
+    [searchInput, typeFilter, statusFilter, categoryFilter].forEach(el => el.addEventListener("input", filterTable));
+    sortFilter.addEventListener("change", sortTable);
+
+    function deleteNotice(id) {
+        if (confirm(`Are you sure you want to delete notice #${id}? This action cannot be undone.`)) {
+            alert(`Notice #${id} deleted successfully!`);
+            // Here you would make an AJAX call to delete from database
+            location.reload();
+        }
+    }
 </script>
 
 <?php require './components/footer.php'; ?>

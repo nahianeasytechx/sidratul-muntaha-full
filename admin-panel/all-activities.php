@@ -157,7 +157,7 @@ require './components/header.php';
 
   .filter-select {
     width: 100%;
-    padding: 14px 18px;
+    padding: 2px 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
@@ -295,8 +295,15 @@ require './components/header.php';
   .badge-type {
     background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
     color: #6b21a8;
+    padding: 5px 10px;
+    border-radius: 50px;
   }
-
+.badge-upcoming{
+  margin-top: 5px;
+}
+.badge-ongoing{
+  margin-top: 5px;
+}
   .notice-actions {
     display: flex;
     gap: 8px;
@@ -608,7 +615,7 @@ require './components/header.php';
         </p>
         <div class="activity-footer">
           <div class="activity-badges">
-            <span class="badge-modern badge-upcoming">Upcoming</span>
+            <span class="badge-modern badge-upcoming mt-1">Upcoming</span>
             <span class="badge-modern badge-type">Community Service</span>
             <span class="badge-modern badge-category">Environmental</span>
           </div>

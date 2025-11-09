@@ -436,7 +436,7 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
                         </nav>
                     </div>
                 </div>
-                <a class="btn btn-add-new" href="add-scholarship-application.php">
+                <a class="btn btn-add-new" href="../scholarship.php">
                     <i class="fa-solid fa-plus me-2"></i>Add New Application
                 </a>
             </div>

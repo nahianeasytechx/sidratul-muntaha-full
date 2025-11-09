@@ -5,257 +5,212 @@ $page_title = 'All Donation Categories';
 <?php require './components/header.php'; ?>
 
 <style>
-    /* Statistics Cards - Updated to match notices styling */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .stat-card-modern {
+    /* Modern Stats Card Styles - Matching donation-list.php */
+    .stats-card {
         position: relative;
-        padding: 28px;
+        padding: 24px;
         border-radius: 20px;
         background: #fff;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
+        overflow: visible;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
         border: 1px solid rgba(0, 0, 0, 0.05);
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
     }
 
-    .stat-card-modern:hover {
-        transform: translateY(-8px);
+    .stats-card:hover {
+        transform: translateY(-8px) scale(1.02);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
-    .stat-card-modern::before {
+    .stats-card::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 5px;
         background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
         opacity: 0;
         transition: opacity 0.3s ease;
+        border-radius: 20px 20px 0 0;
     }
 
-    .stat-card-modern:hover::before {
+    .stats-card:hover::before {
         opacity: 1;
     }
 
-    .stat-card-modern.total { --gradient-start: #8b5cf6; --gradient-end: #7c3aed; }
-    .stat-card-modern.active { --gradient-start: #10b981; --gradient-end: #059669; }
-    .stat-card-modern.raised { --gradient-start: #ef4444; --gradient-end: #dc2626; }
-    .stat-card-modern.donors { --gradient-start: #f59e0b; --gradient-end: #d97706; }
-
-    .stat-content-flex {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .stat-info h3 {
-        font-size: 36px;
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin: 8px 0 0 0;
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .stat-icon-modern {
-        width: 64px;
-        height: 64px;
+    .stats-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
         border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease;
+        transition: all 0.3s ease;
     }
 
-    .stat-card-modern:hover .stat-icon-modern {
+    .stats-card:hover .stats-icon {
         transform: rotate(10deg) scale(1.1);
     }
 
-    .stat-icon-modern i {
+    .stats-icon i {
         font-size: 28px;
         color: #fff;
     }
 
-    /* Page Header - Updated to match notices styling */
-    .page-title-section {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 32px;
-        padding: 24px;
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
+    .stats-content {
+        position: relative;
+        z-index: 1;
+        padding-right: 76px;
     }
 
-    .page-title-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
+    .stats-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 12px;
     }
 
-    .page-title-section .icon-box {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
-    }
-
-    .page-title-section h1 {
-        margin: 0;
-        color: #1e293b;
+    .stats-value {
+        font-size: 36px;
         font-weight: 700;
-        font-size: 28px;
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+        line-height: 1.2;
     }
 
-    .page-title-section .breadcrumb {
+    /* Gradient Variants */
+    .stats-gradient-primary {
+        --gradient-start: #8b5cf6;
+        --gradient-end: #7c3aed;
+    }
+
+    .stats-gradient-success {
+        --gradient-start: #10b981;
+        --gradient-end: #059669;
+    }
+
+    .stats-gradient-danger {
+        --gradient-start: #ef4444;
+        --gradient-end: #dc2626;
+    }
+
+    .stats-gradient-warning {
+        --gradient-start: #f59e0b;
+        --gradient-end: #d97706;
+    }
+
+    /* Page Header Styling - Matching donation-list.php */
+    .page-header {
+        background: linear-gradient(135deg, #10b981, #059669);
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    }
+
+    .page-header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header .breadcrumb {
         background: transparent;
         padding: 0;
-        margin: 8px 0 0 0;
-        font-size: 14px;
-        border:none;
+        margin: 0;
+    }
+
+    .page-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.3s ease;
+        text-decoration: none;
+    }
+
+    .page-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .page-header .breadcrumb-item+.breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.6);
     }
 
     .btn-add-new {
-        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        color: white;
+        background: #000;
+        color: #fff;
         border: none;
+        padding: 0.75rem 1.5rem;
         border-radius: 12px;
-        padding: 14px 24px;
         font-weight: 600;
-        text-decoration: none;
         transition: all 0.3s ease;
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+        text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        cursor: pointer;
     }
 
     .btn-add-new:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
-        color: white;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        background: #fff;
+        color: #000;
     }
 
-    /* Filter Section - Updated to match notices styling */
-    .filter-section {
-        background: #fff;
-        padding: 28px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        margin-bottom: 32px;
+    /* Filter Card - Matching donation-list.php */
+    .filter-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    .filter-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #f1f5f9;
-    }
-
-    .filter-header i {
-        font-size: 20px;
-        color: #8b5cf6;
-    }
-
-    .filter-header h5 {
-        font-size: 18px;
+    .filter-title {
+        font-size: 1.1rem;
         font-weight: 700;
-        color: #1e293b;
-        margin: 0;
+        color: #2c3e50;
     }
 
-    .filter-select {
-        width: 100%;
-        padding: 14px 18px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 15px;
-        color: #1e293b;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 20px;
-        background-color: #fff;
-        padding-right: 45px;
-    }
-
-    .filter-select:focus {
-        outline: none;
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-    }
-
-    .search-input-wrapper {
-        position: relative;
-    }
-
-    .search-input-wrapper i {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94a3b8;
-        font-size: 16px;
-    }
-
-    .search-input-wrapper input {
-        width: 100%;
-        padding: 14px 18px 14px 48px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 15px;
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.6rem 1rem;
         transition: all 0.3s ease;
     }
 
-    .search-input-wrapper input:focus {
-        outline: none;
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
     }
 
-    /* Category Cards - Updated to match notices styling */
+    /* Category Cards - Updated to match table styling */
     .category-card {
         background: #fff;
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
         position: relative;
@@ -277,8 +232,8 @@ $page_title = 'All Donation Categories';
     .category-card.status-completed { --accent-color: #8b5cf6; --accent-color-dark: #7c3aed; }
 
     .category-card:hover {
-        transform: translateX(4px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
 
     .category-header {
@@ -292,13 +247,13 @@ $page_title = 'All Donation Categories';
     .category-title {
         font-size: 20px;
         font-weight: 700;
-        color: #1e293b;
+        color: #2c3e50;
         margin-bottom: 8px;
         line-height: 1.3;
     }
 
     .category-description {
-        color: #475569;
+        color: #64748b;
         font-size: 15px;
         line-height: 1.6;
         margin-bottom: 16px;
@@ -320,8 +275,58 @@ $page_title = 'All Donation Categories';
     }
 
     .meta-item i {
-        color: #8b5cf6;
+        color: #10b981;
         font-size: 14px;
+    }
+
+    /* Badge Styles - Matching donation-list.php */
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-active {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+    }
+
+    .badge-inactive {
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        color: #475569;
+    }
+
+    .badge-completed {
+        background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
+        color: #6b21a8;
+    }
+
+    .badge-emergency {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+    }
+
+    .badge-general {
+        background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
+        color: #6b21a8;
+    }
+
+    .badge-project {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        color: #1e40af;
+    }
+
+    .badge-zakat {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        color: #92400e;
+    }
+
+    .badge-sadaqah {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
     }
 
     /* Progress Bar Styling */
@@ -339,11 +344,12 @@ $page_title = 'All Donation Categories';
     .progress-label {
         font-size: 14px;
         color: #64748b;
+        font-weight: 600;
     }
 
     .progress-percent {
         font-weight: 700;
-        color: #059669;
+        color: #10b981;
         font-size: 14px;
     }
 
@@ -383,73 +389,48 @@ $page_title = 'All Donation Categories';
         flex-wrap: wrap;
     }
 
-    .badge-modern {
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .badge-active {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-    }
-
-    .badge-inactive {
-        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-        color: #475569;
-    }
-
-    .badge-completed {
-        background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
-        color: #6b21a8;
-    }
-
-    .badge-type {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #92400e;
-    }
-
     .category-actions {
         display: flex;
         gap: 8px;
     }
 
-    .btn-action {
-        padding: 8px 16px;
-        border-radius: 10px;
+    /* Action Buttons - Matching donation-list.php */
+    .btn-info {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
         border: none;
-        font-size: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+
+    .btn-sm {
+        transition: all 0.3s ease;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
         font-weight: 600;
         text-decoration: none;
-        transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        cursor: pointer;
     }
 
-    .btn-view {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-    }
-
-    .btn-edit {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #92400e;
-    }
-
-    .btn-delete {
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        color: #991b1b;
-    }
-
-    .btn-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        text-decoration: none;
+    .btn-sm:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
 
     /* Empty State */
@@ -458,7 +439,7 @@ $page_title = 'All Donation Categories';
         padding: 60px 20px;
         background: #fff;
         border-radius: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
     .empty-state-icon {
@@ -480,7 +461,7 @@ $page_title = 'All Donation Categories';
     .empty-state h3 {
         font-size: 24px;
         font-weight: 700;
-        color: #1e293b;
+        color: #2c3e50;
         margin-bottom: 8px;
     }
 
@@ -489,89 +470,48 @@ $page_title = 'All Donation Categories';
         font-size: 16px;
     }
 
-    /* Pagination */
-    .pagination-modern {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        margin-top: 32px;
-    }
-
-    .page-btn {
-        min-width: 40px;
-        height: 40px;
-        padding: 0 12px;
-        border-radius: 10px;
-        border: 2px solid #e2e8f0;
-        background: #fff;
-        color: #64748b;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-    }
-
-    .page-btn:hover:not(.disabled):not(.active) {
-        border-color: #8b5cf6;
-        color: #8b5cf6;
-        transform: translateY(-2px);
-    }
-
-    .page-btn.active {
-        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        color: #fff;
-        border-color: transparent;
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
-    }
-
-    .page-btn.disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-
-    /* Animation */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .category-card {
-        animation: fadeIn 0.5s ease;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .stat-info h3 {
+    /* Responsive Design */
+    @media (max-width: 1199px) {
+        .stats-value {
             font-size: 28px;
         }
 
-        .stat-icon-modern {
+        .stats-icon {
             width: 50px;
             height: 50px;
         }
 
-        .stat-icon-modern i {
-            font-size: 22px;
+        .stats-icon i {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .page-header {
+            padding: 1.5rem;
         }
 
-        .page-title-section {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .stats-card {
+            padding: 20px;
+        }
+
+        .stats-value {
+            font-size: 24px;
+        }
+
+        .stats-icon {
+            width: 46px;
+            height: 46px;
+            top: 16px;
+            right: 16px;
+        }
+
+        .stats-icon i {
+            font-size: 20px;
         }
 
         .category-header {
@@ -590,115 +530,110 @@ $page_title = 'All Donation Categories';
         }
     }
 
-    @media (max-width: 576px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+    /* Loading Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
         }
-        
-        .filter-section .row {
-            gap: 16px;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        
-        .filter-section .col-md-4,
-        .filter-section .col-md-2 {
-            width: 100%;
-        }
+    }
+
+    .stats-card,
+    .filter-card,
+    .category-card {
+        animation: fadeIn 0.5s ease-out;
     }
 </style>
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
 <div class="content-wrapper">
     <div class="donation-categories">
 
-        <!-- Page Title -->
-        <div class="page-title-section">
-            <div class="page-title-content">
-                <div class="icon-box">
-                    <i class="fa-solid fa-hand-holding-heart"></i>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
+                <div class="d-flex gap-3">
+                    <div>
+                        <h1><i class="fa-solid fa-hand-holding-heart me-2"></i>All Donation Categories</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Donation Categories</li>
+                            </ol>
+                        </nav>
+                    </div>
                 </div>
-                <div>
-                    <h1>All Donation Categories</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php" class="text-decoration-none">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">All Donation Categories</li>
-                        </ol>
-                    </nav>
-                </div>
+                <a class="btn btn-add-new" href="donation-categories.php">
+                    <i class="fa-solid fa-plus me-2"></i>Add New Category
+                </a>
             </div>
-            <button class="btn-add-new" onclick="window.location.href='add-donation.php'">
-                <i class="fa-solid fa-plus"></i>Add New Category
-            </button>
         </div>
 
-        <!-- Statistics Grid -->
-        <div class="stats-grid">
-            <div class="stat-card-modern total">
-                <div class="stat-content-flex">
-                    <div class="stat-info">
-                        <div class="stat-label">Total Categories</div>
-                        <h3 id="totalCount">0</h3>
-                    </div>
-                    <div class="stat-icon-modern">
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-primary">
+                    <div class="stats-icon">
                         <i class="fa-solid fa-layer-group"></i>
                     </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Total Categories</h6>
+                        <h2 class="stats-value" id="totalCount">0</h2>
+                    </div>
                 </div>
             </div>
 
-            <div class="stat-card-modern active">
-                <div class="stat-content-flex">
-                    <div class="stat-info">
-                        <div class="stat-label">Active</div>
-                        <h3 id="activeCount">0</h3>
-                    </div>
-                    <div class="stat-icon-modern">
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-success">
+                    <div class="stats-icon">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Active</h6>
+                        <h2 class="stats-value" id="activeCount">0</h2>
+                    </div>
                 </div>
             </div>
 
-            <div class="stat-card-modern raised">
-                <div class="stat-content-flex">
-                    <div class="stat-info">
-                        <div class="stat-label">Total Raised</div>
-                        <h3 id="totalRaised">৳ 0</h3>
-                    </div>
-                    <div class="stat-icon-modern">
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-danger">
+                    <div class="stats-icon">
                         <i class="fa-solid fa-coins"></i>
                     </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Total Raised</h6>
+                        <h2 class="stats-value" id="totalRaised">৳0</h2>
+                    </div>
                 </div>
             </div>
 
-            <div class="stat-card-modern donors">
-                <div class="stat-content-flex">
-                    <div class="stat-info">
-                        <div class="stat-label">Total Donors</div>
-                        <h3 id="totalDonors">0</h3>
-                    </div>
-                    <div class="stat-icon-modern">
+            <div class="col-xl-3 col-md-6">
+                <div class="stats-card stats-gradient-warning">
+                    <div class="stats-icon">
                         <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h6 class="stats-label">Total Donors</h6>
+                        <h2 class="stats-value" id="totalDonors">0</h2>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filter Section -->
-        <div class="filter-section">
-            <div class="filter-header">
-                <i class="fa-solid fa-filter"></i>
-                <h5>Filters & Search</h5>
+        <!-- Filters -->
+        <div class="filter-card">
+            <div class="filter-title mb-3">
+                <i class="fa-solid fa-filter me-2"></i>Filters & Search
             </div>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <div class="search-input-wrapper">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" placeholder="Search categories..." id="searchInput">
-                    </div>
+                    <input type="text" class="form-control" id="searchInput" placeholder=" Search categories...">
                 </div>
                 <div class="col-md-2">
-                    <select class="filter-select" id="statusFilter">
+                    <select class="form-select" id="statusFilter">
                         <option value="all">All Status</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
@@ -706,7 +641,7 @@ $page_title = 'All Donation Categories';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="filter-select" id="typeFilter">
+                    <select class="form-select" id="typeFilter">
                         <option value="all">All Types</option>
                         <option value="emergency">Emergency</option>
                         <option value="general">General</option>
@@ -716,7 +651,7 @@ $page_title = 'All Donation Categories';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="filter-select" id="targetFilter">
+                    <select class="form-select" id="targetFilter">
                         <option value="all">All Targets</option>
                         <option value="reached">Target Reached</option>
                         <option value="progress">In Progress</option>
@@ -724,7 +659,7 @@ $page_title = 'All Donation Categories';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="filter-select" id="sortFilter">
+                    <select class="form-select" id="sortFilter">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="amount">By Amount</option>
@@ -735,25 +670,10 @@ $page_title = 'All Donation Categories';
         </div>
 
         <!-- Categories List -->
-        <div id="categoriesList"></div>
+        <div id="categoriesList" class="mt-4"></div>
 
-        <!-- Pagination -->
-        <div class="pagination-modern">
-            <a class="page-btn disabled">
-                <i class="fa-solid fa-chevron-left"></i>
-            </a>
-            <a class="page-btn active">1</a>
-            <a class="page-btn">2</a>
-            <a class="page-btn">3</a>
-            <a class="page-btn">
-                <i class="fa-solid fa-chevron-right"></i>
-            </a>
-        </div>
     </div>
 </div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
 
 <script>
 const sampleCategories = [
@@ -804,6 +724,30 @@ const sampleCategories = [
         donors: 95, 
         image: "water.jpg", 
         createdDate: "2023-12-05"
+    },
+    {
+        id: 5, 
+        name: "Orphan Care Program", 
+        description: "Providing shelter, education, and care for orphaned children in need", 
+        type: "sadaqah", 
+        status: "active", 
+        targetAmount: 60000, 
+        raisedAmount: 28000, 
+        donors: 112, 
+        image: "orphan.jpg", 
+        createdDate: "2024-02-20"
+    },
+    {
+        id: 6, 
+        name: "Zakat Distribution", 
+        description: "Annual Zakat collection and distribution to eligible recipients", 
+        type: "zakat", 
+        status: "active", 
+        targetAmount: 120000, 
+        raisedAmount: 95000, 
+        donors: 340, 
+        image: "zakat.jpg", 
+        createdDate: "2024-01-01"
     }
 ];
 
@@ -817,7 +761,7 @@ function updateStatistics() {
     document.getElementById('totalCount').textContent = sampleCategories.length;
     document.getElementById('activeCount').textContent = sampleCategories.filter(c => c.status === 'active').length;
     const totalRaised = sampleCategories.reduce((sum, c) => sum + c.raisedAmount, 0);
-    document.getElementById('totalRaised').textContent = '৳ ' + totalRaised.toLocaleString();
+    document.getElementById('totalRaised').textContent = '৳' + totalRaised.toLocaleString();
     const totalDonors = sampleCategories.reduce((sum, c) => sum + c.donors, 0);
     document.getElementById('totalDonors').textContent = totalDonors;
 }
@@ -850,8 +794,8 @@ function displayCategories(categories) {
                     <p class="category-description">${category.description}</p>
                 </div>
                 <div class="category-badges">
-                    <span class="badge-modern ${statusClass}">${category.status.toUpperCase()}</span>
-                    <span class="badge-modern badge-type">${category.type}</span>
+                    <span class="badge ${statusClass}">${category.status.toUpperCase()}</span>
+                    <span class="badge badge-${category.type}">${category.type}</span>
                 </div>
             </div>
 
@@ -872,23 +816,23 @@ function displayCategories(categories) {
                     <span class="progress-percent">${progress.toFixed(1)}%</span>
                 </div>
                 <div class="progress-bar-modern">
-                    <div class="progress-fill" style="width: ${progress}%"></div>
+                    <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
                 </div>
                 <div class="progress-stats">
-                    <span>Raised: <strong>৳ ${category.raisedAmount.toLocaleString()}</strong></span>
-                    <span>Goal: <strong>৳ ${category.targetAmount.toLocaleString()}</strong></span>
+                    <span>Raised: <strong>৳${category.raisedAmount.toLocaleString()}</strong></span>
+                    <span>Goal: <strong>৳${category.targetAmount.toLocaleString()}</strong></span>
                 </div>
             </div>
 
             <div class="category-footer">
                 <div class="category-actions">
-                    <button class="btn-action btn-view" onclick="window.location.href='view-donation-fund.php?id=${category.id}'">
+                    <a href="view-donation-fund.php?id=${category.id}" class="btn btn-sm btn-info">
                         <i class="fa-solid fa-eye"></i> View
-                    </button>
-                    <button class="btn-action btn-edit" onclick="window.location.href='edit-donation-category.php?id=${category.id}'">
-                        <i class="fa-solid fa-edit"></i> Edit
-                    </button>
-                    <button class="btn-action btn-delete" onclick="deleteCategory(${category.id})">
+                    </a>
+                    <a href="donation-categories.php?edit=${category.id}" class="btn btn-sm btn-warning">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </a>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCategory(${category.id})">
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
                 </div>
@@ -952,9 +896,10 @@ function applyFilters() {
 }
 
 function deleteCategory(id) {
-    if (confirm('Are you sure you want to delete this category?')) {
-        console.log('Deleting category:', id);
-        // Add actual deletion logic here
+    if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+        alert(`Category #${id} deleted successfully!`);
+        // Here you would make an AJAX call to delete from database
+        location.reload();
     }
 }
 </script>

@@ -1060,8 +1060,18 @@ button:focus {
 				</div>
 
 				<!-- Right Side: Logo + Socials -->
+				 <style>
+					.featured-logo {
+						width: 400px !important;
+					}
+					@media only screen and (max-width: 768px) {
+						.featured-logo {
+							width: 300px !important;
+						}
+					}
+				 </style>
 				<div class="col-lg-6 p-5 featured-right text-center">
-					<img src="images/sr-logo.png" alt="Logo" class="featured-logo mb-4" style="max-width:180px;">
+					<img src="images/final-logo.png" alt="Logo" class="featured-logo mb-4"><br><br>
 					<div class="social-icons justify-content-center">
 						<a href="#" class="social-icon"><i class="fa fa-facebook"></i></a>
 						<a href="#" class="social-icon"><i class="fa fa-youtube-play"></i></a>
@@ -1238,7 +1248,7 @@ button:focus {
 			<div class="col-lg-4 col-md-6">
 				<div class="project-card">
 					<div class="project-img">
-						<img src="images/hospital.jpg" alt="Hospital">
+						<img src="images/hospital.png" alt="Hospital">
 					</div>
 					<div class="project-body">
 						<h3 class="project-title">Hospital Project</h3>
@@ -1253,7 +1263,7 @@ button:focus {
 			<div class="col-lg-4 col-md-6">
 				<div class="project-card">
 					<div class="project-img">
-						<img src="images/school.jpg" alt="School">
+						<img src="images/school.png" alt="School">
 					</div>
 					<div class="project-body">
 						<h3 class="project-title">School Project</h3>
@@ -1268,7 +1278,7 @@ button:focus {
 			<div class="col-lg-4 col-md-6">
 				<div class="project-card">
 					<div class="project-img">
-						<img src="images/mosque.jpg" alt="Mosque">
+						<img src="images/mosque.png" alt="Mosque">
 					</div>
 					<div class="project-body">
 						<h3 class="project-title">Mosque Project</h3>
