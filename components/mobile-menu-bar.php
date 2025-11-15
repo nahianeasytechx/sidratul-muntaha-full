@@ -1,3 +1,22 @@
+<style>
+	.modern_mobile_menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 82%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.1);
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s ease-in-out;
+    z-index: 1000;
+    overflow-y: scroll;
+}
+</style>
+
 <!-- Mobile Menu Overlay -->
 <div class="mobile-menu-overlay"></div>
 

@@ -56,11 +56,11 @@ require 'database/dbConnection.php';
 		<link rel="stylesheet" type="text/css" href="styles/contact.css">
 		<link rel="stylesheet" type="text/css" href="styles/contact_responsive.css">
 	<?php
-	} else if ($current_page == 'activities.php') {
+	} else if ($current_page == 'projects.php') {
 	?>
 
-		<title>Activities</title>
-		<meta name="description" content="Sidratul Muntaha Foundation’s activities: orphan care, education programs, food distribution, medical support, dawah projects, and community development inspired by Sunnah.">
+		<title>Projects</title>
+		<meta name="description" content="Sidratul Muntaha Foundation’s projects: orphan care, education programs, food distribution, medical support, dawah projects, and community development inspired by Sunnah.">
 
 		<link rel="stylesheet" type="text/css" href="styles/courses.css">
 		<link rel="stylesheet" type="text/css" href="styles/courses_responsive.css">
@@ -94,7 +94,7 @@ require 'database/dbConnection.php';
 		<link rel="stylesheet" type="text/css" href="styles/news.css">
 		<link rel="stylesheet" type="text/css" href="styles/news_responsive.css">
 	<?php
-	} else if ($current_page == 'activities-details.php') {
+	} else if ($current_page == 'project-details.php') {
 	?>
 
 		<title>Sidratul Muntaha Foundation</title>

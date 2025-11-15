@@ -1,32 +1,43 @@
         <!-- Navbar -->
-		<style>
-			.main_nav li a, .nav-donate-btn {
-				font-size: 14px;
-				text-transform: uppercase;
-			}
-			.nav-donate-btn {
-				font-weight: 700;
-			}
-			.nav-zakat-btn {
-				border-color: #05a657;
-				text-transform: uppercase;
-				color: #05a657;
-				font-size: 14px;
-				transition: .3s;
-				font-weight: 700;
-			}
-			.nav-zakat-btn:hover {
-				background-color: #05a657;
-				color: #fff;
-			}
-			/* .logo_img img{
+        <style>
+        	.main_nav li a,
+        	.nav-donate-btn {
+        		font-size: 14px;
+        		text-transform: uppercase;
+        	}
+
+        	.main_nav li:not(:last-child) {
+        		margin-right: 0px;
+        	}
+
+        	.nav-donate-btn {
+        		font-weight: 700;
+        	}
+
+        	.nav-zakat-btn {
+        		border-color: #05a657;
+        		text-transform: uppercase;
+        		color: #05a657;
+        		font-size: 14px;
+        		transition: .3s;
+        		font-weight: 700;
+				padding-bottom: 11px;
+        	}
+
+
+        	.nav-zakat-btn:hover {
+        		background-color: #05a657;
+        		color: #fff;
+        	}
+
+        	/* .logo_img img{
 				min-width: 160px
 			}
 			@media(max-width:460px){
 				.logo_img img{
 				width: 150px
 			} */
-		</style>
+        </style>
         <div class="header_container mx-auto">
         	<div class=" container ">
         		<div class="row">
@@ -36,9 +47,9 @@
         						<a href="index.php">
         							<div class="logo_content mt-1">
         								<div class="logo_img">
-											<img src="images/sidratul logo.png" alt="sidratul logo.png" >
-										</div>
-        					
+        									<img src="images/sidratul logo.png" alt="sidratul logo.png">
+        								</div>
+
         							</div>
         						</a>
         					</div>
@@ -62,11 +73,11 @@
         							</li>
         							<li
         								<?php
-										if ($current_page == 'activities.php') {
+										if ($current_page == 'projects.php') {
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="activities.php">Activities</a>
+        								<a href="projects.php">Projects</a>
         							</li>
 
         							<li
@@ -75,7 +86,7 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="contact.php">Contact</a>
+        								<a href="contact.php">Contact Us</a>
         							</li>
 
         							<li
@@ -99,7 +110,7 @@
         						<div class="hamburger menu_mm">
         							<i class="fa fa-bars menu_mm" aria-hidden="true"></i>
         						</div>
-								
+
         					</nav>
 
         					<!-- Language Toggle -->
@@ -110,7 +121,8 @@
 
         						</div> -->
 
-        						<div class="d-none d-lg-block m-2">
+        					<div class="d-flex ">
+        						<div class="d-none d-lg-block mt-2 ">
         							<a href="zakat-calculator.php" class="active text-decoration-none nav-zakat-btn">Zakat Calculator </a>
         						</div>
         						<div class="donate-btn-section d-none d-lg-block">
@@ -121,4 +133,5 @@
         			</div>
         		</div>
         	</div>
+        </div>
         </div>

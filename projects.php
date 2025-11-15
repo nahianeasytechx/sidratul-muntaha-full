@@ -1,6 +1,6 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']); // Get the current page name
-$page_title = 'Activities'; // Set the page title
+$page_title = 'Projects'; // Set the page title
 ?>
 <?php require './components/header.php'; ?>
 
@@ -24,11 +24,11 @@ $page_title = 'Activities'; // Set the page title
 				<div class="row">
 					<div class="col">
 						<div class="home_content text-center">
-							<div data-aos="fade-up" class="home_title">Activities</div>
+							<div data-aos="fade-up" class="home_title">Projects</div>
 							<div class="breadcrumbs">
 								<ul>
 									<li><a href="index.php">Home</a></li>
-									<li>Activities</li>
+									<li>Projects</li>
 								</ul>
 							</div>
 						</div>
@@ -44,7 +44,7 @@ $page_title = 'Activities'; // Set the page title
 
 
 <div class="container">
-			<div class="row courses_row" id="activitiesGrid" data-aos="fade-up"></div>
+			<div class="row courses_row" id="projectsGrid" data-aos="fade-up"></div>
 			<div class="row">
 				<div class="col">
 

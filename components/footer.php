@@ -52,7 +52,7 @@
 		<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyCIwF204lFZg1y4kPSIhKaHEXMLYxxuMhA"></script>
 		<script src="js/contact.js"></script>
 	<?php
-	} else if ($current_page == 'activities.php') {
+	} else if ($current_page == 'projects.php') {
 	?>
 		<!-- Courses -->
 		<script src="js/jquery-3.2.1.min.js"></script>
@@ -60,7 +60,7 @@
 		<script src="styles/bootstrap4/bootstrap.min.js"></script>
 		<script src="plugins/easing/easing.js"></script>
 		<script src="plugins/parallax-js-master/parallax.min.js"></script>
-		<script src="js/activities.js"></script>
+		<script src="js/projects.js"></script>
 		<script src="js/courses.js"></script>
 	<?php
 	} else if ($current_page == 'gallery.php') {
@@ -92,14 +92,14 @@
 		<script src="plugins/parallax-js-master/parallax.min.js"></script>
 		<script src="js/news.js"></script>
 	<?php
-	} else if ($current_page == 'activities-details.php') {
+	} else if ($current_page == 'project-details.php') {
 	?>
 		<!-- Notice -->
 		<script src="js/jquery-3.2.1.min.js"></script>
 		<script src="styles/bootstrap4/bootstrap.min.js"></script>
 		<script src="plugins/easing/easing.js"></script>
 		<script src="plugins/parallax-js-master/parallax.min.js"></script>
-		<script src="js/activitiesDetails.js"></script>
+		<script src="js/projectsDetails.js.js"></script>
 		<script src="js/news.js"></script>
 	<?php
 	} else if ($current_page == 'donate.php') {

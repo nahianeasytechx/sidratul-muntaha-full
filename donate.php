@@ -7,7 +7,10 @@ $page_title = 'Donate';
     .form-check img {
         width: 70px;
     }
-
+.form-check-label {
+    padding-left: 0;
+    margin-bottom: 0;
+}
     .custom-border {
         border: 1px solid #ccc;
 
@@ -156,7 +159,7 @@ margin-top: 0;
                                     <option value="education-support">Education Support</option>
                                     <option value="orphan-homeless">Food & Financial Aid Support  For Orphan & Homeless</option>
                                     <option value="disaster-relief">Disaster Relief</option>
-                                    <option value="tree-plantation">Planted Tree</option>
+                                    <option value="tree-plantation">Plant A Tree</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>
@@ -175,29 +178,29 @@ margin-top: 0;
                                     Payment Method <span class="required">*</span>
                                 </label>
                                 <div class="payment-method">
-                                    <div class="form-check">
-                                        <div class="d-flex p-1">
+                                    <div class="form-check d-flex">
+                                        <div class="d-flex p-1 ">
                                             <input class="form-check-input mt-2" type="radio" name="payment_method" id="sslcommerz" value="sslcommerz" checked>
                                             <label class="form-check-label d-flex align-items-center" for="sslcommerz">
                                                 <span class="badge"><img src="images/ssl logo.png" alt=""></span>
                                             </label>
                                         </div>
 
-                                        <div class="d-flex p-1">
+                                        <div class="d-flex p-1 mx-3">
                                             <input class="form-check-input mt-2" type="radio" name="payment_method" id="bkash" value="bkash">
                                             <label class="form-check-label d-flex align-items-center" for="bkash">
                                                 <span class="badge"><img src="images/bkash.png" alt=""></span>
                                             </label>
                                         </div>
 
-                                        <div class="d-flex p-1">
+                                        <div class="d-flex p-1 mx-3">
                                             <input class="form-check-input mt-2" type="radio" name="payment_method" id="nagad" value="nagad">
                                             <label class="form-check-label d-flex align-items-center" for="nagad">
                                                 <span class="badge"><img src="images/nogod.png" alt=""></span>
                                             </label>
                                         </div>
 
-                                        <div class="d-flex p-1">
+                                        <div class="d-flex p-1 mx-3">
                                             <input class="form-check-input mt-2" type="radio" name="payment_method" id="paypal" value="paypal">
                                             <label class="form-check-label d-flex align-items-center" for="paypal">
                                                 <span class="badge"><img src="images/paypal.png" alt=""></span>

@@ -86,9 +86,9 @@ $page_title = 'Home';
 
 /* Slide title and description */
 .slide-title {
-	transform: translateX(-50px);
+	transform: translateX(-1000px);
 	opacity: 0;
-	transition: transform 1s ease, opacity 1s ease;
+	transition: transform 2s ease, opacity 1s ease;
 	transition-delay: 0.4s;
 	font-size: 64px;
 	font-weight: 800;
@@ -99,15 +99,16 @@ $page_title = 'Home';
 }
 
 .slide-description {
-	transform: translateX(50px);
+	transform: translateX(1000px);
 	opacity: 0;
-	transition: transform 1s ease, opacity 1s ease;
+	transition: transform 2s ease, opacity 1s ease;
 	transition-delay: 0.6s;
 	font-size: 20px;
 	color: rgba(255, 255, 255, 0.95);
 	margin-bottom: 40px;
 	line-height: 1.7;
 	max-width: 700px;
+	padding-bottom: 30px;
 }
 
 .slide-buttons {
@@ -847,8 +848,8 @@ button:focus {
 							Donate Now
 							<i class="fa fa-arrow-right"></i>
 						</a>
-						<a href="activities.php" class="hero-btn hero-btn-secondary">
-							View Activities
+						<a href="projects.php" class="hero-btn hero-btn-secondary">
+							View Projects
 							<i class="fa fa-angle-right"></i>
 						</a>
 					</div>
@@ -864,8 +865,8 @@ button:focus {
 							Donate Now
 							<i class="fa fa-arrow-right"></i>
 						</a>
-						<a href="activities.php" class="hero-btn hero-btn-secondary">
-							View Activities
+						<a href="projects.php" class="hero-btn hero-btn-secondary">
+							View Projects
 							<i class="fa fa-angle-right"></i>
 						</a>
 					</div>
@@ -881,8 +882,8 @@ button:focus {
 							Donate Now
 							<i class="fa fa-arrow-right"></i>
 						</a>
-						<a href="activities.php" class="hero-btn hero-btn-secondary">
-							View Activities
+						<a href="projects.php" class="hero-btn hero-btn-secondary">
+							View Projects
 							<i class="fa fa-angle-right"></i>
 						</a>
 					</div>
@@ -901,6 +902,376 @@ button:focus {
 	</div>
 </div>
 
+
+<!-- Modern Featured Section (Single Card Layout) -->
+<div class="modern-featured">
+	<div class="container" data-aos="fade-up">
+		<div class="featured-card unified-card px-3">
+			<div class="row g-0 align-items-center">
+				<!-- Left Side: Info -->
+				<div class="col-lg-6 p-5 featured-left">
+					<h2 class="fw-bold mb-3" style="font-size: 2rem; color: #fff; font-weight: 800;">Sidratul Muntaha Foundation</h2>
+					<p class="mb-4" style="color: #f1f1f1; font-size: 1rem; line-height: 1.7;">
+						Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare.
+						Registration Number: S-14117/2024.
+					</p>
+					<div class="d-flex flex-wrap" style="gap: 20px">
+						<a href="about.php" class="hero-btn hero-btn-primary" style="background:#00a854; padding:12px 25px; border-radius:10px; color:#fff; font-weight:600; text-decoration:none;">Know More</a>
+						<a href="projects.php" class="hero-btn hero-btn-outline" style="border:2px solid rgb(255, 255, 255); padding:12px 25px; border-radius:10px; color: #fff; font-weight:600; text-decoration:none;">Activities</a>
+					</div>
+				</div>
+
+				<!-- Right Side: Logo + Socials -->
+				 <style>
+					.featured-logo {
+						width: 400px !important;
+					}
+					@media only screen and (max-width: 768px) {
+						.featured-logo {
+							width: 300px !important;
+						}
+					}
+				 </style>
+				<div class="col-lg-6 p-5 featured-right text-center">
+					<img src="images/final-logo.png" alt="Logo" class="featured-logo mb-4"><br><br>
+					<div class="social-icons justify-content-center">
+						<a href="#" class="social-icon"><i class="fa fa-facebook"></i></a>
+						<a href="#" class="social-icon"><i class="fa fa-youtube-play"></i></a>
+						<a href="#" class="social-icon"><i class="fa fa-instagram"></i></a>
+						<a href="#" class="social-icon"><i class="fa fa-twitter"></i></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Mission Section -->
+<div class="mission-section">
+	<div class="container">
+		<div class="section-header" data-aos="fade-up">
+			<span class="section-badge">OUR MISSION</span>
+			<h2 class="section-title">For Ummah, With Sunnah</h2>
+			<p class="section-subtitle">Dedicated to serving humanity through three core pillars of excellence</p>
+		</div>
+		<div class="row" data-aos="fade-up" data-aos-delay="200">
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="mission-card">
+					<div class="mission-icon">
+						<i class="fa fa-graduation-cap"></i>
+					</div>
+					<h3>Education</h3>
+					<p>Establishing and managing madrasas with an integrated syllabus of religious and general education to produce distinguished Islamic scholars and contemporary da'wah practitioners.</p>
+					<div class="text-center mt-5" data-aos="fade-up">
+						<a href="about.php" class="see-all-btn">
+							See More
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="mission-card">
+					<div class="mission-icon">
+						<i class="fa fa-handshake-o"></i>
+					</div>
+					<h3>Service</h3>
+					<p>Empowering the poor, providing relief for flood victims, installing water purification plants, tree plantation, distributing winter clothing, Iftar meals, and organizing inclusive Qurbani programs.</p>
+					<div class="text-center mt-5" data-aos="fade-up">
+						<a href="about.php" class="see-all-btn">
+							See More
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="mission-card">
+					<div class="mission-icon">
+						<i class="fa fa-book"></i>
+					</div>
+					<h3>Dawah</h3>
+					<p>Online-based da'wah, writing and publishing Islamic books, conducting religious study circles, and organizing training programs and workshops for Islamic outreach.</p>
+					<div class="text-center mt-5" data-aos="fade-up">
+						<a href="about.php" class="see-all-btn">
+							See More
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Projects Section -->
+<div class="activities-section">
+	<div class="container">
+		<div class="section-header" data-aos="fade-up">
+			<span class="section-badge">WHAT WE DO</span>
+			<h2 class="section-title">Our Projects</h2>
+			<p class="section-subtitle">Making a difference through meaningful actions and sustainable projects</p>
+		</div>
+		<div class="courses_slider_container" data-aos="fade-up" data-aos-delay="200">
+			<div class="owl-carousel owl-theme courses_slider">
+				<!-- Activity 1 -->
+				<div class="owl-item">
+					<div class="course">
+						<div class="course_image">
+							<a href="project-details.php">
+								<img src="images/school.png" alt="Tree Plantation">
+							</a>
+						</div>
+						<div class="course_body">
+							<div class="course_header">
+								<span class="course_tag">Major Prjects</span>
+							</div>
+							<div class="course_title">
+								<h3><a href="project-details.php">School Project</a></h3>
+							</div>
+							<div class="course_text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations</div>
+							<a href="project-details.php" class="project-btn mt-3">
+								See Details
+								<i class="fa fa-arrow-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<!-- Project 2 -->
+				<div class="owl-item">
+					<div class="course">
+						<div class="course_image">
+							<a href="project-details.php">
+								<img src="images/self-reliance.webp" alt="General Fund">
+							</a>
+						</div>
+						<div class="course_body">
+							<div class="course_header">
+								<span class="course_tag">Regular Projects</span>
+							</div>
+							<div class="course_title">
+								<h3><a href="project-details.php">General Fund</a></h3>
+							</div>
+							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
+							<a href="project-details.php" class="project-btn mt-3">
+								See Details
+								<i class="fa fa-arrow-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<!-- Projects 3 -->
+				<div class="owl-item">
+					<div class="course">
+						<div class="course_image">
+							<a href="project-details.php">
+								<img src="images/dawah-education.webp" alt="Dawah">
+							</a>
+						</div>
+						<div class="course_body">
+							<div class="course_header">
+								<span class="course_tag">Social Project</span>
+							</div>
+							<div class="course_title">
+								<h3><a href="project-details.php">Dawah</a></h3>
+							</div>
+							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
+							<a href="project-details.php" class="project-btn mt-3">
+								See Details
+								<i class="fa fa-arrow-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Slider Navigation -->
+			<div class="courses_slider_nav courses_slider_prev trans_200">
+				<i class="fa fa-angle-left"></i>
+			</div>
+			<div class="courses_slider_nav courses_slider_next trans_200">
+				<i class="fa fa-angle-right"></i>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Major Projects -->
+<div class="projects-section">
+	<div class="container">
+		<div class="section-header" data-aos="fade-up">
+			<span class="section-badge">MAJOR INITIATIVES</span>
+			<h2 class="section-title">Our Major Projects</h2>
+			<p class="section-subtitle">Building infrastructure for long-term community development</p>
+		</div>
+		<div class="row" data-aos="fade-up" data-aos-delay="200">
+			<div class="col-lg-4 col-md-6">
+				<div class="project-card">
+					<div class="project-img">
+						<img src="images/hospital.png" alt="Hospital">
+					</div>
+					<div class="project-body">
+						<h3 class="project-title">Hospital Project</h3>
+						<p class="project-text">Providing quality healthcare services to underserved communities with compassion and excellence.</p>
+						<a href="donate.php" class="project-btn mt-3">
+							Donate Now
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6">
+				<div class="project-card">
+					<div class="project-img">
+						<img src="images/school.png" alt="School">
+					</div>
+					<div class="project-body">
+						<h3 class="project-title">School Project</h3>
+						<p class="project-text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</p>
+						<a href="donate.php" class="project-btn mt-3">
+							Donate Now
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6">
+				<div class="project-card">
+					<div class="project-img">
+						<img src="images/mosque.png" alt="Mosque">
+					</div>
+					<div class="project-body">
+						<h3 class="project-title">Mosque Project</h3>
+						<p class="project-text">Creating spiritual centers for worship, learning, and community gathering for all Muslims.</p>
+						<a href="donate.php" class="project-btn mt-3">
+							Donate Now
+							<i class="fa fa-arrow-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="text-center mt-5" data-aos="fade-up">
+			<a href="donation-fund.php" class="see-all-btn">
+				View All Projects
+				<i class="fa fa-arrow-right"></i>
+			</a>
+		</div>
+	</div>
+</div>
+<!-- Social  Projects -->
+<div class="activities-section">
+	<div class="container">
+		<div class="section-header" data-aos="fade-up">
+			<span class="section-badge">WHAT WE DO</span>
+			<h2 class="section-title">Our Social Projects</h2>
+			<p class="section-subtitle">Making a difference through meaningful actions and sustainable projects</p>
+		</div>
+		<div class="courses_slider_container" data-aos="fade-up" data-aos-delay="200">
+			<div class="owl-carousel owl-theme courses_slider">
+				<!-- Social Project 1 -->
+				<div class="owl-item">
+					<div class="course">
+						<div class="course_image">
+							<a href="project-details.php">
+								<img src="images/tree-plantation.webp" alt="Tree Plantation">
+							</a>
+						</div>
+						<div class="course_body">
+							<div class="course_header">
+								<span class="course_tag">Social Projects</span>
+							</div>
+							<div class="course_title">
+								<h3><a href="project-details.php">Tree Plantation</a></h3>
+							</div>
+							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
+							<a href="project-details.php" class="project-btn mt-3">
+								See Details
+								<i class="fa fa-arrow-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<!-- Activity 2 -->
+				<div class="owl-item">
+					<div class="course">
+						<div class="course_image">
+							<a href="project-details.php">
+								<img src="images/self-reliance.webp" alt="General Fund">
+							</a>
+						</div>
+						<div class="course_body">
+							<div class="course_header">
+								<span class="course_tag">Social Project</span>
+							</div>
+							<div class="course_title">
+								<h3><a href="project-details.php">General Fund</a></h3>
+							</div>
+							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
+							<a href="project-details.php" class="project-btn mt-3">
+								See Details
+								<i class="fa fa-arrow-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<!-- Project 3 -->
+				<div class="owl-item">
+					<div class="course">
+						<div class="course_image">
+							<a href="project-details.php">
+								<img src="images/dawah-education.webp" alt="Dawah">
+							</a>
+						</div>
+						<div class="course_body">
+							<div class="course_header">
+								<span class="course_tag">Social Project</span>
+							</div>
+							<div class="course_title">
+								<h3><a href="project-details.php">Dawah</a></h3>
+							</div>
+							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
+							<a href="project-details.php" class="project-btn mt-3">
+								See Details
+								<i class="fa fa-arrow-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Slider Navigation -->
+			<div class="courses_slider_nav courses_slider_prev trans_200">
+				<i class="fa fa-angle-left"></i>
+			</div>
+			<div class="courses_slider_nav courses_slider_next trans_200">
+				<i class="fa fa-angle-right"></i>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Associates Section -->
+<div class="associates-section">
+	<div class="container">
+		<div class="section-header" data-aos="fade-up">
+			<span class="section-badge">PARTNERS</span>
+			<h2 class="section-title">Our Associates</h2>
+			<p class="section-subtitle">Collaborating with trusted organizations to amplify our impact</p>
+		</div>
+		<div class="associates-grid" data-aos="fade-up" data-aos-delay="200">
+			<img src="images/islami bank img.png" alt="Islami Bank" class="associate-logo">
+			<img src="images/assunnah.png" alt="As-Sunnah" class="associate-logo">
+			<img src="images/insurancep.png" alt="Insurance" class="associate-logo">
+		</div>
+	</div>
+</div>
+
+
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
 		// Select elements
@@ -913,7 +1284,7 @@ button:focus {
 		// Variables
 		let currentIndex = 0;
 		let autoSlideInterval;
-		const autoSlideDelay = 3000; // 3 seconds
+		const autoSlideDelay = 4000; // 4 seconds
 
 		// Available transition effects
 		const transitionEffects = ['fade', 'slideRight', 'slideLeft', 'zoom', 'slideUp'];
@@ -1040,282 +1411,6 @@ button:focus {
 		startAutoSlide();
 	});
 </script>
-
-<!-- Modern Featured Section (Single Card Layout) -->
-<div class="modern-featured">
-	<div class="container" data-aos="fade-up">
-		<div class="featured-card unified-card px-3">
-			<div class="row g-0 align-items-center">
-				<!-- Left Side: Info -->
-				<div class="col-lg-6 p-5 featured-left">
-					<h2 class="fw-bold mb-3" style="font-size: 2rem; color: #fff; font-weight: 800;">Sidratul Muntaha Foundation</h2>
-					<p class="mb-4" style="color: #f1f1f1; font-size: 1rem; line-height: 1.7;">
-						Sidratul Muntaha Foundation is a non-political, non-profit government-registered organization dedicated to education, da'wah and total human welfare.
-						Registration Number: S-14117/2024.
-					</p>
-					<div class="d-flex flex-wrap" style="gap: 20px">
-						<a href="about.php" class="hero-btn hero-btn-primary" style="background:#00a854; padding:12px 25px; border-radius:10px; color:#fff; font-weight:600; text-decoration:none;">Know More</a>
-						<a href="activities.php" class="hero-btn hero-btn-outline" style="border:2px solid rgb(255, 255, 255); padding:12px 25px; border-radius:10px; color: #fff; font-weight:600; text-decoration:none;">Activities</a>
-					</div>
-				</div>
-
-				<!-- Right Side: Logo + Socials -->
-				 <style>
-					.featured-logo {
-						width: 400px !important;
-					}
-					@media only screen and (max-width: 768px) {
-						.featured-logo {
-							width: 300px !important;
-						}
-					}
-				 </style>
-				<div class="col-lg-6 p-5 featured-right text-center">
-					<img src="images/final-logo.png" alt="Logo" class="featured-logo mb-4"><br><br>
-					<div class="social-icons justify-content-center">
-						<a href="#" class="social-icon"><i class="fa fa-facebook"></i></a>
-						<a href="#" class="social-icon"><i class="fa fa-youtube-play"></i></a>
-						<a href="#" class="social-icon"><i class="fa fa-instagram"></i></a>
-						<a href="#" class="social-icon"><i class="fa fa-twitter"></i></a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-
-<!-- Mission Section -->
-<div class="mission-section">
-	<div class="container">
-		<div class="section-header" data-aos="fade-up">
-			<span class="section-badge">OUR MISSION</span>
-			<h2 class="section-title">For Ummah, With Sunnah</h2>
-			<p class="section-subtitle">Dedicated to serving humanity through three core pillars of excellence</p>
-		</div>
-		<div class="row" data-aos="fade-up" data-aos-delay="200">
-			<div class="col-lg-4 col-md-6 mb-4">
-				<div class="mission-card">
-					<div class="mission-icon">
-						<i class="fa fa-graduation-cap"></i>
-					</div>
-					<h3>Education</h3>
-					<p>Establishing and managing madrasas with an integrated syllabus of religious and general education to produce distinguished Islamic scholars and contemporary da'wah practitioners.</p>
-					<div class="text-center mt-5" data-aos="fade-up">
-						<a href="about.php" class="see-all-btn">
-							See More
-							<i class="fa fa-arrow-right"></i>
-						</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-lg-4 col-md-6 mb-4">
-				<div class="mission-card">
-					<div class="mission-icon">
-						<i class="fa fa-handshake-o"></i>
-					</div>
-					<h3>Service</h3>
-					<p>Empowering the poor, providing relief for flood victims, installing water purification plants, tree plantation, distributing winter clothing, Iftar meals, and organizing inclusive Qurbani programs.</p>
-					<div class="text-center mt-5" data-aos="fade-up">
-						<a href="about.php" class="see-all-btn">
-							See More
-							<i class="fa fa-arrow-right"></i>
-						</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-lg-4 col-md-6 mb-4">
-				<div class="mission-card">
-					<div class="mission-icon">
-						<i class="fa fa-book"></i>
-					</div>
-					<h3>Dawah</h3>
-					<p>Online-based da'wah, writing and publishing Islamic books, conducting religious study circles, and organizing training programs and workshops for Islamic outreach.</p>
-					<div class="text-center mt-5" data-aos="fade-up">
-						<a href="about.php" class="see-all-btn">
-							See More
-							<i class="fa fa-arrow-right"></i>
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-
-<!-- Activities Section -->
-<div class="activities-section">
-	<div class="container">
-		<div class="section-header" data-aos="fade-up">
-			<span class="section-badge">WHAT WE DO</span>
-			<h2 class="section-title">Our Activities</h2>
-			<p class="section-subtitle">Making a difference through meaningful actions and sustainable programs</p>
-		</div>
-		<div class="courses_slider_container" data-aos="fade-up" data-aos-delay="200">
-			<div class="owl-carousel owl-theme courses_slider">
-				<!-- Activity 1 -->
-				<div class="owl-item">
-					<div class="course">
-						<div class="course_image">
-							<a href="activities-details.php">
-								<img src="images/tree-plantation.webp" alt="Tree Plantation">
-							</a>
-						</div>
-						<div class="course_body">
-							<div class="course_header">
-								<span class="course_tag">Activities</span>
-							</div>
-							<div class="course_title">
-								<h3><a href="activities-details.php">Tree Plantation</a></h3>
-							</div>
-							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
-							<a href="activities-details.php" class="project-btn mt-3">
-								See Details
-								<i class="fa fa-arrow-right"></i>
-							</a>
-						</div>
-					</div>
-				</div>
-
-				<!-- Activity 2 -->
-				<div class="owl-item">
-					<div class="course">
-						<div class="course_image">
-							<a href="activities-details.php">
-								<img src="images/self-reliance.webp" alt="General Fund">
-							</a>
-						</div>
-						<div class="course_body">
-							<div class="course_header">
-								<span class="course_tag">New</span>
-							</div>
-							<div class="course_title">
-								<h3><a href="activities-details.php">General Fund</a></h3>
-							</div>
-							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
-							<a href="activities-details.php" class="project-btn mt-3">
-								See Details
-								<i class="fa fa-arrow-right"></i>
-							</a>
-						</div>
-					</div>
-				</div>
-
-				<!-- Activity 3 -->
-				<div class="owl-item">
-					<div class="course">
-						<div class="course_image">
-							<a href="activities-details.php">
-								<img src="images/dawah-education.webp" alt="Dawah">
-							</a>
-						</div>
-						<div class="course_body">
-							<div class="course_header">
-								<span class="course_tag">Featured</span>
-							</div>
-							<div class="course_title">
-								<h3><a href="activities-details.php">Dawah</a></h3>
-							</div>
-							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
-							<a href="activities-details.php" class="project-btn mt-3">
-								See Details
-								<i class="fa fa-arrow-right"></i>
-							</a>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Slider Navigation -->
-			<div class="courses_slider_nav courses_slider_prev trans_200">
-				<i class="fa fa-angle-left"></i>
-			</div>
-			<div class="courses_slider_nav courses_slider_next trans_200">
-				<i class="fa fa-angle-right"></i>
-			</div>
-		</div>
-	</div>
-</div>
-
-<!-- Major Projects -->
-<div class="projects-section">
-	<div class="container">
-		<div class="section-header" data-aos="fade-up">
-			<span class="section-badge">MAJOR INITIATIVES</span>
-			<h2 class="section-title">Our Major Projects</h2>
-			<p class="section-subtitle">Building infrastructure for long-term community development</p>
-		</div>
-		<div class="row" data-aos="fade-up" data-aos-delay="200">
-			<div class="col-lg-4 col-md-6">
-				<div class="project-card">
-					<div class="project-img">
-						<img src="images/hospital.png" alt="Hospital">
-					</div>
-					<div class="project-body">
-						<h3 class="project-title">Hospital Project</h3>
-						<p class="project-text">Providing quality healthcare services to underserved communities with compassion and excellence.</p>
-						<a href="donate.php" class="project-btn mt-3">
-							Donate Now
-							<i class="fa fa-arrow-right"></i>
-						</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-lg-4 col-md-6">
-				<div class="project-card">
-					<div class="project-img">
-						<img src="images/school.png" alt="School">
-					</div>
-					<div class="project-body">
-						<h3 class="project-title">School Project</h3>
-						<p class="project-text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</p>
-						<a href="donate.php" class="project-btn mt-3">
-							Donate Now
-							<i class="fa fa-arrow-right"></i>
-						</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-lg-4 col-md-6">
-				<div class="project-card">
-					<div class="project-img">
-						<img src="images/mosque.png" alt="Mosque">
-					</div>
-					<div class="project-body">
-						<h3 class="project-title">Mosque Project</h3>
-						<p class="project-text">Creating spiritual centers for worship, learning, and community gathering for all Muslims.</p>
-						<a href="donate.php" class="project-btn mt-3">
-							Donate Now
-							<i class="fa fa-arrow-right"></i>
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="text-center mt-5" data-aos="fade-up">
-			<a href="donation-fund.php" class="see-all-btn">
-				View All Projects
-				<i class="fa fa-arrow-right"></i>
-			</a>
-		</div>
-	</div>
-</div>
-
-<!-- Associates Section -->
-<div class="associates-section">
-	<div class="container">
-		<div class="section-header" data-aos="fade-up">
-			<span class="section-badge">PARTNERS</span>
-			<h2 class="section-title">Our Associates</h2>
-			<p class="section-subtitle">Collaborating with trusted organizations to amplify our impact</p>
-		</div>
-		<div class="associates-grid" data-aos="fade-up" data-aos-delay="200">
-			<img src="images/islami bank img.png" alt="Islami Bank" class="associate-logo">
-			<img src="images/assunnah.png" alt="As-Sunnah" class="associate-logo">
-			<img src="images/insurancep.png" alt="Insurance" class="associate-logo">
-		</div>
-	</div>
-</div>
-
 <!-- Join Platform -->
 <?php require './components/join-platform-text.php'; ?>
 
