@@ -184,7 +184,7 @@ margin-top: 0;
                                             <label class="form-check-label d-flex align-items-center" for="sslcommerz">
                                                 <span class="badge"><img src="images/ssl logo.png" alt=""></span>
                                             </label>
-                                        </div>
+</div>
 
                                         <div class="d-flex p-1 mx-3">
                                             <input class="form-check-input mt-2" type="radio" name="payment_method" id="bkash" value="bkash">
