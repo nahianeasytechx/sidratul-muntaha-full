@@ -917,7 +917,7 @@ button:focus {
 					</p>
 					<div class="d-flex flex-wrap" style="gap: 20px">
 						<a href="about.php" class="hero-btn hero-btn-primary" style="background:#00a854; padding:12px 25px; border-radius:10px; color:#fff; font-weight:600; text-decoration:none;">Know More</a>
-						<a href="projects.php" class="hero-btn hero-btn-outline" style="border:2px solid rgb(255, 255, 255); padding:12px 25px; border-radius:10px; color: #fff; font-weight:600; text-decoration:none;">Activities</a>
+						<a href="projects.php" class="hero-btn hero-btn-outline" style="border:2px solid rgb(255, 255, 255); padding:12px 25px; border-radius:10px; color: #fff; font-weight:600; text-decoration:none;">Projects</a>
 					</div>
 				</div>
 

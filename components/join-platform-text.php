@@ -20,6 +20,20 @@
                 height: 4px;               
                 background-color:#ffffff; 
             }
+            
+            /* Payment method icon styling */
+            .payment-method-card label {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .payment-icon {
+                height: 30px;
+                width: auto;
+                max-width: 60px;
+                object-fit: contain;
+            }
         </style>
 
             
@@ -107,30 +121,40 @@
                     <div class="mb-3">
                         <label class="course-lable">Payment Method <span class="required-asterisk">*</span></label>
                         
+                        <div class="payment-method-card" onclick="selectPaymentMethod('sslcommerz')">
+                            <input type="radio" name="donationPaymentMethod" id="sslcommerz" value="sslcommerz" required>
+                            <label for="sslcommerz" style="cursor: pointer; margin: 0; font-weight: 600;">
+                                <img src="images/ssl logo.png" alt="SSL Commerz" class="payment-icon">
+                                <span>SSL Commerz</span>
+                            </label>
+                        </div>
+
                         <div class="payment-method-card" onclick="selectPaymentMethod('bkashPayment')">
-                            <input type="radio" name="donationPaymentMethod" id="bkashPayment" value="bkash" required>
-                            <label for="bkashPayment" style="cursor: pointer; margin: 0; font-weight: 600;">bKash</label>
+                            <input type="radio" name="donationPaymentMethod" id="bkashPayment" value="bkash">
+                            <label for="bkashPayment" style="cursor: pointer; margin: 0; font-weight: 600;">
+                                <img src="images/bkash.png" alt="bKash" class="payment-icon">
+                                <span>bKash</span>
+                            </label>
                         </div>
 
                         <div class="payment-method-card" onclick="selectPaymentMethod('nagadPayment')">
                             <input type="radio" name="donationPaymentMethod" id="nagadPayment" value="nagad">
-                            <label for="nagadPayment" style="cursor: pointer; margin: 0; font-weight: 600;">Nagad</label>
+                            <label for="nagadPayment" style="cursor: pointer; margin: 0; font-weight: 600;">
+                                <img src="images/nogod.png" alt="Nagad" class="payment-icon">
+                                <span>Nagad</span>
+                            </label>
                         </div>
 
-                        <div class="payment-method-card" onclick="selectPaymentMethod('rocketPayment')">
-                            <input type="radio" name="donationPaymentMethod" id="rocketPayment" value="rocket">
-                            <label for="rocketPayment" style="cursor: pointer; margin: 0; font-weight: 600;">Rocket</label>
+
+
+                        <div class="payment-method-card" onclick="selectPaymentMethod('paypalPayment')">
+                            <input type="radio" name="donationPaymentMethod" id="paypalPayment" value="paypal">
+                            <label for="paypalPayment" style="cursor: pointer; margin: 0; font-weight: 600;">
+                                <img src="images/paypal.png" alt="PayPal" class="payment-icon">
+                                <span>PayPal</span>
+                            </label>
                         </div>
 
-                        <div class="payment-method-card" onclick="selectPaymentMethod('bankPayment')">
-                            <input type="radio" name="donationPaymentMethod" id="bankPayment" value="bank">
-                            <label for="bankPayment" style="cursor: pointer; margin: 0; font-weight: 600;">Bank Transfer</label>
-                        </div>
-
-                        <div class="payment-method-card" onclick="selectPaymentMethod('cardPayment')">
-                            <input type="radio" name="donationPaymentMethod" id="cardPayment" value="card">
-                            <label for="cardPayment" style="cursor: pointer; margin: 0; font-weight: 600;">Credit/Debit Card</label>
-                        </div>
                     </div>
 
                     <!-- Proceed Button -->
@@ -209,14 +233,7 @@
     box-shadow: var(--input-focus-shadow);
 }
 
-/* Custom down arrow for the select input for a cleaner look */
-select.course_input, select.category_options {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 0.65em 0.65em;
-    padding-right: 2.5rem;
-}
+
 
 /* --- 3. BUTTON STYLING (button) --- */
 
