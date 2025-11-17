@@ -87,7 +87,7 @@
                                 <input type="email" class="form-control newsletter-input" placeholder="Your email address" aria-label="Email address" required>
                             </div>
                             <button type="submit" class="btn btn-subscribe w-100">
-                                <i class="fa fa-paper-plane me-2"></i>Subscribe
+                                <i class="fa fa-paper-plane mx-2"></i>Subscribe
                             </button>
                         </form>
                     </div>

@@ -41,7 +41,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="course-lable">Donation Fund<span class="required-asterisk">*</span></label>
-                                <select class="w-100 px-4 py-3 rounded-2  category_options" id="donationCategory" name="category">
+                                <select class="w-100 px-4  rounded-2 course_input  category_options" id="donationCategory" name="category">
                                     <option value="">-- Select a category --</option>
                                     <option value="mosque-fund">Mosque Project</option>
                                     <option value="madrasha-fund">Madrasha Project</option>
@@ -79,9 +79,9 @@
                 </div>
             </div>
             
-            <div class="alert alert-success text-center mt-5 mx-auto bg-transparent text-white" role="alert">
+            <div class=" alert alert-success text-center mt-5 mx-auto bg-transparent text-white" role="alert">
                 <ul>
-                    <li>You may receive tax relief when you donate to <strong>Sidratul Muntaha Foundation</strong>.</li>
+                    <li>Your contribution can change lives — please select a category you wish to donate to.</li>
                 </ul>
             </div>
 

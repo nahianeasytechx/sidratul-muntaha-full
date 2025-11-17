@@ -1166,7 +1166,7 @@ button:focus {
 	<div class="container">
 		<div class="section-header" data-aos="fade-up">
 			<span class="section-badge">WHAT WE DO</span>
-			<h2 class="section-title">Our Social Projects</h2>
+			<h2 class="section-title">Our Social Works</h2>
 			<p class="section-subtitle">Making a difference through meaningful actions and sustainable projects</p>
 		</div>
 		<div class="courses_slider_container" data-aos="fade-up" data-aos-delay="200">
