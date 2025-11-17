@@ -158,7 +158,7 @@
                     </div>
 
                     <!-- Proceed Button -->
-                    <button type="submit" class="button w-100 donate-main-button border-0 text-white" style="border-radius: 10px; margin-top: 0.5rem;">
+                    <button type="submit" class="cursor-pointer button w-100 donate-main-button border-0 text-white" style="border-radius: 10px; margin-top: 0.5rem;">
                         <span>Proceed</span>
                     </button>
                 </form>
@@ -232,7 +232,9 @@
     outline: 0;
     box-shadow: var(--input-focus-shadow);
 }
-
+.cursor-pointer{
+    cursor: pointer;
+}
 
 
 /* --- 3. BUTTON STYLING (button) --- */
