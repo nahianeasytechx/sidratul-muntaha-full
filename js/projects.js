@@ -49,23 +49,23 @@ const projects = [
   },
 ];
 
-function renderProjects(filteredProjects) {
+function renderProjects(projectsToRender) {
   const container = document.getElementById("projectsGrid");
   if (!container) {
     console.error("projectsGrid container not found!");
     return;
   }
   
-  if (filteredProjects.length === 0) {
+  if (projectsToRender.length === 0) {
     container.innerHTML = `
       <div class="col-12 text-center py-5">
-        <p class="text-muted">No projects found in this category.</p>
+        <p class="text-muted">No projects found.</p>
       </div>
     `;
     return;
   }
   
-  container.innerHTML = filteredProjects.map(project => `
+  container.innerHTML = projectsToRender.map(project => `
     <div class="col-lg-4 col-md-6">
       <div class="course">
         <div class="course_image"><img src="${project.image}" alt="${project.title}"></div>
@@ -84,43 +84,11 @@ function renderProjects(filteredProjects) {
   `).join("");
 }
 
-function filterProjects(category, clickedButton) {
-  // Update active tab
-  const tabs = document.querySelectorAll('.tab-button');
-  tabs.forEach(tab => tab.classList.remove('active'));
-  
-  // Add active class to clicked button
-  if (clickedButton) {
-    clickedButton.classList.add('active');
-  }
-
-  // Filter and render projects
-  let filteredProjects;
-  if (category === 'all') {
-    filteredProjects = projects;
-  } else {
-    filteredProjects = projects.filter(project => project.category === category);
-  }
-  
-  console.log(`Filtering by: ${category}, Found ${filteredProjects.length} projects`);
-  renderProjects(filteredProjects);
-}
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Initializing projects page...');
   
-  // Add click event listeners to tabs
-  const tabs = document.querySelectorAll('.tab-button');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function(e) {
-      const category = this.getAttribute('data-category');
-      console.log('Tab clicked:', category);
-      filterProjects(category, this);
-    });
-  });
-  
-  // Initial render - show all projects
+  // Render all projects
   renderProjects(projects);
-  console.log('Projects loaded successfully');
+  console.log('All projects loaded successfully');
 });

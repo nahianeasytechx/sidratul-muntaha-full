@@ -31,34 +31,41 @@ $page_title = 'Home';
 	overflow: hidden;
 }
 
+/* Replace the .slide and .slide.active styles (lines 54-66) with: */
 .slide {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	opacity: 0;
-	z-index: 1;
-	transition: opacity 0.5s ease;
-	overflow: hidden;
-	pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    z-index: 1;
+    transform: translateX(100%);
+    transition: transform 1s ease-in-out; /* Reduced from 5s to 1s */
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .slide.active {
-	opacity: 1;
-	z-index: 2;
-	pointer-events: auto;
+    transform: translateX(0);
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.slide.prev {
+    transform: translateX(-100%);
+    z-index: 1;
 }
 
 .slide img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	transition: transform 8s ease-in-out;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 8s ease-in-out; /* Keep this for zoom effect */
 }
 
 .slide.active img {
-	transform: scale(1.1);
+    transform: scale(1.1);
 }
 
 .slide-content {
@@ -81,14 +88,14 @@ $page_title = 'Home';
 
 .slide.active .slide-content {
 	opacity: 1;
-	transition-delay: 0.3s;
+	transition-delay: 0.2s;
 }
 
 /* Slide title and description */
 .slide-title {
 	transform: translateX(-1000px);
 	opacity: 0;
-	transition: transform 2s ease, opacity 1s ease;
+	transition: transform 2s ease, opacity 0.8s ease;
 	transition-delay: 0.4s;
 	font-size: 64px;
 	font-weight: 800;
@@ -1273,143 +1280,165 @@ button:focus {
 
 
 <script>
-	document.addEventListener('DOMContentLoaded', () => {
-		// Select elements
-		const slider = document.querySelector('.slider');
-		const slides = document.querySelectorAll('.slide');
-		const prevBtn = document.querySelector('.prev');
-		const nextBtn = document.querySelector('.next');
-		const dotsContainer = document.querySelector('.dots-container');
+document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.querySelector('.slider');
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.querySelector('.prev');
+    const nextBtn = document.querySelector('.next');
+    const dotsContainer = document.querySelector('.dots-container');
 
-		// Variables
-		let currentIndex = 0;
-		let autoSlideInterval;
-		const autoSlideDelay = 4000; // 4 seconds
+    let currentIndex = 0;
+    let autoSlideInterval;
+    const autoSlideDelay = 6000; // 6 seconds total
+    let isTransitioning = false;
+    let isInitialized = false;
 
-		// Available transition effects
-		const transitionEffects = ['fade', 'slideRight', 'slideLeft', 'zoom', 'slideUp'];
+    // Initialize slides
+    slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        if (index === 0) {
+            slide.style.transform = 'translateX(0)';
+            slide.style.zIndex = '2';
+            slide.classList.add('active');
+        } else {
+            slide.style.transform = 'translateX(100%)';
+            slide.style.zIndex = '1';
+        }
+    });
 
-		// Initialize - make first slide active
-		slides[0].classList.add('active');
-		slides[0].classList.add(`transition-${transitionEffects[0]}`);
+    // Enable transitions
+    slides.forEach(slide => {
+        slide.style.transition = 'transform 1s ease-in-out, z-index 0s';
+    });
+    isInitialized = true;
 
-		// Create dot indicators
-		slides.forEach((_, index) => {
-			const dot = document.createElement('div');
-			dot.classList.add('dot');
-			if (index === 0) dot.classList.add('active');
-			dot.addEventListener('click', () => showSlide(index));
-			dotsContainer.appendChild(dot);
-		});
+    // Create dots
+    slides.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        if (index === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+            if (!isTransitioning && isInitialized) {
+                const direction = index > currentIndex ? 'next' : 'prev';
+                showSlide(index, direction);
+            }
+        });
+        dotsContainer.appendChild(dot);
+    });
 
-		// Get all dots
-		const dots = document.querySelectorAll('.dot');
+    const dots = document.querySelectorAll('.dot');
 
-		// Main function to show a slide
-		function showSlide(index) {
-			// Handle index boundaries
-			if (index < 0) index = slides.length - 1;
-			if (index >= slides.length) index = 0;
+    function showSlide(index, direction = 'next') {
+        let newIndex = index;
+        if (newIndex < 0) newIndex = slides.length - 1;
+        if (newIndex >= slides.length) newIndex = 0;
 
-			// Skip if already on this slide
-			if (index === currentIndex) return;
+        if (newIndex === currentIndex || isTransitioning) return;
 
-			// Remove active class from all slides and dots
-			slides.forEach(slide => {
-				slide.classList.remove('active');
-				slide.classList.remove('transition-fade', 'transition-slideRight',
-					'transition-slideLeft', 'transition-zoom', 'transition-slideUp');
-			});
+        isTransitioning = true;
 
-			dots.forEach(dot => dot.classList.remove('active'));
+        const currentSlide = slides[currentIndex];
+        const nextSlide = slides[newIndex];
 
-			// Apply random transition effect
-			const randomEffect = transitionEffects[Math.floor(Math.random() * transitionEffects.length)];
-			slides[index].classList.add(`transition-${randomEffect}`);
+        // Set up next slide
+        nextSlide.style.transition = 'none';
+        nextSlide.style.zIndex = '2';
+        
+        if (direction === 'next') {
+            nextSlide.style.transform = 'translateX(100%)';
+        } else {
+            nextSlide.style.transform = 'translateX(-100%)';
+        }
 
-			// Activate the new slide and dot
-			slides[index].classList.add('active');
-			dots[index].classList.add('active');
+        // Force reflow
+        nextSlide.offsetHeight;
 
-			// Update the current index
-			currentIndex = index;
+        // Enable transitions
+        currentSlide.style.transition = 'transform 1s ease-in-out';
+        nextSlide.style.transition = 'transform 1s ease-in-out';
+        
+        currentSlide.style.zIndex = '1';
 
-			// Reset auto slide timer
-			resetAutoSlide();
-		}
+        // Animate
+        if (direction === 'next') {
+            currentSlide.style.transform = 'translateX(-100%)';
+        } else {
+            currentSlide.style.transform = 'translateX(100%)';
+        }
+        nextSlide.style.transform = 'translateX(0)';
 
-		// Next slide function
-		function nextSlide() {
-			showSlide(currentIndex + 1);
-		}
+        // Update classes
+        currentSlide.classList.remove('active');
+        nextSlide.classList.add('active');
 
-		// Previous slide function
-		function prevSlide() {
-			showSlide(currentIndex - 1);
-		}
+        // Update dots
+        dots.forEach(dot => dot.classList.remove('active'));
+        dots[newIndex].classList.add('active');
 
-		// Start auto slide
-		function startAutoSlide() {
-			autoSlideInterval = setInterval(nextSlide, autoSlideDelay);
-		}
+        currentIndex = newIndex;
 
-		// Reset auto slide timer
-		function resetAutoSlide() {
-			clearInterval(autoSlideInterval);
-			startAutoSlide();
-		}
+        setTimeout(() => {
+            isTransitioning = false;
+        }, 1000);
 
-		// Event listeners
-		prevBtn.addEventListener('click', prevSlide);
-		nextBtn.addEventListener('click', nextSlide);
+        resetAutoSlide();
+    }
 
-		// Touch events for mobile swipe
-		let touchStartX = 0;
-		let touchEndX = 0;
+    function nextSlide() {
+        if (!isInitialized) return;
+        const nextIndex = (currentIndex + 1) % slides.length;
+        showSlide(nextIndex, 'next');
+    }
 
-		slider.addEventListener('touchstart', (e) => {
-			touchStartX = e.changedTouches[0].screenX;
-			// Pause auto slide while touching
-			clearInterval(autoSlideInterval);
-		});
+    function prevSlide() {
+        if (!isInitialized) return;
+        const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+        showSlide(prevIndex, 'prev');
+    }
 
-		slider.addEventListener('touchend', (e) => {
-			touchEndX = e.changedTouches[0].screenX;
-			handleSwipe();
-			// Restart auto slide after touch
-			startAutoSlide();
-		});
+    function startAutoSlide() {
+        if (autoSlideInterval) {
+            clearInterval(autoSlideInterval);
+        }
+        
+        autoSlideInterval = setInterval(() => {
+            if (isInitialized && !isTransitioning) {
+                nextSlide();
+            }
+        }, autoSlideDelay);
+    }
 
-		function handleSwipe() {
-			const swipeThreshold = 50;
-			if (touchEndX < touchStartX - swipeThreshold) {
-				nextSlide(); // Swipe left -> next slide
-			} else if (touchEndX > touchStartX + swipeThreshold) {
-				prevSlide(); // Swipe right -> prev slide
-			}
-		}
+    function resetAutoSlide() {
+        clearInterval(autoSlideInterval);
+        startAutoSlide();
+    }
 
-		// Pause auto slide on hover
-		slider.addEventListener('mouseenter', () => {
-			clearInterval(autoSlideInterval);
-		});
+    // Event listeners
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!isTransitioning && isInitialized) {
+                prevSlide();
+            }
+        });
+    }
 
-		slider.addEventListener('mouseleave', () => {
-			startAutoSlide();
-		});
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!isTransitioning && isInitialized) {
+                nextSlide();
+            }
+        });
+    }
 
-		// Keyboard navigation
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'ArrowLeft') {
-				prevSlide();
-			} else if (e.key === 'ArrowRight') {
-				nextSlide();
-			}
-		});
-
-		// Initialize auto slide
-		startAutoSlide();
-	});
+    // Start auto slide
+    setTimeout(() => {
+        if (isInitialized) {
+            startAutoSlide();
+        }
+    }, 1000);
+});
 </script>
 <!-- Join Platform -->
 <?php require './components/join-platform-text.php'; ?>

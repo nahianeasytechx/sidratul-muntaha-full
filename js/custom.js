@@ -199,7 +199,7 @@ $(document).ready(function()
 				items:3,
 				loop:true,
 				autoplay:true,
-				autoplayTimeout:3000,
+				autoplayTimeout:2000,
 				nav:false,
 				dots:false,
 				smartSpeed:1200,
