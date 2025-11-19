@@ -32,6 +32,14 @@ const projects = [
     link: "project-details.php",
     text: "Financial Support For Madrasha Students which are needed for poor students",
   },
+      {
+    image: "images/zakat.jpg",
+    tag: "Regular Projects",
+    category: "regular",
+    title: "Zakatul Sadaka",
+    link: "project-details.php",
+    text: "Donate Zakat to Please Allah (SWT) and make better society",
+  },
   {
     image: "images/New walkway.jpg",
     tag: "Social Project",
@@ -52,7 +60,7 @@ const projects = [
     image: "images/SocialWork10.jpg",
     tag: "Social Project",
     category: "social",
-    title: "Relief Distribution",
+    title: "Disaster Relief",
     link: "project-details.php",
     text: "Distributing Releif For the poor people ",
   },
@@ -60,9 +68,9 @@ const projects = [
     image: "images/SocialWork15.jpg",
     tag: "Social Project",
     category: "social",
-    title: "Relief Donation",
+    title: "Food and Financial Aid For Homeless and Orphan People",
     link: "project-details.php",
-    text: "Donating Releif to the villagers",
+    text: "Donating food to the homeless and orphan",
   },
   {
     image: "images/crops aid.jpg",
@@ -71,6 +79,22 @@ const projects = [
     title: "Volunteering For Crops",
     link: "project-details.php",
     text: "Aiding to help for cultivation of crops",
+  },
+    {
+    image: "images/Scholarship1.jpg",
+    tag: "Regular Projects",
+    category: "regular",
+    title: "Madrasha Projects",
+    link: "project-details.php",
+    text: "Financial Support For Madrasha Students which are needed for poor students",
+  },
+    {
+    image: "images/tree-plantation.jpg",
+    tag: "Regular Projects",
+    category: "regular",
+    title: "Plant A Tree",
+    link: "project-details.php",
+    text: "Donate for planting tree to make better environment",
   },
 ];
 

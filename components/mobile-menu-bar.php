@@ -40,7 +40,7 @@
 		<ul class="menu_list">
 			<li><a href="index.php">Home</a></li>
 			<li><a href="about.php">About</a></li>
-			<li><a href="activities.php">Activities</a></li>
+			<li><a href="projects.php">Our Projects</a></li>
 			<li><a href="gallery.php">Gallery</a></li>
 			<li><a href="contact.php">Contact</a></li>
 			<li><a href="notice.php">Notice</a></li>

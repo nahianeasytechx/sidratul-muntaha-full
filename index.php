@@ -1093,6 +1093,12 @@ button:focus {
 					</div>
 				</div>
 			</div>
+									<div class="text-center mt-5" data-aos="fade-up">
+			<a href="donation-fund.php" class="see-all-btn">
+				View All Projects
+				<i class="fa fa-arrow-right"></i>
+			</a>
+		</div>
 
 			<!-- Slider Navigation -->
 			<div class="courses_slider_nav courses_slider_prev trans_200">
@@ -1261,7 +1267,12 @@ button:focus {
 		</div>
 	</div>
 </div>
-
+						<div class="text-center " data-aos="fade-up">
+			<a href="donation-fund.php" class="see-all-btn">
+				View All Projects
+				<i class="fa fa-arrow-right"></i>
+			</a>
+		</div>
 <!-- Associates Section -->
 <div class="associates-section">
 	<div class="container">

@@ -668,7 +668,7 @@ $page_title = 'Donate';
             <div class="col-lg-4 col-md-6">
                 <div class="project-card">
                     <div class="project-img">
-                        <img src="images/hospital.png" alt="Hospital">
+                        <img src="images/Hospital Project.jpg" alt="Hospital">
                     </div>
                     <div class="project-body">
                         <h3 class="project-title">Hospital Project</h3>
@@ -718,7 +718,7 @@ $page_title = 'Donate';
 
         <!-- View All Button -->
         <div class="text-center mt-5" data-aos="fade-up">
-            <a href="donation-fund.php" class="see-all-btn">
+            <a href="projects.php" class="see-all-btn">
                 View All Projects
                 <i class="fa fa-arrow-right"></i>
             </a>
@@ -739,12 +739,12 @@ $page_title = 'Donate';
             <div class="custom-slider-wrapper">
                 <div class="custom-slider-track">
 
-                    <!-- Slide 1: Tree Plantation -->
+                    <!-- Slide 1: Plant a Tree  -->
                     <div class="custom-slide">
                         <div class="course">
                             <div class="course_image">
                                 <a href="project-details.php">
-                                    <img src="images/tree-plantation.webp" alt="Tree Plantation">
+                                    <img src="images/tree-plantation.jpg" alt="Tree Plantation">
                                 </a>
                             </div>
                             <div class="course_body">
@@ -752,7 +752,7 @@ $page_title = 'Donate';
                                     <span class="course_tag">Social Projects</span>
                                 </div>
                                 <div class="course_title">
-                                    <h3><a href="project-details.php">School Project</a></h3>
+                                    <h3><a href="project-details.php">Plant A Tree</a></h3>
                                 </div>
                                 <div class="course_text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</div>
                                 <a href="project-details.php" class="project-btn mt-3">
@@ -763,22 +763,22 @@ $page_title = 'Donate';
                         </div>
                     </div>
 
-                    <!-- Slide 5: Hospital Project -->
+                    <!-- Slide 5: Disaster Relief Project -->
                     <div class="custom-slide">
                         <div class="course">
                             <div class="course_image">
                                 <a href="project-details.php">
-                                    <img src="images/hospital.png" alt="Hospital Project">
+                                    <img src="images/SocialWork10.jpg" alt="Hospital Project">
                                 </a>
                             </div>
                             <div class="course_body">
                                 <div class="course_header">
-                                    <span class="course_tag">Healthcare</span>
+                                    <span class="course_tag">Social</span>
                                 </div>
                                 <div class="course_title">
-                                    <h3><a href="project-details.php">Hospital Project</a></h3>
+                                    <h3><a href="project-details.php">Disaster Relief</a></h3>
                                 </div>
-                                <div class="course_text">Providing quality healthcare services to underserved communities with compassion and excellence.</div>
+                                <div class="course_text">Providing quality relief  to people in need </div>
                                 <a href="project-details.php" class="project-btn mt-3">
                                     See Details
                                     <i class="fa fa-arrow-right"></i>
@@ -787,22 +787,22 @@ $page_title = 'Donate';
                         </div>
                     </div>
 
-                    <!-- Slide 6: Mosque Project -->
+                    <!-- Slide 6: Financial Support Program  -->
                     <div class="custom-slide">
                         <div class="course">
                             <div class="course_image">
                                 <a href="project-details.php">
-                                    <img src="images/mosque.png" alt="Mosque Project">
+                                    <img src="images/Scholarship1.jpg" alt="scholarshop1.jpg">
                                 </a>
                             </div>
                             <div class="course_body">
                                 <div class="course_header">
-                                    <span class="course_tag">Religious</span>
+                                    <span class="course_tag">Social</span>
                                 </div>
                                 <div class="course_title">
-                                    <h3><a href="project-details.php">Mosque Project</a></h3>
+                                    <h3><a href="project-details.php">Financial Support Program</a></h3>
                                 </div>
-                                <div class="course_text">Creating spiritual centers for worship, learning, and community gathering for all Muslims.</div>
+                                <div class="course_text">Giving Finantical Aid to poor and meritorious students</div>
                                 <a href="project-details.php" class="project-btn mt-3">
                                     See Details
                                     <i class="fa fa-arrow-right"></i>

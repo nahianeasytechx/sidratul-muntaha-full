@@ -81,7 +81,7 @@ $page_title = 'Projects'; // Set the page title
 			<div class="row">
 				<div class="col">
 					<div class="home_content text-center">
-						<div data-aos="fade-up" class="home_title">Projects</div>
+						<div data-aos="fade-up" class="home_title">Our Projects</div>
 						<div class="breadcrumbs">
 							<ul>
 								<li><a href="index.php">Home</a></li>

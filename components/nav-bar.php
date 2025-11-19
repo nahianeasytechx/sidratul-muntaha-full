@@ -77,7 +77,7 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="projects.php">Projects</a>
+        								<a href="projects.php">Our Projects</a>
         							</li>
 
         							<li
