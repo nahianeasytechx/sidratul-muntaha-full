@@ -98,12 +98,7 @@ $page_title = 'Projects'; // Set the page title
 <!-- Courses -->
 <div class="courses pb-0 mb-0">
 	<div class="container">
-		<!-- Section Header -->
-		<div class="mt-5 section-header" data-aos="fade-up">
-			<span class="section-badge">ALL PROJECTS</span>
-			<h2 class="section-title">Our Initiatives</h2>
-			<p class="section-subtitle">Discover all our projects aimed at creating positive change in communities</p>
-		</div>
+
 
 		<div class="row courses_row" id="projectsGrid" data-aos="fade-up">
 			<!-- Projects will be loaded here by JavaScript -->

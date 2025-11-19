@@ -1026,7 +1026,7 @@ button:focus {
 					<div class="course">
 						<div class="course_image">
 							<a href="project-details.php">
-								<img src="images/school.png" alt="Tree Plantation">
+								<img src="images/school.png" alt="School Project">
 							</a>
 						</div>
 						<div class="course_body">
@@ -1050,15 +1050,15 @@ button:focus {
 					<div class="course">
 						<div class="course_image">
 							<a href="project-details.php">
-								<img src="images/self-reliance.webp" alt="General Fund">
+								<img src="images/New walkway.jpg" alt="General Fund">
 							</a>
 						</div>
 						<div class="course_body">
 							<div class="course_header">
-								<span class="course_tag">Regular Projects</span>
+								<span class="course_tag">Social Works</span>
 							</div>
 							<div class="course_title">
-								<h3><a href="project-details.php">General Fund</a></h3>
+								<h3><a href="project-details.php">Walkway Development</a></h3>
 							</div>
 							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
 							<a href="project-details.php" class="project-btn mt-3">
@@ -1074,15 +1074,15 @@ button:focus {
 					<div class="course">
 						<div class="course_image">
 							<a href="project-details.php">
-								<img src="images/dawah-education.webp" alt="Dawah">
+								<img src="images/SocialWork11.jpg "alt="social works">
 							</a>
 						</div>
 						<div class="course_body">
 							<div class="course_header">
-								<span class="course_tag">Social Project</span>
+								<span class="course_tag">Regular Project</span>
 							</div>
 							<div class="course_title">
-								<h3><a href="project-details.php">Dawah</a></h3>
+								<h3><a href="project-details.php">Relief Distribution</a></h3>
 							</div>
 							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
 							<a href="project-details.php" class="project-btn mt-3">
@@ -1117,7 +1117,7 @@ button:focus {
 			<div class="col-lg-4 col-md-6">
 				<div class="project-card">
 					<div class="project-img">
-						<img src="images/hospital.png" alt="Hospital">
+						<img src="images/Hospital Project.jpg" alt="Hospital">
 					</div>
 					<div class="project-body">
 						<h3 class="project-title">Hospital Project</h3>
@@ -1183,7 +1183,7 @@ button:focus {
 					<div class="course">
 						<div class="course_image">
 							<a href="project-details.php">
-								<img src="images/tree-plantation.webp" alt="Tree Plantation">
+								<img src="images/SocialWork10.jpg" alt="Tree Plantation">
 							</a>
 						</div>
 						<div class="course_body">
@@ -1191,7 +1191,7 @@ button:focus {
 								<span class="course_tag">Social Projects</span>
 							</div>
 							<div class="course_title">
-								<h3><a href="project-details.php">Tree Plantation</a></h3>
+								<h3><a href="project-details.php">Relief Distribution</a></h3>
 							</div>
 							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
 							<a href="project-details.php" class="project-btn mt-3">
@@ -1207,7 +1207,7 @@ button:focus {
 					<div class="course">
 						<div class="course_image">
 							<a href="project-details.php">
-								<img src="images/self-reliance.webp" alt="General Fund">
+								<img src="images/Scholarship1.jpg" alt="General Fund">
 							</a>
 						</div>
 						<div class="course_body">
@@ -1215,9 +1215,9 @@ button:focus {
 								<span class="course_tag">Social Project</span>
 							</div>
 							<div class="course_title">
-								<h3><a href="project-details.php">General Fund</a></h3>
+								<h3><a href="project-details.php">Scholarship Oportunity</a></h3>
 							</div>
-							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
+							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower education community through comprehensive financial aids to students.</div>
 							<a href="project-details.php" class="project-btn mt-3">
 								See Details
 								<i class="fa fa-arrow-right"></i>
@@ -1231,7 +1231,7 @@ button:focus {
 					<div class="course">
 						<div class="course_image">
 							<a href="project-details.php">
-								<img src="images/dawah-education.webp" alt="Dawah">
+								<img src="images/SocialWork17.jpg" alt="Dawah">
 							</a>
 						</div>
 						<div class="course_body">
@@ -1239,7 +1239,7 @@ button:focus {
 								<span class="course_tag">Social Project</span>
 							</div>
 							<div class="course_title">
-								<h3><a href="project-details.php">Dawah</a></h3>
+								<h3><a href="project-details.php">Relief Donation</a></h3>
 							</div>
 							<div class="course_text">Supporting various welfare initiatives to create sustainable impact and empower communities through comprehensive development programs.</div>
 							<a href="project-details.php" class="project-btn mt-3">

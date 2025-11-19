@@ -11,16 +11,20 @@ $page_title = 'Donate';
     .form-check img {
         width: 70px;
     }
+
     .form-check-label {
         padding-left: 0;
         margin-bottom: 0;
     }
+
     .custom-border {
         border: 1px solid #ccc;
     }
+
     .donate-page {
         margin: 50px 20px;
     }
+
     .section-description {
         font-size: 16px;
         line-height: 1.6;
@@ -34,6 +38,7 @@ $page_title = 'Donate';
         text-align: center;
         margin-bottom: 70px;
     }
+
     .section-badge {
         display: inline-block;
         padding: 8px 20px;
@@ -45,6 +50,7 @@ $page_title = 'Donate';
         letter-spacing: 1px;
         margin-bottom: 20px;
     }
+
     .section-title {
         font-size: 48px;
         font-weight: 800;
@@ -52,6 +58,7 @@ $page_title = 'Donate';
         margin-bottom: 20px;
         margin-top: 0;
     }
+
     .section-subtitle {
         font-size: 18px;
         color: #6c757d;
@@ -66,6 +73,7 @@ $page_title = 'Donate';
         padding: 80px 0;
         background: #fff;
     }
+
     .project-card {
         background: #fff;
         border-radius: 20px;
@@ -74,57 +82,67 @@ $page_title = 'Donate';
         transition: all 0.4s ease;
         margin-bottom: 30px;
     }
+
     .project-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
     }
+
     .project-img {
         position: relative;
         height: 280px;
         overflow: hidden;
     }
+
     .project-img img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         transition: transform 0.6s ease;
     }
+
     .project-card:hover .project-img img {
         transform: scale(1.1);
     }
+
     .project-body {
         padding: 35px;
     }
+
     .project-title {
         font-size: 26px;
         font-weight: 700;
         color: #0F2920;
         margin-bottom: 15px;
     }
+
     .project-text {
         color: #6c757d;
         line-height: 1.7;
         margin-bottom: 25px;
         font-size: 15px;
     }
-.project-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 32px;
-    background: linear-gradient(135deg, #008E48 0%, #00a854 100%);
-    color: #fff;
-    text-decoration: none;
-    border-radius: 12px;
-    font-weight: 700;
-    transition: all 0.3s ease;
-}
+
+    .project-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #008E48 0%, #00a854 100%);
+        color: #fff;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+
     .project-btn:hover {
         transform: translateX(5px);
         box-shadow: 0 8px 20px rgba(0, 142, 72, 0.3);
         color: #fff;
     }
+
     .see-all-btn {
         display: inline-flex;
         align-items: center;
@@ -139,6 +157,7 @@ $page_title = 'Donate';
         font-size: 16px;
         transition: all 0.3s ease;
     }
+
     .see-all-btn:hover {
         background: #008E48;
         color: #fff;
@@ -167,31 +186,37 @@ $page_title = 'Donate';
         display: flex;
         flex-direction: column;
     }
+
     .course:hover {
         transform: translateY(-10px);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
     }
+
     .course_image {
         position: relative;
         overflow: hidden;
         height: 250px;
         flex-shrink: 0;
     }
+
     .course_image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         transition: transform 0.6s ease;
     }
+
     .course:hover .course_image img {
         transform: scale(1.15);
     }
+
     .course_body {
         padding: 30px;
         flex: 1;
         display: flex;
         flex-direction: column;
     }
+
     .course_tag {
         display: inline-block;
         padding: 6px 16px;
@@ -201,12 +226,14 @@ $page_title = 'Donate';
         font-size: 13px;
         font-weight: 700;
     }
+
     .course_title h3 {
         font-size: 24px;
         font-weight: 700;
         color: #0F2920;
         margin: 20px 0 15px;
     }
+
     .course_title h3 a {
         color: #0F2920;
         text-decoration: none;
@@ -214,9 +241,11 @@ $page_title = 'Donate';
         font-size: 24px;
         font-weight: 800;
     }
+
     .course_title h3 a:hover {
         color: #008E48;
     }
+
     .course_text {
         color: #6c757d;
         line-height: 1.7;
@@ -233,20 +262,24 @@ $page_title = 'Donate';
         padding: 0 70px;
         margin-top: 30px;
     }
+
     .custom-slider-wrapper {
         overflow: hidden;
         border-radius: 10px;
     }
+
     .custom-slider-track {
         display: flex;
         transition: transform 0.5s ease-in-out;
         will-change: transform;
     }
+
     .custom-slide {
         flex: 0 0 auto;
         width: calc(33.333% - 20px);
         margin-right: 30px;
     }
+
     .custom-slide:last-child {
         margin-right: 0;
     }
@@ -272,18 +305,22 @@ $page_title = 'Donate';
         align-items: center;
         justify-content: center;
     }
+
     .custom-slider-nav:hover {
         background: #00a854;
         transform: translateY(-50%) scale(1.1);
     }
+
     .custom-slider-nav:disabled {
         background: #ccc;
         cursor: not-allowed;
         opacity: 0.5;
     }
+
     .custom-slider-prev {
         left: 0;
     }
+
     .custom-slider-next {
         right: 0;
     }
@@ -297,6 +334,7 @@ $page_title = 'Donate';
         gap: 10px;
         margin-top: 30px;
     }
+
     .slider-dot {
         width: 12px;
         height: 12px;
@@ -307,10 +345,12 @@ $page_title = 'Donate';
         border: none;
         padding: 0;
     }
+
     .slider-dot:hover {
         background: #008E48;
         opacity: 0.7;
     }
+
     .slider-dot.active {
         background: #008E48;
         width: 30px;
@@ -325,6 +365,7 @@ $page_title = 'Donate';
             width: calc(50% - 15px);
             margin-right: 30px;
         }
+
         .section-title {
             font-size: 40px;
         }
@@ -334,18 +375,22 @@ $page_title = 'Donate';
         .custom-slider-container {
             padding: 0 60px;
         }
+
         .custom-slide {
             width: 100%;
             margin-right: 0;
         }
+
         .custom-slider-nav {
             width: 45px;
             height: 45px;
             font-size: 20px;
         }
+
         .section-title {
             font-size: 36px;
         }
+
         .section-subtitle {
             font-size: 16px;
         }
@@ -355,26 +400,33 @@ $page_title = 'Donate';
         .donate-page {
             margin-top: 70px;
         }
+
         .custom-slider-container {
             padding: 0 50px;
         }
+
         .custom-slider-nav {
             width: 40px;
             height: 40px;
             font-size: 18px;
         }
+
         .section-title {
             font-size: 28px;
         }
+
         .course_image {
             height: 200px;
         }
+
         .course_body {
             padding: 20px;
         }
+
         .course_title h3 {
             font-size: 20px;
         }
+
         .project-img {
             height: 220px;
         }
@@ -418,18 +470,32 @@ $page_title = 'Donate';
                 <div>
                     <h3 class="section-title">Make a Difference Today</h3>
                     <p class="section-description">
-                        Your generous donation helps us continue our mission to support communities in need.
-                        Every contribution, no matter the size, makes a significant impact in transforming lives
-                        and building a better future together.
-                    </p>
-                    <p class="section-description">
-                        Join thousands of donors who are already making a difference. Your support provides
-                        essential resources, education, and hope to those who need it most.
+                        Your donation is endless possibilities. Educate a child with Sidratul Muntaha Foundation.”
+                        <br><br>
+                        Together, we can uplift lives, nurture faith, and build a brighter future — support Sidratul
+                        Muntaha Foundation today.
+                        <br><br>
+                        Together, we can uplift lives, nurture faith, and build a brighter future — support Sidratul
+                        Muntaha Foundation today.
+                        <br><br>
+                        Supporting a madrasha is planting the seeds of knowledge that will shade generations
+                        to come.
+                        <br><br>
+                        Your donation to Sidratul Muntaha Foundation helps provide education, books, and a
+                        brighter future for underprivileged children.
+                        <br><br>
                     </p>
                 </div>
                 <img src="images/Financial Support For Madrasha Students.jpeg" alt="Financial Support" class="w-100">
-                <p class="section-description pt-3">
-                    Bangladesh is a country prone to natural disasters. Every year, millions of people are affected by floods, cyclones, tidal waves, landslides and other natural disasters. Especially during the rainy season, about 26,000 square kilometers (18%) of the country is flooded, which causes extreme suffering and displacement of people in various regions, including the northern region. In addition, the lives of helpless people are disrupted by various disasters including cyclones, fires, cold waves. As-Sunnah Foundation has been working tirelessly to stand by the people affected by disasters across the country. Since its establishment, we have been implementing relief activities in emergency situations as well as long-term rehabilitation programs in various disasters.
+                <p class="section-description mt-2">
+                    Whoever teaches knowledge will have the reward of those who act upon it.” — Prophet
+                    Muhammad ﷺ
+                    <br><br>
+                    Through Sidratul Muntaha Foundation, your donation supports Islamic and academic
+                    education for children in need.
+                    <br><br>
+                    📘 Every book, every pen, every lesson — becomes sadaqah jariyah that lives beyond
+                    your lifetime.
                 </p>
             </div>
 
@@ -478,7 +544,7 @@ $page_title = 'Donate';
                                 <label for="yourName" class="form-label">Your Name</label>
                                 <input type="text" class="form-control" id="yourName" name="name" placeholder="Enter your full name">
                             </div>
-                            
+
                             <!-- Phone -->
                             <div class="mb-3">
                                 <label for="contact" class="form-label">
@@ -487,19 +553,19 @@ $page_title = 'Donate';
                                 </label>
                                 <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter phone number">
                             </div>
-                            
+
                             <!-- Your Mail -->
                             <div class="mb-3">
                                 <label for="yourmail" class="form-label">Your Email</label>
                                 <input type="email" class="form-control" id="yourmail" name="email" placeholder="Enter your email">
                             </div>
-                            
+
                             <!-- Address -->
                             <div class="mb-3">
                                 <label for="address" class="form-label">Your Address</label>
                                 <textarea class="form-control" id="youraddress" name="youraddress" placeholder="Enter your address"></textarea>
                             </div>
-                            
+
                             <!-- Category -->
                             <div class="mb-3">
                                 <label for="category" class="form-label">Category</label>
@@ -668,11 +734,11 @@ $page_title = 'Donate';
             <h2 class="section-title">Our Social Works</h2>
             <p class="section-subtitle">Making a difference through meaningful actions and sustainable projects</p>
         </div>
-        
+
         <div class="custom-slider-container" data-aos="fade-up" data-aos-delay="200">
             <div class="custom-slider-wrapper">
                 <div class="custom-slider-track">
-                    
+
                     <!-- Slide 1: Tree Plantation -->
                     <div class="custom-slide">
                         <div class="course">
@@ -768,247 +834,251 @@ $page_title = 'Donate';
 
 <script>
     // ================================================================
-// INFINITE LOOP SLIDER JAVASCRIPT - FIXED VERSION
-// ================================================================
-document.addEventListener('DOMContentLoaded', function() {
-    const sliderWrapper = document.querySelector('.custom-slider-wrapper');
-    const sliderTrack = document.querySelector('.custom-slider-track');
-    const slides = document.querySelectorAll('.custom-slide');
-    const prevBtn = document.querySelector('.custom-slider-prev');
-    const nextBtn = document.querySelector('.custom-slider-next');
-    const dotsContainer = document.querySelector('.custom-slider-dots');
+    // INFINITE LOOP SLIDER JAVASCRIPT - FIXED VERSION
+    // ================================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const sliderWrapper = document.querySelector('.custom-slider-wrapper');
+        const sliderTrack = document.querySelector('.custom-slider-track');
+        const slides = document.querySelectorAll('.custom-slide');
+        const prevBtn = document.querySelector('.custom-slider-prev');
+        const nextBtn = document.querySelector('.custom-slider-next');
+        const dotsContainer = document.querySelector('.custom-slider-dots');
 
-    if (!sliderTrack || slides.length === 0) return;
+        if (!sliderTrack || slides.length === 0) return;
 
-    let currentIndex = 0;
-    let slidesPerView = 3;
-    let autoPlayInterval;
-    let isTransitioning = false;
-    let slideWidth = 0;
-    let gap = 30;
+        let currentIndex = 0;
+        let slidesPerView = 3;
+        let autoPlayInterval;
+        let isTransitioning = false;
+        let slideWidth = 0;
+        let gap = 30;
 
-    // Clone slides for infinite loop
-    function cloneSlides() {
-        // Remove any existing clones
-        const existingClones = sliderTrack.querySelectorAll('.clone');
-        existingClones.forEach(clone => clone.remove());
+        // Clone slides for infinite loop
+        function cloneSlides() {
+            // Remove any existing clones
+            const existingClones = sliderTrack.querySelectorAll('.clone');
+            existingClones.forEach(clone => clone.remove());
 
-        // Clone first set of slides and append to end
-        slides.forEach(slide => {
-            const cloneEnd = slide.cloneNode(true);
-            cloneEnd.classList.add('clone');
-            sliderTrack.appendChild(cloneEnd);
-        });
+            // Clone first set of slides and append to end
+            slides.forEach(slide => {
+                const cloneEnd = slide.cloneNode(true);
+                cloneEnd.classList.add('clone');
+                sliderTrack.appendChild(cloneEnd);
+            });
 
-        // Clone last set of slides and prepend to start
-        for (let i = slides.length - 1; i >= 0; i--) {
-            const cloneStart = slides[i].cloneNode(true);
-            cloneStart.classList.add('clone');
-            sliderTrack.insertBefore(cloneStart, sliderTrack.firstChild);
-        }
-    }
-
-    // Calculate slides per view based on window width
-    function updateSlidesPerView() {
-        const width = window.innerWidth;
-        if (width < 768) {
-            slidesPerView = 1;
-            gap = 0;
-        } else if (width < 992) {
-            slidesPerView = 2;
-            gap = 30;
-        } else {
-            slidesPerView = 3;
-            gap = 30;
-        }
-    }
-
-    // Calculate dimensions
-    function calculateDimensions() {
-        const containerWidth = sliderWrapper.offsetWidth;
-        slideWidth = (containerWidth - (gap * (slidesPerView - 1))) / slidesPerView;
-        
-        // Update all slides width
-        const allSlides = sliderTrack.querySelectorAll('.custom-slide');
-        allSlides.forEach(slide => {
-            slide.style.width = `${slideWidth}px`;
-            slide.style.marginRight = gap > 0 ? `${gap}px` : '0';
-        });
-    }
-
-    // Get total number of original slides
-    function getTotalSlides() {
-        return slides.length;
-    }
-
-    // Calculate transform value
-    function calculateTransform(index) {
-        // Offset by the number of cloned slides at the start
-        const offset = slides.length;
-        const actualIndex = offset + index;
-        return actualIndex * (slideWidth + gap);
-    }
-
-    // Go to specific slide
-    function goToSlide(index, instant = false) {
-        if (isTransitioning && !instant) return;
-
-        const totalSlides = getTotalSlides();
-        
-        if (instant) {
-            sliderTrack.style.transition = 'none';
-            currentIndex = index;
-        } else {
-            sliderTrack.style.transition = 'transform 0.5s ease-in-out';
-            currentIndex = index;
-            isTransitioning = true;
-        }
-
-        const transformValue = calculateTransform(currentIndex);
-        sliderTrack.style.transform = `translateX(-${transformValue}px)`;
-
-        updateDots();
-
-        if (!instant) {
-            setTimeout(() => {
-                isTransitioning = false;
-                
-                // Handle infinite loop
-                if (currentIndex >= totalSlides) {
-                    // We've gone past the end, jump to start
-                    currentIndex = 0;
-                    goToSlide(0, true);
-                } else if (currentIndex < 0) {
-                    // We've gone before the start, jump to end
-                    currentIndex = totalSlides - 1;
-                    goToSlide(totalSlides - 1, true);
-                }
-            }, 500);
-        }
-    }
-
-    // Next slide
-    function nextSlide() {
-        goToSlide(currentIndex + 1);
-    }
-
-    // Previous slide
-    function prevSlide() {
-        goToSlide(currentIndex - 1);
-    }
-
-    // Create dots (only for original slides)
-    function createDots() {
-        dotsContainer.innerHTML = '';
-        const totalSlides = getTotalSlides();
-        
-        for (let i = 0; i < totalSlides; i++) {
-            const dot = document.createElement('button');
-            dot.classList.add('slider-dot');
-            dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-            if (i === currentIndex) {
-                dot.classList.add('active');
+            // Clone last set of slides and prepend to start
+            for (let i = slides.length - 1; i >= 0; i--) {
+                const cloneStart = slides[i].cloneNode(true);
+                cloneStart.classList.add('clone');
+                sliderTrack.insertBefore(cloneStart, sliderTrack.firstChild);
             }
-            dot.addEventListener('click', () => goToSlide(i));
-            dotsContainer.appendChild(dot);
         }
-    }
 
-    // Update dots
-    function updateDots() {
-        const dots = document.querySelectorAll('.slider-dot');
-        const totalSlides = getTotalSlides();
-        
-        // Handle wrapping for dot display
-        let displayIndex = currentIndex % totalSlides;
-        if (displayIndex < 0) displayIndex = totalSlides + displayIndex;
-        
-        dots.forEach((dot, idx) => {
-            dot.classList.toggle('active', idx === displayIndex);
-        });
-    }
-
-    // Auto play
-    function startAutoPlay() {
-        stopAutoPlay();
-        autoPlayInterval = setInterval(nextSlide, 4000);
-    }
-
-    function stopAutoPlay() {
-        if (autoPlayInterval) {
-            clearInterval(autoPlayInterval);
-        }
-    }
-
-    // Event listeners
-    prevBtn.addEventListener('click', () => {
-        prevSlide();
-        stopAutoPlay();
-        startAutoPlay();
-    });
-
-    nextBtn.addEventListener('click', () => {
-        nextSlide();
-        stopAutoPlay();
-        startAutoPlay();
-    });
-
-    // Pause on hover
-    sliderWrapper.addEventListener('mouseenter', stopAutoPlay);
-    sliderWrapper.addEventListener('mouseleave', startAutoPlay);
-
-    // Handle window resize
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            updateSlidesPerView();
-            calculateDimensions();
-            goToSlide(currentIndex, true);
-        }, 250);
-    });
-
-    // Touch/swipe support
-    let touchStartX = 0;
-    let touchEndX = 0;
-    let touchStartY = 0;
-    let touchEndY = 0;
-
-    sliderWrapper.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-        stopAutoPlay();
-    }, { passive: true });
-
-    sliderWrapper.addEventListener('touchmove', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        touchEndY = e.changedTouches[0].screenY;
-    }, { passive: true });
-
-    sliderWrapper.addEventListener('touchend', () => {
-        const diffX = touchStartX - touchEndX;
-        const diffY = touchStartY - touchEndY;
-        
-        // Only trigger if horizontal swipe is dominant
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-            if (diffX > 0) {
-                nextSlide(); // Swipe left
+        // Calculate slides per view based on window width
+        function updateSlidesPerView() {
+            const width = window.innerWidth;
+            if (width < 768) {
+                slidesPerView = 1;
+                gap = 0;
+            } else if (width < 992) {
+                slidesPerView = 2;
+                gap = 30;
             } else {
-                prevSlide(); // Swipe right
+                slidesPerView = 3;
+                gap = 30;
             }
         }
-        
+
+        // Calculate dimensions
+        function calculateDimensions() {
+            const containerWidth = sliderWrapper.offsetWidth;
+            slideWidth = (containerWidth - (gap * (slidesPerView - 1))) / slidesPerView;
+
+            // Update all slides width
+            const allSlides = sliderTrack.querySelectorAll('.custom-slide');
+            allSlides.forEach(slide => {
+                slide.style.width = `${slideWidth}px`;
+                slide.style.marginRight = gap > 0 ? `${gap}px` : '0';
+            });
+        }
+
+        // Get total number of original slides
+        function getTotalSlides() {
+            return slides.length;
+        }
+
+        // Calculate transform value
+        function calculateTransform(index) {
+            // Offset by the number of cloned slides at the start
+            const offset = slides.length;
+            const actualIndex = offset + index;
+            return actualIndex * (slideWidth + gap);
+        }
+
+        // Go to specific slide
+        function goToSlide(index, instant = false) {
+            if (isTransitioning && !instant) return;
+
+            const totalSlides = getTotalSlides();
+
+            if (instant) {
+                sliderTrack.style.transition = 'none';
+                currentIndex = index;
+            } else {
+                sliderTrack.style.transition = 'transform 0.5s ease-in-out';
+                currentIndex = index;
+                isTransitioning = true;
+            }
+
+            const transformValue = calculateTransform(currentIndex);
+            sliderTrack.style.transform = `translateX(-${transformValue}px)`;
+
+            updateDots();
+
+            if (!instant) {
+                setTimeout(() => {
+                    isTransitioning = false;
+
+                    // Handle infinite loop
+                    if (currentIndex >= totalSlides) {
+                        // We've gone past the end, jump to start
+                        currentIndex = 0;
+                        goToSlide(0, true);
+                    } else if (currentIndex < 0) {
+                        // We've gone before the start, jump to end
+                        currentIndex = totalSlides - 1;
+                        goToSlide(totalSlides - 1, true);
+                    }
+                }, 500);
+            }
+        }
+
+        // Next slide
+        function nextSlide() {
+            goToSlide(currentIndex + 1);
+        }
+
+        // Previous slide
+        function prevSlide() {
+            goToSlide(currentIndex - 1);
+        }
+
+        // Create dots (only for original slides)
+        function createDots() {
+            dotsContainer.innerHTML = '';
+            const totalSlides = getTotalSlides();
+
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('button');
+                dot.classList.add('slider-dot');
+                dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+                if (i === currentIndex) {
+                    dot.classList.add('active');
+                }
+                dot.addEventListener('click', () => goToSlide(i));
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        // Update dots
+        function updateDots() {
+            const dots = document.querySelectorAll('.slider-dot');
+            const totalSlides = getTotalSlides();
+
+            // Handle wrapping for dot display
+            let displayIndex = currentIndex % totalSlides;
+            if (displayIndex < 0) displayIndex = totalSlides + displayIndex;
+
+            dots.forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === displayIndex);
+            });
+        }
+
+        // Auto play
+        function startAutoPlay() {
+            stopAutoPlay();
+            autoPlayInterval = setInterval(nextSlide, 4000);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+            }
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            stopAutoPlay();
+            startAutoPlay();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            stopAutoPlay();
+            startAutoPlay();
+        });
+
+        // Pause on hover
+        sliderWrapper.addEventListener('mouseenter', stopAutoPlay);
+        sliderWrapper.addEventListener('mouseleave', startAutoPlay);
+
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                updateSlidesPerView();
+                calculateDimensions();
+                goToSlide(currentIndex, true);
+            }, 250);
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        sliderWrapper.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            stopAutoPlay();
+        }, {
+            passive: true
+        });
+
+        sliderWrapper.addEventListener('touchmove', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+        }, {
+            passive: true
+        });
+
+        sliderWrapper.addEventListener('touchend', () => {
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+
+            // Only trigger if horizontal swipe is dominant
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    nextSlide(); // Swipe left
+                } else {
+                    prevSlide(); // Swipe right
+                }
+            }
+
+            startAutoPlay();
+        });
+
+        // Initialize slider
+        updateSlidesPerView();
+        cloneSlides();
+        calculateDimensions();
+        createDots();
+        goToSlide(0, true);
         startAutoPlay();
     });
-
-    // Initialize slider
-    updateSlidesPerView();
-    cloneSlides();
-    calculateDimensions();
-    createDots();
-    goToSlide(0, true);
-    startAutoPlay();
-});
 </script>
 <?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?><a href="project-details.php">
