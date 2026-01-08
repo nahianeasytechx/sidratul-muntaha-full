@@ -364,6 +364,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
               $result = createNotice($noticeData);
 
               if ($result['success']) {
+                echo "<script>
+
+        window.location.href = 'all-notice.php';
+    </script>";
+
                 echo '<div class="message-box success">
                               <i class="fa-solid fa-circle-check"></i>
                               Notice created successfully!' .  '

@@ -26,6 +26,8 @@ $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
 
+    $id = (int) $_POST['id'];
+
     $updateData = [
         'title'        => trim($_POST['title']),
         'description'  => trim($_POST['description']),
@@ -37,13 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
         'age_limit'    => $_POST['age_limit'] ?? null
     ];
 
-    $id = (int)$_POST['id'];
     $result = updateNotice($id, $updateData);
 
     if ($result['success']) {
-        echo '<div class="message-box success">'.$result['message'].'</div>';
+
+echo "<script>
+    window.location.href = 'all-notice.php?updated=1';
+</script>";
+exit;
+
     } else {
-        echo '<div class="message-box error">'.$result['message'].'</div>';
+        $error_message = $result['message'];
     }
 }
 
@@ -467,6 +473,8 @@ $current_date = new DateTime();
 
         <!-- Edit Form -->
         <form method="POST" action="">
+            <input type="hidden" name="id" value="<?= $notice['id'] ?>">
+
             <div class="row g-4">
                 <!-- Left Column -->
                 <div class="col-lg-8">

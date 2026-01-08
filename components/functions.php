@@ -265,6 +265,7 @@ function createNotice($data)
         $id = mysqli_insert_id($conn);
         mysqli_close($conn);
         return ['success' => true, 'message' => 'Notice created successfully', 'id' => $id];
+        
     } else {
         $error = mysqli_error($conn);
         mysqli_close($conn);
@@ -320,57 +321,45 @@ function getNoticeById($id)
  * Update a notice
  */
 // functions.php
+   
 function updateNotice(int $id, array $data): array
 {
-    $conn = getDatabaseConnection(); // or $conn = $GLOBALS['conn']; depends on your setup
+    $conn = getDatabaseConnection();
     if (!$conn) return ['success' => false, 'message' => 'DB connection failed'];
 
-    if ($id <= 0) return ['success' => false, 'message' => 'Invalid ID'];
-
-    $age_limit_sql = isset($data['age_limit']) && $data['age_limit'] !== '' 
-                     ? 'age_limit = ?' 
-                     : 'age_limit = NULL';
-
-    $sql = "UPDATE notices SET 
-                title = ?, 
-                description = ?, 
-                publish_date = ?, 
-                duration = ?, 
-                type = ?, 
-                category = ?, 
-                status = ?, 
-                $age_limit_sql
+    $sql = "UPDATE notices SET
+                title = ?,
+                description = ?,
+                publish_date = ?,
+                duration = ?,
+                type = ?,
+                category = ?,
+                status = ?,
+                age_limit = ?
             WHERE id = ?";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) return ['success' => false, 'message' => $conn->error];
-
-    if (isset($data['age_limit']) && $data['age_limit'] !== '') {
-        $stmt->bind_param(
-            "sssissii",
-            $data['title'],
-            $data['description'],
-            $data['publish_date'],
-            $data['duration'],
-            $data['type'],
-            $data['category'],
-            $data['status'],
-            $data['age_limit'],
-            $id
-        );
-    } else {
-        $stmt->bind_param(
-            "sssissi",
-            $data['title'],
-            $data['description'],
-            $data['publish_date'],
-            $data['duration'],
-            $data['type'],
-            $data['category'],
-            $data['status'],
-            $id
-        );
+    if (!$stmt) {
+        return ['success' => false, 'message' => $conn->error];
     }
+
+    // Normalize age_limit
+    $age_limit = ($data['age_limit'] === '' || $data['age_limit'] === null)
+        ? null
+        : (int)$data['age_limit'];
+
+    $stmt->bind_param(
+        "sssisssii",
+        $data['title'],
+        $data['description'],
+        $data['publish_date'],
+        $data['duration'],
+        $data['type'],
+        $data['category'],
+        $data['status'],
+        $age_limit,
+        $id
+    );
 
     if (!$stmt->execute()) {
         return ['success' => false, 'message' => $stmt->error];
@@ -388,7 +377,7 @@ function updateNotice(int $id, array $data): array
 function deleteNotice($id)
 {
     $conn = getDatabaseConnection();
-    
+
     if (!$conn) {
         return [
             'success' => false,
@@ -398,7 +387,7 @@ function deleteNotice($id)
 
     // Use prepared statement for security
     $stmt = $conn->prepare("DELETE FROM notices WHERE id = ?");
-    
+
     if (!$stmt) {
         $conn->close();
         return [
@@ -406,14 +395,14 @@ function deleteNotice($id)
             'message' => 'Failed to prepare delete statement.'
         ];
     }
-    
+
     $stmt->bind_param("i", $id);
-    
+
     if ($stmt->execute()) {
         $affected_rows = $stmt->affected_rows;
         $stmt->close();
         $conn->close();
-        
+
         if ($affected_rows > 0) {
             return [
                 'success' => true,

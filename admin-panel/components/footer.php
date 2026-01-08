@@ -29,7 +29,8 @@
     <script src="js/editActivity.js"></script>
     <script src="js/donationList.js"></script>
     <script src="js/main.js"></script>
-
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Chart Scripts -->
     <script>
       const ctx = document.getElementById('myChart');

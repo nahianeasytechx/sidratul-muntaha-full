@@ -4,8 +4,6 @@ $page_title = 'All Notices';
 require './components/header.php';
 protectPage();
 
-
-
 // Get all notices from database using your function
 $notices = getAllNotices();
 
@@ -27,6 +25,9 @@ foreach ($notices as $notice) {
     }
 }
 ?>
+
+<!-- Add SweetAlert CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
     /* Modern Stats Card Styles */
@@ -738,7 +739,11 @@ foreach ($notices as $notice) {
                                     </a>
                                 </td>
                                 <td>
-                                    <button onclick="deleteNotice(<?= $notice['id'] ?>)" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Delete">
+                                    <button class="btn btn-sm btn-danger btn-delete-notice d-inline-flex align-items-center justify-content-center p-0" 
+                                            style="height: 32px; width: 32px; min-width: 32px;" 
+                                            title="Delete"
+                                            data-id="<?= $notice['id'] ?>"
+                                            data-title="<?= htmlspecialchars($notice['title']) ?>">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </td>
@@ -763,7 +768,12 @@ foreach ($notices as $notice) {
     </div>
 </div>
 
+<!-- Add SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtering functionality
     const searchInput = document.getElementById("searchInput");
     const typeFilter = document.getElementById("typeFilter");
     const statusFilter = document.getElementById("statusFilter");
@@ -827,15 +837,92 @@ foreach ($notices as $notice) {
         validRows.forEach(row => tbody.appendChild(row));
     }
 
+    // SweetAlert Delete Confirmation
+    const deleteButtons = document.querySelectorAll('.btn-delete-notice');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            const deleteUrl = `delete-notice.php?id=${id}`;
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                html: `<div style="text-align: center;">
+                          <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                          <p>You are about to delete the notice:</p>
+                          <p><strong>"${title}"</strong></p>
+                          <p class="text-danger">This action cannot be undone!</p>
+                       </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                backdrop: true,
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return new Promise((resolve) => {
+                        // Redirect to delete page after confirmation
+                        window.location.href = deleteUrl;
+                        resolve();
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // The redirection happens in preConfirm
+                }
+            });
+        });
+    });
+
+    // Event listeners for filters
     [searchInput, typeFilter, statusFilter, categoryFilter].forEach(el => el.addEventListener("input", filterTable));
     sortFilter.addEventListener("change", sortTable);
-
-    function deleteNotice(id) {
-        if (confirm(`Are you sure you want to delete notice #${id}? This action cannot be undone.`)) {
-            // Redirect to delete script
-            window.location.href = `delete-notice.php?id=${id}`;
+    
+    // Add print styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .page-header, .filter-card, .bulk-actions,
+            .dataTables_length, .dataTables_filter, .dataTables_info,
+            .dataTables_paginate, .dt-buttons, .btn-add-new,
+            .action-buttons-footer, .btn-back, .btn-edit-header {
+                display: none !important;
+            }
+            .table-container {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            body {
+                background: white !important;
+            }
+            .content-text {
+                font-size: 14px !important;
+                line-height: 1.6 !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #ddd !important;
+                padding: 8px !important;
+            }
+            th {
+                background-color: #f2f2f2 !important;
+            }
         }
-    }
+    `;
+    document.head.appendChild(style);
+});
 </script>
 
 <?php require './components/footer.php'; ?>

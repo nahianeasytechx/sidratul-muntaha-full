@@ -1,6 +1,6 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'View Notice: ' . htmlspecialchars($notice['title']);
+$page_title = 'View Notice: ' ;
 require './components/header.php';
 protectPage();
 
@@ -538,7 +538,7 @@ $current_user = getCurrentUser();
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button class="btn btn-back" onclick="window.location.href='all-notices.php'">
+                    <button class="btn btn-back" onclick="window.location.href='all-notice.php'">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to List
                     </button>
                     <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-header">
@@ -746,28 +746,61 @@ $current_user = getCurrentUser();
         </div>
 
         <!-- Action Buttons -->
-        <div class="action-buttons-footer">
-            <button class="btn btn-print" onclick="window.print()">
-                <i class="fa-solid fa-print me-2"></i> Print Notice
-            </button>
-            <div class="d-flex gap-2">
-                <button class="btn btn-delete-main" onclick="deleteNotice(<?= $notice['id'] ?>)">
-                    <i class="fa-solid fa-trash me-2"></i> Delete
-                </button>
-                <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-main">
-                    <i class="fa-solid fa-pen-to-square me-2"></i> Edit Notice
-                </a>
-            </div>
-        </div>
+<div class="action-buttons-footer">
+    <button class="btn btn-print" onclick="window.print()">
+        <i class="fa-solid fa-print me-2"></i> Print Notice
+    </button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-delete-main" id="deleteBtn" data-id="<?= $notice['id'] ?>" data-title="<?= htmlspecialchars($notice['title']) ?>">
+            <i class="fa-solid fa-trash me-2"></i> Delete
+        </button>
+        <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-main">
+            <i class="fa-solid fa-pen-to-square me-2"></i> Edit Notice
+        </a>
+    </div>
+</div>
     </div>
 </div>
 
 <script>
-    function deleteNotice(id) {
-        if (confirm('Are you sure you want to delete this notice? This action cannot be undone.')) {
-            window.location.href = `delete-notice.php?id=${id}&from=view`;
+
+document.getElementById('deleteBtn').addEventListener('click', function() {
+    const id = this.dataset.id;
+    const title = this.dataset.title;
+    
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `<div style="text-align: center;">
+                  <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                  <p>You are about to delete the notice:</p>
+                  <p><strong>"${title}"</strong></p>
+                  <p class="text-danger">This action cannot be undone!</p>
+               </div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        backdrop: true,
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            return new Promise((resolve) => {
+                // Redirect to delete page after confirmation
+                window.location.href = `delete-notice.php?id=${id}&from=view`;
+                resolve();
+            });
         }
-    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // The redirection happens in preConfirm
+        }
+    });
+});
+
 
     // Add print styles
     const style = document.createElement('style');
