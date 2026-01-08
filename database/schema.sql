@@ -1,3 +1,12 @@
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  role ENUM('admin', 'editor', 'viewer') DEFAULT 'viewer',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE hero_sections (
   id INT AUTO_INCREMENT PRIMARY KEY,
   page_title VARCHAR(100) NOT NULL,

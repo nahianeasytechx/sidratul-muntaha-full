@@ -1,5 +1,9 @@
 <?php
 session_start();
+require_once '../database/dbConnection.php';
+include '../components/functions.php';
+
+//  include './api/config.php';
 // if (!isset($_SESSION['admin'])) {
 //     header("Location: login.php");
 //     exit();
@@ -122,6 +126,7 @@ $admin_username = $_SESSION['admin'] ?? 'Admin';
     </style>
 
     <?php include 'header-style.php'; ?>
+
 
   </head>
   <body>

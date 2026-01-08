@@ -2,21 +2,30 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'All Notices';
 require './components/header.php';
+protectPage();
 
-// Sample notice data (replace with DB data later)
-$notices = [
-    ["id" => 1, "title" => "Annual Volunteer Recruitment 2025", "description" => "We are looking for passionate volunteers to join our community programs.", "type" => "recruitment", "category" => "volunteer", "status" => "active", "published_date" => "2025-01-15", "expiry_date" => "2025-06-15", "age_requirement" => "18-35"],
-    ["id" => 2, "title" => "Training Session - December 2024", "description" => "Professional development training for all team members.", "type" => "training", "category" => "training", "status" => "expired", "published_date" => "2024-12-01", "expiry_date" => "2024-12-31", "age_requirement" => "All Ages"],
-    ["id" => 3, "title" => "Upcoming Community Event", "description" => "Planning a major community event for the spring season.", "type" => "event", "category" => "program", "status" => "draft", "published_date" => "2025-11-05", "expiry_date" => null, "age_requirement" => "All Ages"],
-    ["id" => 4, "title" => "Ramadan Program 2025", "description" => "Special programs and activities during the holy month of Ramadan.", "type" => "event", "category" => "program", "status" => "active", "published_date" => "2025-01-20", "expiry_date" => "2025-04-30", "age_requirement" => "All Ages"],
-    ["id" => 5, "title" => "Scholarship Deadline Extension", "description" => "The deadline for scholarship applications has been extended.", "type" => "deadline", "category" => "administrative", "status" => "active", "published_date" => "2025-01-10", "expiry_date" => "2025-03-31", "age_requirement" => "18-30"],
-];
 
-// Statistics
+
+// Get all notices from database using your function
+$notices = getAllNotices();
+
+// Calculate statistics from actual database data
 $totalNotices = count($notices);
-$activeCount = count(array_filter($notices, fn($n) => $n['status'] === 'active'));
-$expiredCount = count(array_filter($notices, fn($n) => $n['status'] === 'expired'));
-$draftCount = count(array_filter($notices, fn($n) => $n['status'] === 'draft'));
+$activeCount = getNoticeCount('Active');
+$expiredCount = getNoticeCount('Expired');
+$draftCount = getNoticeCount('Draft');
+$currentDate = date('Y-m-d');
+
+// Calculate auto-expired notices (active notices that have passed expiry)
+$autoExpiredCount = 0;
+foreach ($notices as $notice) {
+    if ($notice['status'] === 'Active') {
+        $expiryDate = date('Y-m-d', strtotime("+{$notice['duration']} months", strtotime($notice['publish_date'])));
+        if ($currentDate > $expiryDate) {
+            $autoExpiredCount++;
+        }
+    }
+}
 ?>
 
 <style>
@@ -131,11 +140,11 @@ $draftCount = count(array_filter($notices, fn($n) => $n['status'] === 'draft'));
 
     /* Page Header Styling */
     .page-header {
-      background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, #10b981, #059669);
         padding: 2rem;
         border-radius: 20px;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
     }
 
     .page-header h1 {
@@ -168,21 +177,22 @@ $draftCount = count(array_filter($notices, fn($n) => $n['status'] === 'draft'));
         color: rgba(255, 255, 255, 0.6);
     }
 
-.btn-add-new {
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
+    .btn-add-new {
+        background: #000;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
     .btn-add-new:hover {
         transform: translateY(-3px);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
         color: white;
-   background: #fff;
-   color: #000;
+        background: #fff;
+        color: #000;
     }
 
     /* Filter Card */
@@ -236,11 +246,12 @@ $draftCount = count(array_filter($notices, fn($n) => $n['status'] === 'draft'));
         padding: 1.2rem 1rem;
         border: none;
     }
+    
     .table thead th {
-    background-color: #10b981 !important;
-color: #fff;
-font-size: 16px;
-}
+        background-color: #10b981 !important;
+        color: #fff;
+        font-size: 16px;
+    }
 
     .table tbody tr {
         transition: all 0.3s ease;
@@ -323,6 +334,45 @@ font-size: 16px;
 
     .btn-danger {
         background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    /* Message Styling */
+    .message-box {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .message-box.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .message-box.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .message-box.info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    .message-box i {
+        font-size: 18px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     /* Responsive Design */
@@ -417,6 +467,31 @@ font-size: 16px;
             </div>
         </div>
 
+        <?php
+        // Display success/error messages from actions
+        if (isset($_GET['success']) && $_GET['success'] == '1') {
+            echo '<div class="message-box success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Notice operation completed successfully!
+                  </div>';
+        }
+        
+        if (isset($_GET['error'])) {
+            echo '<div class="message-box error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    Error: ' . htmlspecialchars($_GET['error']) . '
+                  </div>';
+        }
+        
+        // Show info if no notices
+        if ($totalNotices === 0) {
+            echo '<div class="message-box info">
+                    <i class="fa-solid fa-circle-info"></i>
+                    No notices found. <a href="add-notice.php">Create your first notice</a>.
+                  </div>';
+        }
+        ?>
+
         <!-- Statistics Cards -->
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
@@ -439,6 +514,11 @@ font-size: 16px;
                     <div class="stats-content">
                         <h6 class="stats-label">Active</h6>
                         <h2 class="stats-value"><?= $activeCount ?></h2>
+                        <?php if ($autoExpiredCount > 0): ?>
+                            <small style="color: #dc2626; font-size: 12px;">
+                                <i class="fa-solid fa-clock"></i> <?= $autoExpiredCount ?> auto-expired
+                            </small>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -450,7 +530,12 @@ font-size: 16px;
                     </div>
                     <div class="stats-content">
                         <h6 class="stats-label">Expired</h6>
-                        <h2 class="stats-value"><?= $expiredCount ?></h2>
+                        <h2 class="stats-value"><?= $expiredCount + $autoExpiredCount ?></h2>
+                        <?php if ($autoExpiredCount > 0): ?>
+                            <small style="color: #f59e0b; font-size: 12px;">
+                                (<?= $expiredCount ?> marked + <?= $autoExpiredCount ?> auto)
+                            </small>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -480,29 +565,28 @@ font-size: 16px;
                 <div class="col-md-2">
                     <select class="form-select" id="statusFilter">
                         <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="expired">Expired</option>
-                        <option value="draft">Draft</option>
+                        <option value="Active">Active</option>
+                        <option value="Expired">Expired</option>
+                        <option value="Draft">Draft</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" id="typeFilter">
                         <option value="all">All Types</option>
-                        <option value="announcement">Announcement</option>
-                        <option value="event">Event</option>
-                        <option value="meeting">Meeting</option>
-                        <option value="deadline">Deadline</option>
-                        <option value="recruitment">Recruitment</option>
-                        <option value="training">Training</option>
+                        <option value="General">General</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Info">Information</option>
+                        <option value="Announcement">Announcement</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" id="categoryFilter">
                         <option value="all">All Categories</option>
-                        <option value="administrative">Administrative</option>
-                        <option value="volunteer">Volunteer</option>
-                        <option value="program">Program</option>
-                        <option value="training">Training</option>
+                        <option value="Education">Education</option>
+                        <option value="Scholarship">Scholarship</option>
+                        <option value="Health">Health</option>
+                        <option value="Events">Events</option>
+                        <option value="General">General</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -523,74 +607,124 @@ font-size: 16px;
                         <tr>
                             <th>#</th>
                             <th>Title</th>
+                            <th>Description</th>
                             <th>Type</th>
                             <th>Category</th>
                             <th>Status</th>
                             <th>Published Date</th>
-                            <th>Expiry Date</th>
-                            <th>Age Requirement</th>
+                            <th>Duration</th>
+                            <th>Age Limit</th>
                             <th colspan="3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($notices as $notice): ?>
-                            <tr data-type="<?= $notice['type'] ?>" data-status="<?= $notice['status'] ?>" data-category="<?= $notice['category'] ?>" data-title="<?= strtolower($notice['title']) ?>">
+                        <?php if ($totalNotices > 0): ?>
+                            <?php foreach ($notices as $index => $notice): 
+                                // Calculate expiry date
+                                $publishDate = new DateTime($notice['publish_date']);
+                                $expiryDate = clone $publishDate;
+                                $expiryDate->modify("+{$notice['duration']} months");
+                                $expiryDateFormatted = $expiryDate->format('Y-m-d');
+                                
+                                // Check if notice is auto-expired
+                                $isAutoExpired = ($notice['status'] === 'Active' && $currentDate > $expiryDateFormatted);
+                                
+                                // Determine badge color based on status
+                                $statusBadgeColor = '';
+                                $statusIcon = '';
+                                $statusText = $notice['status'];
+                                
+                                if ($isAutoExpired) {
+                                    $statusBadgeColor = 'danger';
+                                    $statusIcon = 'clock';
+                                    $statusText = 'Expired (Auto)';
+                                } elseif ($notice['status'] === 'Active') {
+                                    $statusBadgeColor = 'success';
+                                    $statusIcon = 'circle-check';
+                                } elseif ($notice['status'] === 'Draft') {
+                                    $statusBadgeColor = 'warning text-dark';
+                                    $statusIcon = 'file-pen';
+                                } elseif ($notice['status'] === 'Expired') {
+                                    $statusBadgeColor = 'danger';
+                                    $statusIcon = 'circle-xmark';
+                                } else {
+                                    $statusBadgeColor = 'secondary';
+                                    $statusIcon = 'question-circle';
+                                }
+                                
+                                // Type badge color
+                                $typeBadgeColor = '';
+                                switch ($notice['type']) {
+                                    case 'Urgent': $typeBadgeColor = 'danger'; break;
+                                    case 'General': $typeBadgeColor = 'primary'; break;
+                                    case 'Info': $typeBadgeColor = 'info'; break;
+                                    case 'Announcement': $typeBadgeColor = 'purple'; break;
+                                    default: $typeBadgeColor = 'secondary';
+                                }
+                                
+                                // Category badge color
+                                $categoryBadgeColor = '';
+                                switch ($notice['category']) {
+                                    case 'Education': $categoryBadgeColor = 'success'; break;
+                                    case 'Scholarship': $categoryBadgeColor = 'info'; break;
+                                    case 'Health': $categoryBadgeColor = 'danger'; break;
+                                    case 'Events': $categoryBadgeColor = 'purple'; break;
+                                    case 'General': $categoryBadgeColor = 'secondary'; break;
+                                    default: $categoryBadgeColor = 'secondary';
+                                }
+                            ?>
+                            <tr data-type="<?= $notice['type'] ?>" data-status="<?= $notice['status'] ?>" 
+                                data-category="<?= $notice['category'] ?>" data-title="<?= strtolower($notice['title']) ?>"
+                                data-expiry="<?= $expiryDateFormatted ?>">
                                 <td>
-                                    <div>
-                                        <?= $notice['id'] ?>
-                                    </div>
+                                    <div><?= $index + 1 ?></div>
                                 </td>
                                 <td>
                                     <strong style="color: #2c3e50;"><?= htmlspecialchars($notice['title']) ?></strong>
-                                    <br>
-                                    <small style="color: #94a3b8;"><?= htmlspecialchars(substr($notice['description'], 0, 60)) ?>...</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-<?=
-                                                            $notice['type'] === 'recruitment' ? 'success' : 
-                                                            ($notice['type'] === 'event' ? 'info' : 
-                                                            ($notice['type'] === 'training' ? 'purple' : 
-                                                            ($notice['type'] === 'deadline' ? 'danger' : 
-                                                            ($notice['type'] === 'meeting' ? 'warning text-dark' : 'primary'))))
-                                                            ?>">
+                                    <small style="color: #94a3b8;">
+                                        <?= htmlspecialchars(substr($notice['description'], 0, 80)) ?>
+                                        <?= strlen($notice['description']) > 80 ? '...' : '' ?>
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-<?= $typeBadgeColor ?>">
                                         <i class="fa-solid fa-tag me-1"></i>
-                                        <?= ucfirst($notice['type']) ?>
+                                        <?= htmlspecialchars($notice['type']) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">
+                                    <span class="badge bg-<?= $categoryBadgeColor ?>">
                                         <i class="fa-solid fa-folder me-1"></i>
-                                        <?= ucfirst($notice['category']) ?>
+                                        <?= htmlspecialchars($notice['category']) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-<?=
-                                                            $notice['status'] === 'active' ? 'success' : 
-                                                            ($notice['status'] === 'draft' ? 'warning text-dark' : 'danger')
-                                                            ?>">
-                                        <i class="fa-solid fa-<?=
-                                                                $notice['status'] === 'active' ? 'circle-check' : 
-                                                                ($notice['status'] === 'draft' ? 'file-pen' : 'circle-xmark')
-                                                                ?> me-1"></i>
-                                        <?= ucfirst($notice['status']) ?>
+                                    <span class="badge bg-<?= $statusBadgeColor ?>">
+                                        <i class="fa-solid fa-<?= $statusIcon ?> me-1"></i>
+                                        <?= $statusText ?>
                                     </span>
                                 </td>
                                 <td>
                                     <small style="color: #64748b;">
                                         <i class="fa-solid fa-calendar me-1"></i>
-                                        <?= date('M d, Y', strtotime($notice['published_date'])) ?>
+                                        <?= date('M d, Y', strtotime($notice['publish_date'])) ?>
                                     </small>
                                 </td>
                                 <td>
                                     <small style="color: #64748b;">
                                         <i class="fa-solid fa-clock me-1"></i>
-                                        <?= $notice['expiry_date'] ? date('M d, Y', strtotime($notice['expiry_date'])) : 'N/A' ?>
+                                        <?= $notice['duration'] ?> months
+                                        <?php if ($isAutoExpired): ?>
+                                            <br><small class="text-danger">(Expired: <?= date('M d, Y', strtotime($expiryDateFormatted)) ?>)</small>
+                                        <?php endif; ?>
                                     </small>
                                 </td>
                                 <td>
                                     <small style="color: #64748b;">
                                         <i class="fa-solid fa-user me-1"></i>
-                                        <?= htmlspecialchars($notice['age_requirement']) ?>
+                                        <?= !empty($notice['age_limit']) ? $notice['age_limit'] : 'N/A' ?>
                                     </small>
                                 </td>
                                 <td>
@@ -609,7 +743,18 @@ font-size: 16px;
                                     </button>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="11" class="text-center py-5">
+                                    <div class="py-5">
+                                        <i class="fa-solid fa-inbox fa-3x mb-3" style="color: #cbd5e1;"></i>
+                                        <h5 class="text-muted">No notices found</h5>
+                                        <p class="text-muted mb-0">Start by adding your first notice</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -633,6 +778,8 @@ font-size: 16px;
         const category = categoryFilter.value;
 
         rows.forEach(row => {
+            if (row.cells.length <= 1) return; // Skip the "no notices" row
+            
             const title = row.dataset.title;
             const rowType = row.dataset.type;
             const rowStatus = row.dataset.status;
@@ -652,21 +799,32 @@ font-size: 16px;
         const sortValue = sortFilter.value;
         const tbody = document.querySelector("#noticeTable tbody");
         const rowsArr = Array.from(tbody.querySelectorAll("tr"));
-
-        rowsArr.sort((a, b) => {
-            const aId = parseInt(a.children[0].innerText.trim());
-            const bId = parseInt(b.children[0].innerText.trim());
-
-            if (sortValue === "oldest") return aId - bId;
-            if (sortValue === "expiring") {
-                // Sort by expiry date
-                return 0; // Implement expiry date sorting logic here
+        
+        // Filter out the "no notices" row
+        const validRows = rowsArr.filter(row => row.cells.length > 1);
+        
+        validRows.sort((a, b) => {
+            const aDate = new Date(a.querySelector('td:nth-child(7) small')?.textContent.replace('Expired: ', '').split(', ')[1] || '');
+            const bDate = new Date(b.querySelector('td:nth-child(7) small')?.textContent.replace('Expired: ', '').split(', ')[1] || '');
+            const aExpiry = a.dataset.expiry;
+            const bExpiry = b.dataset.expiry;
+            
+            if (sortValue === "oldest") {
+                return aDate - bDate;
             }
-            return bId - aId; // newest
+            if (sortValue === "expiring") {
+                // Sort by expiry date (soonest first)
+                const now = new Date();
+                const aTime = new Date(aExpiry) - now;
+                const bTime = new Date(bExpiry) - now;
+                return aTime - bTime;
+            }
+            // newest first (default)
+            return bDate - aDate;
         });
 
-        tbody.innerHTML = "";
-        rowsArr.forEach(r => tbody.appendChild(r));
+        // Reorder rows in the table
+        validRows.forEach(row => tbody.appendChild(row));
     }
 
     [searchInput, typeFilter, statusFilter, categoryFilter].forEach(el => el.addEventListener("input", filterTable));
@@ -674,9 +832,8 @@ font-size: 16px;
 
     function deleteNotice(id) {
         if (confirm(`Are you sure you want to delete notice #${id}? This action cannot be undone.`)) {
-            alert(`Notice #${id} deleted successfully!`);
-            // Here you would make an AJAX call to delete from database
-            location.reload();
+            // Redirect to delete script
+            window.location.href = `delete-notice.php?id=${id}`;
         }
     }
 </script>

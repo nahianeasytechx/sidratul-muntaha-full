@@ -1,33 +1,33 @@
+
 <?php
-session_start();
 
-//--------------------------------------------------------------------
-// For local development ---------------------------------------------
-//--------------------------------------------------------------------
+   $servername="localhost";
 
-$site_url = "";
-$servername = "localhost";
-$username = "root";
-$password = "";
-$database_name = "";
+   $username="root";
+   $database_name="sidratul_muntaha";
+    $password="";
 
-//---------------------------------------------------------------------
-// For production -----------------------------------------------------
-//---------------------------------------------------------------------
+    $conn=mysqli_connect($servername,$username,$password,$database_name);
+    $conn->set_charset("utf8mb4");
+    if($conn->connect_error){
+        die("Connection failed:" . $conn->connect_error);
 
-// $site_url = "";
-// $servername = "localhost";
-// $username = "";
-// $password = "";
-// $database_name = "";
+    }
 
 
-// Create connection
-$conn = mysqli_connect($servername, $username, $password, $database_name);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-} 
-
-?>
+    function getDatabaseConnection() {
+    $host = 'localhost';
+    $username = 'root';
+    $password = '';
+    $database = 'sidratul_muntaha';
+    
+    $conn = new mysqli($host, $username, $password, $database);
+    
+    if ($conn->connect_error) {
+        error_log("Database connection failed: " . $conn->connect_error);
+        return null;
+    }
+    
+    return $conn;
+}
+    ?>

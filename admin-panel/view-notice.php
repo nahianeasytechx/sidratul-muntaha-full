@@ -1,7 +1,80 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'View Notice';
+$page_title = 'View Notice: ' . htmlspecialchars($notice['title']);
 require './components/header.php';
+protectPage();
+
+// Check if notice ID is provided
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    header('Location: all-notices.php?error=Notice ID is required');
+    exit();
+}
+
+$notice_id = intval($_GET['id']);
+$notice = getNoticeById($notice_id);
+
+if (!$notice) {
+    header('Location: all-notices.php?error=Notice not found');
+    exit();
+}
+
+
+
+// Calculate expiry date
+$publish_date = new DateTime($notice['publish_date']);
+$expiry_date = clone $publish_date;
+$expiry_date->modify("+{$notice['duration']} months");
+$current_date = new DateTime();
+
+// Determine if notice is auto-expired
+$is_auto_expired = ($notice['status'] === 'Active' && $current_date > $expiry_date);
+
+// Get actual status (accounting for auto-expiry)
+$actual_status = $notice['status'];
+$status_color = '';
+$status_icon = '';
+
+if ($is_auto_expired) {
+    $actual_status = 'Expired (Auto)';
+    $status_color = 'danger';
+    $status_icon = 'clock';
+} elseif ($notice['status'] === 'Active') {
+    $status_color = 'success';
+    $status_icon = 'circle-check';
+} elseif ($notice['status'] === 'Expired') {
+    $status_color = 'danger';
+    $status_icon = 'circle-xmark';
+} elseif ($notice['status'] === 'Draft') {
+    $status_color = 'warning';
+    $status_icon = 'file-pen';
+} else {
+    $status_color = 'secondary';
+    $status_icon = 'question-circle';
+}
+
+// Determine type badge color
+$type_color = '';
+switch ($notice['type']) {
+    case 'Urgent': $type_color = 'danger'; break;
+    case 'General': $type_color = 'primary'; break;
+    case 'Info': $type_color = 'info'; break;
+    case 'Announcement': $type_color = 'purple'; break;
+    default: $type_color = 'secondary';
+}
+
+// Determine category badge color
+$category_color = '';
+switch ($notice['category']) {
+    case 'Education': $category_color = 'success'; break;
+    case 'Scholarship': $category_color = 'info'; break;
+    case 'Health': $category_color = 'danger'; break;
+    case 'Events': $category_color = 'purple'; break;
+    case 'General': $category_color = 'secondary'; break;
+    default: $category_color = 'secondary';
+}
+
+// Get current user info (if needed for "Posted by")
+$current_user = getCurrentUser();
 ?>
 
 <style>
@@ -159,21 +232,43 @@ require './components/header.php';
         margin-right: 0.5rem;
         margin-bottom: 0.5rem;
         display: inline-block;
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        color: white;
     }
 
-    .badge-active {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
+    .badge-success {
+        --gradient-start: #10b981;
+        --gradient-end: #059669;
+    }
+
+    .badge-danger {
+        --gradient-start: #ef4444;
+        --gradient-end: #dc2626;
+    }
+
+    .badge-warning {
+        --gradient-start: #f59e0b;
+        --gradient-end: #d97706;
+    }
+
+    .badge-primary {
+        --gradient-start: #3b82f6;
+        --gradient-end: #2563eb;
     }
 
     .badge-info {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
+        --gradient-start: #06b6d4;
+        --gradient-end: #0891b2;
+    }
+
+    .badge-purple {
+        --gradient-start: #a855f7;
+        --gradient-end: #9333ea;
     }
 
     .badge-secondary {
-        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-        color: #475569;
+        --gradient-start: #6b7280;
+        --gradient-end: #4b5563;
     }
 
     /* Content Section */
@@ -201,21 +296,6 @@ require './components/header.php';
         line-height: 1.8;
     }
 
-    .content-text h6 {
-        color: #1e293b;
-        font-weight: 700;
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .content-text ul {
-        padding-left: 1.5rem;
-    }
-
-    .content-text li {
-        margin-bottom: 0.5rem;
-    }
-
     /* Info Boxes */
     .info-box-modern {
         background: linear-gradient(135deg, #f8f9fa, #ffffff);
@@ -223,7 +303,6 @@ require './components/header.php';
         border-radius: 16px;
         padding: 1.5rem;
         transition: all 0.3s ease;
-        height: 100%;
     }
 
     .info-box-modern:hover {
@@ -279,100 +358,6 @@ require './components/header.php';
         color: #64748b;
         font-size: 1rem;
         margin-left: 3.25rem;
-    }
-
-    /* Attachments Section */
-    .attachment-item {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 16px;
-        padding: 1.25rem;
-        transition: all 0.3s ease;
-    }
-
-    .attachment-item:hover {
-        border-color: #10b981;
-        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
-        transform: translateY(-2px);
-    }
-
-    .file-icon i {
-        font-size: 2.5rem;
-    }
-
-    .attachment-info {
-        flex-grow: 1;
-    }
-
-    .attachment-name {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
-    }
-
-    .attachment-size {
-        color: #94a3b8;
-        font-size: 0.85rem;
-    }
-
-    .btn-download {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn-download:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        color: white;
-    }
-
-    /* Contact Section */
-    .contact-section {
-        background: linear-gradient(135deg, #f8f9fa, #ffffff);
-        border: 2px solid #e9ecef;
-        border-radius: 16px;
-        padding: 1.5rem;
-    }
-
-    .contact-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .contact-title i {
-        color: #10b981;
-    }
-
-    .contact-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        color: #475569;
-    }
-
-    .contact-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .contact-item i {
-        color: #10b981;
-        width: 20px;
-    }
-
-    .contact-item strong {
-        color: #1e293b;
-        margin-right: 0.25rem;
     }
 
     /* Action Buttons Footer */
@@ -487,6 +472,51 @@ require './components/header.php';
     .notice-detail-card {
         animation: fadeIn 0.5s ease-out;
     }
+
+    /* Status Indicator */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    /* Message Box */
+    .message-box {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .message-box.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .message-box.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .message-box.info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    .message-box i {
+        font-size: 18px;
+    }
 </style>
 
 <div class="content-wrapper">
@@ -511,12 +541,29 @@ require './components/header.php';
                     <button class="btn btn-back" onclick="window.location.href='all-notices.php'">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to List
                     </button>
-                    <button class="btn btn-edit-header" onclick="window.location.href='edit-notice.php?id=1'">
+                    <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-header">
                         <i class="fa-solid fa-pen-to-square me-1"></i> Edit Notice
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
+
+        <?php
+        // Display success/error messages
+        if (isset($_GET['success']) && $_GET['success'] == '1') {
+            echo '<div class="message-box success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Notice updated successfully!
+                  </div>';
+        }
+        
+        if (isset($_GET['error'])) {
+            echo '<div class="message-box error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    Error: ' . htmlspecialchars($_GET['error']) . '
+                  </div>';
+        }
+        ?>
 
         <!-- Notice Details Card -->
         <div class="notice-detail-card">
@@ -525,26 +572,36 @@ require './components/header.php';
                 <div class="notice-header-section">
                     <div style="flex: 1;">
                         <div class="mb-3">
-                            <span class="badge-modern badge-active">Active</span>
-                            <span class="badge-modern badge-info">Announcement</span>
-                            <span class="badge-modern badge-secondary">Administrative</span>
+                            <span class="badge-modern badge-<?= $status_color ?>">
+                                <i class="fa-solid fa-<?= $status_icon ?> me-1"></i>
+                                <?= $actual_status ?>
+                            </span>
+                            <span class="badge-modern badge-<?= $type_color ?>">
+                                <i class="fa-solid fa-tag me-1"></i>
+                                <?= htmlspecialchars($notice['type']) ?>
+                            </span>
+                            <span class="badge-modern badge-<?= $category_color ?>">
+                                <i class="fa-solid fa-folder me-1"></i>
+                                <?= htmlspecialchars($notice['category']) ?>
+                            </span>
                         </div>
-                        <h2 class="notice-title-main">Annual General Meeting 2024</h2>
+                        <h2 class="notice-title-main"><?= htmlspecialchars($notice['title']) ?></h2>
                         <div class="notice-meta-info">
                             <div class="meta-item-display">
                                 <i class="fa-solid fa-calendar-days"></i>
-                                <span>Posted: January 15, 2024</span>
+                                <span>Posted: <?= date('F d, Y', strtotime($notice['publish_date'])) ?></span>
                             </div>
                             <span class="text-muted">|</span>
                             <div class="meta-item-display">
-                                <i class="fa-solid fa-user"></i>
-                                <span>By: Admin User</span>
+                                <i class="fa-solid fa-clock"></i>
+                                <span>Duration: <?= $notice['duration'] ?> months</span>
+                            </div>
+                            <span class="text-muted">|</span>
+                            <div class="meta-item-display">
+                                <i class="fa-solid fa-calendar-xmark"></i>
+                                <span>Expires: <?= $expiry_date->format('F d, Y') ?></span>
                             </div>
                         </div>
-                    </div>
-                    <div class="notice-id-box">
-                        <div class="notice-id-label">Notice ID</div>
-                        <div class="notice-id-value">#NOT-001</div>
                     </div>
                 </div>
 
@@ -552,25 +609,10 @@ require './components/header.php';
                 <div class="notice-content-section">
                     <h5 class="section-title">
                         <i class="fa-solid fa-file-lines"></i>
-                        Notice Details
+                        Notice Description
                     </h5>
                     <div class="content-text">
-                        <p>Dear Members,</p>
-                        <p>We are pleased to announce that the Annual General Meeting (AGM) for 2024 will be held on <strong>March 15, 2024</strong> at our main office premises.</p>
-                        <p>The meeting will commence at <strong>10:00 AM</strong> and is expected to conclude by 2:00 PM. Lunch will be provided for all attendees.</p>
-                        
-                        <h6>Agenda:</h6>
-                        <ul>
-                            <li>Review of 2023 activities and achievements</li>
-                            <li>Financial report and budget approval</li>
-                            <li>Election of new board members</li>
-                            <li>Discussion on upcoming projects for 2024</li>
-                            <li>Q&A session</li>
-                        </ul>
-
-                        <p>All members are encouraged to attend and participate in this important meeting. Please confirm your attendance by replying to this notice.</p>
-                        
-                        <p class="mb-0">Looking forward to seeing you all there!</p>
+                        <?= nl2br(htmlspecialchars($notice['description'])) ?>
                     </div>
                 </div>
 
@@ -582,9 +624,11 @@ require './components/header.php';
                                 <div class="info-box-icon primary">
                                     <i class="fa-solid fa-calendar-check"></i>
                                 </div>
-                                <div class="info-box-title">Valid From</div>
+                                <div class="info-box-title">Publish Date</div>
                             </div>
-                            <div class="info-box-value">January 15, 2024</div>
+                            <div class="info-box-value">
+                                <?= date('F d, Y', strtotime($notice['publish_date'])) ?>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -593,106 +637,107 @@ require './components/header.php';
                                 <div class="info-box-icon danger">
                                     <i class="fa-solid fa-calendar-xmark"></i>
                                 </div>
-                                <div class="info-box-title">Valid Until</div>
+                                <div class="info-box-title">Expiry Date</div>
                             </div>
-                            <div class="info-box-value">March 15, 2024</div>
+                            <div class="info-box-value">
+                                <?= $expiry_date->format('F d, Y') ?>
+                                <?php if ($is_auto_expired): ?>
+                                    <span class="badge-modern badge-danger ms-2">
+                                        <i class="fa-solid fa-clock me-1"></i> Auto-Expired
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="info-box-modern">
                             <div class="info-box-header">
                                 <div class="info-box-icon warning">
-                                    <i class="fa-solid fa-flag"></i>
+                                    <i class="fa-solid fa-clock"></i>
                                 </div>
-                                <div class="info-box-title">Priority Level</div>
+                                <div class="info-box-title">Duration</div>
                             </div>
-                            <div class="info-box-value">High</div>
+                            <div class="info-box-value">
+                                <?= $notice['duration'] ?> months
+                                <?php if ($is_auto_expired): ?>
+                                    <br><small class="text-danger">(Expired <?= $current_date->diff($expiry_date)->days ?> days ago)</small>
+                                <?php else: ?>
+                                    <?php 
+                                    $days_remaining = $current_date->diff($expiry_date)->days;
+                                    if ($days_remaining > 0 && $days_remaining <= 30): ?>
+                                        <br><small class="text-warning">(<?= $days_remaining ?> days remaining)</small>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="info-box-modern">
                             <div class="info-box-header">
                                 <div class="info-box-icon info">
-                                    <i class="fa-solid fa-users"></i>
+                                    <i class="fa-solid fa-user"></i>
                                 </div>
-                                <div class="info-box-title">Target Audience</div>
+                                <div class="info-box-title">Age Limit</div>
                             </div>
-                            <div class="info-box-value">All Members</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Attachments Section -->
-                <div class="mb-4">
-                    <h5 class="section-title">
-                        <i class="fa-solid fa-paperclip"></i>
-                        Attachments
-                    </h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="attachment-item d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="file-icon">
-                                        <i class="fa-solid fa-file-pdf text-danger"></i>
-                                    </div>
-                                    <div class="attachment-info">
-                                        <div class="attachment-name">AGM-Agenda-2024.pdf</div>
-                                        <div class="attachment-size">245 KB</div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-download">
-                                    <i class="fa-solid fa-download me-1"></i> Download
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="attachment-item d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="file-icon">
-                                        <i class="fa-solid fa-file-word" style="color: #2b579a;"></i>
-                                    </div>
-                                    <div class="attachment-info">
-                                        <div class="attachment-name">Annual-Report-2023.docx</div>
-                                        <div class="attachment-size">1.2 MB</div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-download">
-                                    <i class="fa-solid fa-download me-1"></i> Download
-                                </button>
+                            <div class="info-box-value">
+                                <?= !empty($notice['age_limit']) ? $notice['age_limit'] . ' years and above' : 'No age restriction' ?>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Contact Information -->
-                <div class="contact-section">
-                    <h6 class="contact-title">
-                        <i class="fa-solid fa-address-card"></i>
-                        Contact Information
-                    </h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="contact-item">
-                                <i class="fa-solid fa-user"></i>
-                                <span><strong>Contact Person:</strong> John Doe</span>
+                <!-- Additional Details -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="info-box-modern">
+                            <div class="info-box-header">
+                                <div class="info-box-icon primary">
+                                    <i class="fa-solid fa-tag"></i>
+                                </div>
+                                <div class="info-box-title">Type</div>
                             </div>
+                            <div class="info-box-value"><?= htmlspecialchars($notice['type']) ?></div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="contact-item">
-                                <i class="fa-solid fa-envelope"></i>
-                                <span><strong>Email:</strong> john.doe@organization.org</span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box-modern">
+                            <div class="info-box-header">
+                                <div class="info-box-icon info">
+                                    <i class="fa-solid fa-folder"></i>
+                                </div>
+                                <div class="info-box-title">Category</div>
                             </div>
+                            <div class="info-box-value"><?= htmlspecialchars($notice['category']) ?></div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="contact-item">
-                                <i class="fa-solid fa-phone"></i>
-                                <span><strong>Phone:</strong> +880 1234-567890</span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box-modern">
+                            <div class="info-box-header">
+                                <div class="info-box-icon <?= $status_color ?>">
+                                    <i class="fa-solid fa-flag"></i>
+                                </div>
+                                <div class="info-box-title">Status</div>
                             </div>
+                            <div class="info-box-value"><?= $actual_status ?></div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="contact-item">
-                                <i class="fa-solid fa-map-marker-alt"></i>
-                                <span><strong>Location:</strong> Main Office, Dhaka</span>
+                    </div>
+                </div>
+
+                <!-- Created Information -->
+                <div class="info-box-modern">
+                    <div class="info-box-header">
+                        <div class="info-box-icon secondary">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                        </div>
+                        <div class="info-box-title">Created Information</div>
+                    </div>
+                    <div class="info-box-value">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small><strong>Created At:</strong> <?= date('F d, Y - h:i A', strtotime($notice['created_at'])) ?></small>
+                            </div>
+                            <div class="col-md-6">
+                                <small><strong>Last Updated:</strong> <?= date('F d, Y - h:i A', strtotime($notice['created_at'])) ?></small>
                             </div>
                         </div>
                     </div>
@@ -706,15 +751,45 @@ require './components/header.php';
                 <i class="fa-solid fa-print me-2"></i> Print Notice
             </button>
             <div class="d-flex gap-2">
-                <button class="btn btn-delete-main" onclick="if(confirm('Are you sure you want to delete this notice?')) window.location.href='all-notices.php'">
+                <button class="btn btn-delete-main" onclick="deleteNotice(<?= $notice['id'] ?>)">
                     <i class="fa-solid fa-trash me-2"></i> Delete
                 </button>
-                <button class="btn btn-edit-main" onclick="window.location.href='edit-notice.php?id=1'">
+                <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-main">
                     <i class="fa-solid fa-pen-to-square me-2"></i> Edit Notice
-                </button>
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function deleteNotice(id) {
+        if (confirm('Are you sure you want to delete this notice? This action cannot be undone.')) {
+            window.location.href = `delete-notice.php?id=${id}&from=view`;
+        }
+    }
+
+    // Add print styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .page-header, .action-buttons-footer, .btn-back, .btn-edit-header {
+                display: none !important;
+            }
+            .notice-detail-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            body {
+                background: white !important;
+            }
+            .content-text {
+                font-size: 14px !important;
+                line-height: 1.6 !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
 
 <?php require './components/footer.php'; ?>
