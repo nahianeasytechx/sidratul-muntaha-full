@@ -1,11 +1,31 @@
+-- Create database
+CREATE DATABASE sidratul_muntaha;
+
+-- Select database
+USE sidratul_muntaha;
+
+-- Users table
 CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(50) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  email VARCHAR(100) NOT NULL UNIQUE,
-  role ENUM('admin', 'editor', 'viewer') DEFAULT 'viewer',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Notices table
+CREATE TABLE notices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    publish_date DATE NOT NULL,
+    duration INT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    age_limit INT DEFAULT NULL,
+    category VARCHAR(100) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 CREATE TABLE hero_sections (
   id INT AUTO_INCREMENT PRIMARY KEY,
