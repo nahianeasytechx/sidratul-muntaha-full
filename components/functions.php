@@ -1,6 +1,6 @@
 <?php
 
-require_once "../database/dbConnection.php";
+require_once "../admin-panel/database/dbConnection.php";
 
 
 function authenticateUser($username, $password)

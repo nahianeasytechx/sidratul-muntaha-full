@@ -1,29 +1,33 @@
+
 <?php
-$servername = "localhost";
 
-//--------------------------------------------------------------------
+   $servername="localhost";
 
-// For local development ---------------------------------------------
-$site_link = "http://localhost/sites/clothdrob/";
-$username = "root";
-$password = "";
-$database_name = "clothdrob";
+   $username="root";
+   $database_name="sidratul_muntaha";
+    $password="";
 
-// For production -----------------------------------------------------
-// $site_link = "https://clothdrob.com/";
-// $username = "clothd";
-// $password = "Vp6IY-Lese6!56";
-// $database_name = "clothd_easy_commerce";
+    $conn=mysqli_connect($servername,$username,$password,$database_name);
+    $conn->set_charset("utf8mb4");
+    if($conn->connect_error){
+        die("Connection failed:" . $conn->connect_error);
 
-//---------------------------------------------------------------------
+    }
 
-// Create connection
-$conn = mysqli_connect($servername, $username, $password, $database_name);
-$conn->set_charset("utf8mb4");
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    function getDatabaseConnection() {
+    $host = 'localhost';
+    $username = 'root';
+    $password = '';
+    $database = 'sidratul_muntaha';
+    
+    $conn = new mysqli($host, $username, $password, $database);
+    
+    if ($conn->connect_error) {
+        error_log("Database connection failed: " . $conn->connect_error);
+        return null;
+    }
+    
+    return $conn;
 }
-
-?>
+    ?>
