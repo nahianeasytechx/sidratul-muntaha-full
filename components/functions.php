@@ -450,3 +450,278 @@ function getNoticeCount($status = null)
     mysqli_close($conn);
     return $count;
 }
+
+
+
+// ============================================
+// ACTIVITY MANAGEMENT FUNCTIONS
+// ============================================
+
+/**
+ * Create a new activity
+ */
+function createActivity($data)
+{
+    $conn = getDatabaseConnection();
+
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection error.'
+        ];
+    }
+
+    // Escape data
+    $title = mysqli_real_escape_string($conn, $data['title']);
+    $objectives = mysqli_real_escape_string($conn, $data['objectives']);
+    $short_description = mysqli_real_escape_string($conn, $data['short_description']);
+    $description = mysqli_real_escape_string($conn, $data['description']);
+    $type = mysqli_real_escape_string($conn, $data['type']);
+    $status = mysqli_real_escape_string($conn, $data['status']);
+    $image = isset($data['image']) ? mysqli_real_escape_string($conn, $data['image']) : null;
+    $sections_data = isset($data['sections_data']) ? mysqli_real_escape_string($conn, $data['sections_data']) : null;
+
+    // Build query
+    if ($image && $sections_data) {
+        $sql = "INSERT INTO activities (title, objectives, short_description, description, type, status, image, sections_data) 
+                VALUES ('$title', '$objectives', '$short_description', '$description', '$type', '$status', '$image', '$sections_data')";
+    } elseif ($image) {
+        $sql = "INSERT INTO activities (title, objectives, short_description, description, type, status, image) 
+                VALUES ('$title', '$objectives', '$short_description', '$description', '$type', '$status', '$image')";
+    } elseif ($sections_data) {
+        $sql = "INSERT INTO activities (title, objectives, short_description, description, type, status, sections_data) 
+                VALUES ('$title', '$objectives', '$short_description', '$description', '$type', '$status', '$sections_data')";
+    } else {
+        $sql = "INSERT INTO activities (title, objectives, short_description, description, type, status) 
+                VALUES ('$title', '$objectives', '$short_description', '$description', '$type', '$status')";
+    }
+
+    if (mysqli_query($conn, $sql)) {
+        $id = mysqli_insert_id($conn);
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Activity created successfully',
+            'id' => $id
+        ];
+    } else {
+        $error = mysqli_error($conn);
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to create activity: ' . $error
+        ];
+    }
+}
+
+/**
+ * Get all activities
+ */
+function getAllActivities()
+{
+    $conn = getDatabaseConnection();
+
+    $sql = "SELECT * FROM activities ORDER BY created_at DESC";
+    $result = mysqli_query($conn, $sql);
+
+    $activities = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $activities[] = $row;
+        }
+    }
+
+    mysqli_close($conn);
+    return $activities;
+}
+
+/**
+ * Get a single activity by ID
+ */
+function getActivityById($id)
+{
+    $conn = getDatabaseConnection();
+    $id = intval($id);
+
+    $sql = "SELECT * FROM activities WHERE id = $id";
+    $result = mysqli_query($conn, $sql);
+
+    $activity = null;
+    if ($result && mysqli_num_rows($result) > 0) {
+        $activity = mysqli_fetch_assoc($result);
+    }
+
+    mysqli_close($conn);
+    return $activity;
+}
+
+/**
+ * Update an activity
+ */
+function updateActivity(int $id, array $data): array
+{
+    $conn = getDatabaseConnection();
+    
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection failed'
+        ];
+    }
+
+    $sql = "UPDATE activities SET
+                title = ?,
+                objectives = ?,
+                short_description = ?,
+                description = ?,
+                type = ?,
+                status = ?,
+                image = ?,
+                sections_data = ?
+            WHERE id = ?";
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to prepare statement: ' . $conn->error
+        ];
+    }
+
+    // Handle nullable fields
+    $image = isset($data['image']) && !empty($data['image']) ? $data['image'] : null;
+    $sections_data = isset($data['sections_data']) && !empty($data['sections_data']) ? $data['sections_data'] : null;
+
+    $stmt->bind_param(
+        "ssssssssi",
+        $data['title'],
+        $data['objectives'],
+        $data['short_description'],
+        $data['description'],
+        $data['type'],
+        $data['status'],
+        $image,
+        $sections_data,
+        $id
+    );
+
+    if ($stmt->execute()) {
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Activity updated successfully'
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to update activity: ' . $error
+        ];
+    }
+}
+
+/**
+ * Delete an activity
+ */
+function deleteActivity($id)
+{
+    $conn = getDatabaseConnection();
+
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection error.'
+        ];
+    }
+
+    // Use prepared statement for security
+    $stmt = $conn->prepare("DELETE FROM activities WHERE id = ?");
+
+    if (!$stmt) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to prepare delete statement.'
+        ];
+    }
+
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        $affected_rows = $stmt->affected_rows;
+        $stmt->close();
+        mysqli_close($conn);
+
+        if ($affected_rows > 0) {
+            return [
+                'success' => true,
+                'message' => 'Activity deleted successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Activity not found or already deleted'
+            ];
+        }
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to delete activity: ' . $error
+        ];
+    }
+}
+
+/**
+ * Get activity count by status
+ */
+function getActivityCount($status = null)
+{
+    $conn = getDatabaseConnection();
+
+    if ($status) {
+        $status = mysqli_real_escape_string($conn, $status);
+        $sql = "SELECT COUNT(*) as count FROM activities WHERE status = '$status'";
+    } else {
+        $sql = "SELECT COUNT(*) as count FROM activities";
+    }
+
+    $result = mysqli_query($conn, $sql);
+    $count = 0;
+
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        $count = $row['count'];
+    }
+
+    mysqli_close($conn);
+    return $count;
+}
+
+/**
+ * Get activity count by type
+ */
+function getActivityCountByType($type)
+{
+    $conn = getDatabaseConnection();
+    $type = mysqli_real_escape_string($conn, $type);
+
+    $sql = "SELECT COUNT(*) as count FROM activities WHERE type = '$type'";
+    $result = mysqli_query($conn, $sql);
+    $count = 0;
+
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        $count = $row['count'];
+    }
+
+    mysqli_close($conn);
+    return $count;
+}

@@ -1,11 +1,11 @@
 <?php
-require 'database/dbConnection.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-	<base href="<?= $site_url ?>" />
+
 	<!-- Favicon -->
 	<link rel="icon" type="image/x-icon" href="images/s-icon.png" />
 

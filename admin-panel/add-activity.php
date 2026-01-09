@@ -1,8 +1,10 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Add Activity';
+require './components/header.php';
+protectPage(); // Protect this page - only logged in users can access
+
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
-<?php require './components/header.php'; ?>
 
 <style>
   /* Modern Form Styles */
@@ -306,10 +308,6 @@ $page_title = 'Add Activity';
     box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
   }
 
-  .icon-box {
-    background-color: #059669 !important;
-  }
-
   /* File Upload Styling */
   input[type="file"] {
     padding: 12px;
@@ -318,11 +316,51 @@ $page_title = 'Add Activity';
     background: #f8fafc;
     cursor: pointer;
     transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   input[type="file"]:hover {
     border-color: #10b981;
     background: #f0fdf4;
+  }
+
+  .message-box {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .message-box.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+  .message-box.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .message-box i {
+    font-size: 18px;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* Responsive Design */
@@ -387,6 +425,10 @@ $page_title = 'Add Activity';
   .modern-form-group:nth-child(4) { animation-delay: 0.25s; }
   .modern-form-group:nth-child(5) { animation-delay: 0.3s; }
   .modern-form-group:nth-child(6) { animation-delay: 0.35s; }
+  
+  .icon-box {
+    background-color: #059669 !important;
+  }
 </style>
 
 <!--------------------------->
@@ -398,7 +440,7 @@ $page_title = 'Add Activity';
     <!-- Page Title -->
     <div class="page-title-section">
       <div class="icon-box">
-        <i class="mdi mdi-bell-ring text"></i>
+        <i class="fa-solid fa-bell-ring text"></i>
       </div>
       <h1>Add New Activity</h1>
     </div>
@@ -407,20 +449,137 @@ $page_title = 'Add Activity';
     <div class="row">
       <div class="col-lg-10 col-xl-9 mx-auto">
         <div class="notice-form-container">
-          
+
           <!-- Form Header -->
           <div class="form-header">
             <h1>Create New Activity</h1>
             <p>Fill in the details below to publish a new activity</p>
           </div>
 
+          <?php
+          // Handle form submission
+          if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get form data
+            $title = trim($_POST['title']);
+            $objectives = trim($_POST['objectives']);
+            $short_description = trim($_POST['short_description']);
+            $description = trim($_POST['description']);
+            $type = $_POST['type'];
+            $status = $_POST['status'];
+            
+            // Handle image upload
+            $image = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+              $uploadDir = '../uploads/activities/';
+              if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+              }
+              
+              $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+              $targetFile = $uploadDir . $fileName;
+              
+              // Check file type
+              $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+              $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+              
+              if (in_array($imageFileType, $allowedTypes)) {
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                  $image = $fileName; // Store only the filename
+                } else {
+                  echo '<div class="message-box error">
+                          <i class="fa-solid fa-circle-exclamation"></i>
+                          Error uploading image file.
+                        </div>';
+                }
+              } else {
+                echo '<div class="message-box error">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        Only JPG, JPEG, PNG, GIF & WEBP files are allowed.
+                      </div>';
+              }
+            }
+            
+            // Handle dynamic sections data
+            $sections_data = null;
+            if (isset($_POST['section_titles']) && isset($_POST['section_items'])) {
+              $sections = [];
+              $section_titles = $_POST['section_titles'];
+              $section_items = $_POST['section_items'];
+              
+              for ($i = 0; $i < count($section_titles); $i++) {
+                if (!empty($section_titles[$i])) {
+                  $sections[] = [
+                    'title' => $section_titles[$i],
+                    'items' => isset($section_items[$i]) ? $section_items[$i] : []
+                  ];
+                }
+              }
+              
+              if (!empty($sections)) {
+                $sections_data = json_encode($sections);
+              }
+            }
+            
+            // Validate required fields
+            if (empty($title) || empty($objectives) || empty($short_description) || empty($description) || empty($type) || empty($status)) {
+              echo '<div class="message-box error">
+                      <i class="fa-solid fa-circle-exclamation"></i>
+                      All required fields must be filled!
+                    </div>';
+            } else {
+              // Prepare data array
+              $activityData = [
+                'title' => $title,
+                'objectives' => $objectives,
+                'short_description' => $short_description,
+                'description' => $description,
+                'type' => $type,
+                'status' => $status
+              ];
+              
+              // Add image only if uploaded
+              if ($image !== null) {
+                $activityData['image'] = $image;
+              }
+              
+              // Add sections data only if exists
+              if ($sections_data !== null) {
+                $activityData['sections_data'] = $sections_data;
+              }
+              
+              // Create activity using your function
+              $result = createActivity($activityData);
+              
+              if ($result['success']) {
+                echo '<div class="message-box success">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Activity created successfully!
+                      </div>';
+                
+                // Clear form after successful submission
+                echo '<script>
+                        setTimeout(function() {
+                          window.location.href = "all-activities.php";
+                        }, 1500);
+                      </script>';
+              } else {
+                echo '<div class="message-box error">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        Error: ' . htmlspecialchars($result['message']) . '
+                      </div>';
+              }
+            }
+          }
+          ?>
+
           <!-- Form -->
-          <form action="" method="post">
+          <form action="" method="post" enctype="multipart/form-data" id="activityForm">
 
             <!-- Title -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-heading"></i> Activity Title</label>
-              <input type="text" name="title" class="modern-input" placeholder="Enter activity title..." required>
+              <input type="text" name="title" class="modern-input" placeholder="Enter activity title..." required
+                value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>">
             </div>
 
             <!-- Type & Status -->
@@ -429,9 +588,9 @@ $page_title = 'Add Activity';
                 <label><i class="fa-solid fa-tag"></i> Type</label>
                 <select name="type" class="modern-select" required>
                   <option value="">Select Type</option>
-                  <option value="Regular">Regular</option>
-                  <option value="Financial">Financial</option>
-                  <option value="Social">Social</option>
+                  <option value="Regular" <?php echo (isset($_POST['type']) && $_POST['type'] == 'Regular') ? 'selected' : ''; ?>>Regular</option>
+                  <option value="Financial" <?php echo (isset($_POST['type']) && $_POST['type'] == 'Financial') ? 'selected' : ''; ?>>Financial</option>
+                  <option value="Social" <?php echo (isset($_POST['type']) && $_POST['type'] == 'Social') ? 'selected' : ''; ?>>Social</option>
                 </select>
               </div>
 
@@ -439,46 +598,48 @@ $page_title = 'Add Activity';
                 <label><i class="fa-solid fa-toggle-on"></i> Status</label>
                 <select name="status" class="modern-select" required>
                   <option value="">Select Status</option>
-                  <option value="Active" selected>Active</option>
-                  <option value="Expired">Expired</option>
+                  <option value="Active" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Active') ? 'selected' : 'selected'; ?>>Active</option>
+                  <option value="Inactive" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Inactive') ? 'selected' : ''; ?>>Inactive</option>
+                  <option value="Draft" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Draft') ? 'selected' : ''; ?>>Draft</option>
                 </select>
               </div>
             </div>
 
             <!-- Image -->
             <div class="modern-form-group">
-              <label><i class="fa-solid fa-image"></i> Activity Image</label>
+              <label><i class="fa-solid fa-image"></i> Activity Image (Optional)</label>
               <input type="file" name="image" class="modern-input" accept="image/*">
+              <small class="text-muted">Upload JPG, PNG, GIF or WEBP image (max 5MB)</small>
             </div>
 
             <!-- Objectives -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-bullseye"></i> Objectives (Activity Goals)</label>
-              <textarea name="objectives" class="modern-textarea" rows="3" placeholder="Write the activity objectives here..." required></textarea>
+              <textarea name="objectives" class="modern-textarea" rows="3" placeholder="Write the activity objectives here..." required><?php echo isset($_POST['objectives']) ? htmlspecialchars($_POST['objectives']) : ''; ?></textarea>
             </div>
 
             <!-- Short Description -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-align-left"></i> Short Description</label>
-              <textarea name="short_description" class="modern-textarea" rows="3" placeholder="Write a brief description..." required></textarea>
+              <textarea name="short_description" class="modern-textarea" rows="3" placeholder="Write a brief description..." required><?php echo isset($_POST['short_description']) ? htmlspecialchars($_POST['short_description']) : ''; ?></textarea>
             </div>
 
             <!-- Description -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-file-lines"></i> Detailed Description</label>
-              <textarea name="description" class="modern-textarea" rows="5" placeholder="Write the detailed activity description..." required></textarea>
+              <textarea name="description" class="modern-textarea" rows="5" placeholder="Write the detailed activity description..." required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
             </div>
 
             <!-- Add List Section -->
             <div class="modern-form-group">
-              <label style="font-size: 16px; margin-bottom: 20px;"><i class="fa-solid fa-list-check"></i> List Sections</label>
+              <label style="font-size: 16px; margin-bottom: 20px;"><i class="fa-solid fa-list-check"></i> List Sections (Optional)</label>
 
               <div id="dynamicSectionsContainer">
                 <div class="card shadow-sm dynamic-section" data-section-id="1">
                   <div class="card-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2 flex-grow-1">
                       <span class="input-group-text"><i class="fas fa-list"></i></span>
-                      <input type="text" class="section-title-input" name="section_title_1" placeholder="Enter section title (e.g., Requirements, Procedures)" style="max-width: 400px;">
+                      <input type="text" class="section-title-input" name="section_titles[]" placeholder="Enter section title (e.g., Requirements, Procedures)" style="max-width: 400px;">
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSectionDynamic(this)">
                       <i class="fas fa-trash"></i> Remove
@@ -491,7 +652,7 @@ $page_title = 'Add Activity';
                         <div class="item-row">
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>
-                            <input type="text" class="form-control" name="section_1_items[]" placeholder="Enter item text">
+                            <input type="text" class="form-control" name="section_items[0][]" placeholder="Enter item text">
                             <button type="button" class="btn btn-outline-danger" onclick="removeItemDynamic(this)">
                               <i class="fas fa-trash"></i>
                             </button>
@@ -499,7 +660,7 @@ $page_title = 'Add Activity';
                         </div>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addNewItemDynamic(this)">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addNewItemDynamic(this, 0)">
                       <i class="fas fa-plus"></i> Add New Item
                     </button>
                   </div>
@@ -516,8 +677,8 @@ $page_title = 'Add Activity';
               <button type="button" class="btn-cancel" onclick="window.history.back()">
                 <i class="fa-solid fa-times"></i> Cancel
               </button>
-              <button type="submit" class="btn-submit">
-                <i class="fa-solid fa-paper-plane"></i> Add Activity
+              <button type="submit" class="btn-submit" name="submit_activity">
+                <i class="fa-solid fa-paper-plane"></i> Create Activity
               </button>
             </div>
 
@@ -533,18 +694,18 @@ $page_title = 'Add Activity';
 <!--------------------------->
 
 <script>
-  var activitySectionCounter = 2;
+  var activitySectionCounter = 1;
+  var sectionItemCounters = [0]; // Track items for each section
 
-  function addNewItemDynamic(button) {
+  function addNewItemDynamic(button, sectionIndex) {
     var section = button.closest('.dynamic-section');
-    var sectionId = section.getAttribute('data-section-id');
     var itemsList = section.querySelector('.items-list');
 
     var newItem = document.createElement('div');
     newItem.className = 'item-row';
     newItem.innerHTML = '<div class="input-group">' +
       '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
-      '<input type="text" class="form-control" name="section_' + sectionId + '_items[]" placeholder="Enter item text">' +
+      '<input type="text" class="form-control" name="section_items[' + sectionIndex + '][]" placeholder="Enter item text">' +
       '<button type="button" class="btn btn-outline-danger" onclick="removeItemDynamic(this)">' +
       '<i class="fas fa-trash"></i>' +
       '</button>' +
@@ -570,7 +731,9 @@ $page_title = 'Add Activity';
 
   function addNewSectionDynamic() {
     activitySectionCounter++;
+    sectionItemCounters.push(0);
     var container = document.getElementById('dynamicSectionsContainer');
+    var sectionIndex = activitySectionCounter - 1;
 
     var newSection = document.createElement('div');
     newSection.className = 'card shadow-sm dynamic-section';
@@ -578,7 +741,7 @@ $page_title = 'Add Activity';
     newSection.innerHTML = '<div class="card-header d-flex justify-content-between align-items-center">' +
       '<div class="d-flex align-items-center gap-2 flex-grow-1">' +
       '<span class="input-group-text"><i class="fas fa-list"></i></span>' +
-      '<input type="text" class="section-title-input" name="section_title_' + activitySectionCounter + '" placeholder="Enter section title (e.g., Requirements, Procedures)" style="max-width: 400px;">' +
+      '<input type="text" class="section-title-input" name="section_titles[]" placeholder="Enter section title (e.g., Requirements, Procedures)" style="max-width: 400px;">' +
       '</div>' +
       '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSectionDynamic(this)">' +
       '<i class="fas fa-trash"></i> Remove' +
@@ -591,7 +754,7 @@ $page_title = 'Add Activity';
       '<div class="item-row">' +
       '<div class="input-group">' +
       '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
-      '<input type="text" class="form-control" name="section_' + activitySectionCounter + '_items[]" placeholder="Enter item text">' +
+      '<input type="text" class="form-control" name="section_items[' + sectionIndex + '][]" placeholder="Enter item text">' +
       '<button type="button" class="btn btn-outline-danger" onclick="removeItemDynamic(this)">' +
       '<i class="fas fa-trash"></i>' +
       '</button>' +
@@ -599,7 +762,7 @@ $page_title = 'Add Activity';
       '</div>' +
       '</div>' +
       '</div>' +
-      '<button type="button" class="btn btn-outline-primary btn-sm" onclick="addNewItemDynamic(this)">' +
+      '<button type="button" class="btn btn-outline-primary btn-sm" onclick="addNewItemDynamic(this, ' + sectionIndex + ')">' +
       '<i class="fas fa-plus"></i> Add New Item' +
       '</button>' +
       '</div>';
@@ -621,6 +784,58 @@ $page_title = 'Add Activity';
       section.remove();
     }
   }
+
+  // Form validation before submit
+  document.getElementById('activityForm').addEventListener('submit', function(e) {
+    const title = this.querySelector('input[name="title"]').value.trim();
+    const objectives = this.querySelector('textarea[name="objectives"]').value.trim();
+    const shortDescription = this.querySelector('textarea[name="short_description"]').value.trim();
+    const description = this.querySelector('textarea[name="description"]').value.trim();
+    const type = this.querySelector('select[name="type"]').value;
+    const status = this.querySelector('select[name="status"]').value;
+
+    if (title.length === 0) {
+      e.preventDefault();
+      alert('Please enter an activity title');
+      this.querySelector('input[name="title"]').focus();
+      return false;
+    }
+
+    if (objectives.length === 0) {
+      e.preventDefault();
+      alert('Please enter activity objectives');
+      this.querySelector('textarea[name="objectives"]').focus();
+      return false;
+    }
+
+    if (shortDescription.length === 0) {
+      e.preventDefault();
+      alert('Please enter a short description');
+      this.querySelector('textarea[name="short_description"]').focus();
+      return false;
+    }
+
+    if (description.length === 0) {
+      e.preventDefault();
+      alert('Please enter a detailed description');
+      this.querySelector('textarea[name="description"]').focus();
+      return false;
+    }
+
+    if (type === '') {
+      e.preventDefault();
+      alert('Please select an activity type');
+      this.querySelector('select[name="type"]').focus();
+      return false;
+    }
+
+    if (status === '') {
+      e.preventDefault();
+      alert('Please select a status');
+      this.querySelector('select[name="status"]').focus();
+      return false;
+    }
+  });
 </script>
 
 <?php require './components/footer.php'; ?>

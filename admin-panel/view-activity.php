@@ -2,6 +2,91 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'View Activity';
 require './components/header.php';
+protectPage();
+
+// Check if activity ID is provided
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    header('Location: all-activities.php?error=Activity ID is required');
+    exit();
+}
+
+$activity_id = intval($_GET['id']);
+$activity = getActivityById($activity_id);
+
+if (!$activity) {
+    header('Location: all-activities.php?error=Activity not found');
+    exit();
+}
+
+// Determine status badge color and icon
+$status_color = '';
+$status_icon = '';
+
+switch ($activity['status']) {
+    case 'Active':
+        $status_color = 'success';
+        $status_icon = 'circle-check';
+        break;
+    case 'Inactive':
+        $status_color = 'danger';
+        $status_icon = 'circle-xmark';
+        break;
+    case 'Draft':
+        $status_color = 'warning';
+        $status_icon = 'file-pen';
+        break;
+    case 'Completed':
+        $status_color = 'info';
+        $status_icon = 'circle-check';
+        break;
+    case 'Expired':
+        $status_color = 'danger';
+        $status_icon = 'circle-xmark';
+        break;
+    default:
+        $status_color = 'secondary';
+        $status_icon = 'question-circle';
+}
+
+// Determine type badge color
+$type_color = '';
+switch ($activity['type']) {
+    case 'Regular':
+        $type_color = 'primary';
+        break;
+    case 'Financial':
+        $type_color = 'success';
+        break;
+    case 'Social':
+        $type_color = 'info';
+        break;
+    case 'Community Service':
+        $type_color = 'info';
+        break;
+    case 'Educational':
+        $type_color = 'primary';
+        break;
+    case 'Cultural':
+        $type_color = 'purple';
+        break;
+    case 'Sports':
+        $type_color = 'info';
+        break;
+    case 'Environmental':
+        $type_color = 'success';
+        break;
+    default:
+        $type_color = 'secondary';
+}
+
+// Get current user info
+$current_user = getCurrentUser();
+
+// Parse sections data if available
+$sections = [];
+if (!empty($activity['sections_data'])) {
+    $sections = json_decode($activity['sections_data'], true) ?? [];
+}
 ?>
 
 <style>
@@ -150,6 +235,22 @@ require './components/header.php';
         background: linear-gradient(135deg, #f59e0b, #d97706) !important;
     }
 
+    .bg-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    }
+
+    .bg-purple {
+        background: linear-gradient(135deg, #a855f7, #9333ea) !important;
+    }
+
+    .bg-secondary {
+        background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+    }
+
     /* Activity Image */
     .activity-image {
         border-radius: 16px;
@@ -274,6 +375,80 @@ require './components/header.php';
         font-size: 1.1rem;
         font-weight: 700;
         color: #1e293b;
+    }
+
+    /* Dynamic Sections Display */
+    .dynamic-section-display {
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .dynamic-section-display:hover {
+        border-color: #10b981;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    }
+
+    .section-display-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        padding: 20px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .section-display-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-display-title i {
+        color: #10b981;
+    }
+
+    .section-display-body {
+        padding: 24px;
+        background: #fafbfc;
+    }
+
+    .section-items-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .section-items-list li {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .section-items-list li:hover {
+        border-color: #10b981;
+        transform: translateX(4px);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+    }
+
+    .section-items-list li i {
+        color: #10b981;
+        font-size: 1rem;
+    }
+
+    .section-items-list li span {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
     }
 
     /* Attachment Item */
@@ -401,6 +576,34 @@ require './components/header.php';
         border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
+    /* Message Box */
+    .message-box {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .message-box.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .message-box.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .message-box i {
+        font-size: 18px;
+    }
+
     /* Responsive Design */
     @media (max-width: 991px) {
         .page-header {
@@ -458,6 +661,24 @@ require './components/header.php';
     .card {
         animation: fadeIn 0.5s ease-out;
     }
+
+    /* Print Styles */
+    @media print {
+        .page-header, .action-buttons-container, .btn-back, .btn-edit-header {
+            display: none !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        body {
+            background: white !important;
+        }
+        .content-text {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+        }
+    }
 </style>
 
 <div class="content-wrapper">
@@ -482,12 +703,29 @@ require './components/header.php';
                     <button class="btn btn-back" onclick="window.location.href='all-activities.php'">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to List
                     </button>
-                    <button class="btn btn-edit-header" onclick="window.location.href='edit-activity.php'">
+                    <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn btn-edit-header">
                         <i class="fa-solid fa-pen-to-square me-1"></i> Edit Activity
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
+
+        <?php
+        // Display success/error messages
+        if (isset($_GET['success']) && $_GET['success'] == '1') {
+            echo '<div class="message-box success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Activity updated successfully!
+                  </div>';
+        }
+        
+        if (isset($_GET['error'])) {
+            echo '<div class="message-box error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    Error: ' . htmlspecialchars($_GET['error']) . '
+                  </div>';
+        }
+        ?>
 
         <!-- Activity Details Card -->
         <div class="card mb-4">
@@ -497,111 +735,125 @@ require './components/header.php';
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-                                <span class="badge bg-success">
-                                    <i class="fa-solid fa-circle-check me-1"></i> Active
+                                <span class="badge bg-<?= $status_color ?>">
+                                    <i class="fa-solid fa-<?= $status_icon ?> me-1"></i> <?= htmlspecialchars($activity['status']) ?>
                                 </span>
-                                <span class="badge bg-info">
-                                    <i class="fa-solid fa-tag me-1"></i> Community Service
-                                </span>
-                                <span class="badge bg-warning text-dark">
-                                    <i class="fa-solid fa-spinner me-1"></i> Ongoing
+                                <span class="badge bg-<?= $type_color ?>">
+                                    <i class="fa-solid fa-tag me-1"></i> <?= htmlspecialchars($activity['type']) ?>
                                 </span>
                             </div>
-                            <h2>Tree Plantation Drive 2024</h2>
+                            <h2><?= htmlspecialchars($activity['title']) ?></h2>
                             <div class="text-muted small">
-                                <i class="fa-solid fa-calendar-days me-1"></i> Created on: January 10, 2024
-                                <span class="mx-2">|</span>
-                                <i class="fa-solid fa-user me-1"></i> By: Admin User
+                                <i class="fa-solid fa-calendar-days me-1"></i> Created on: <?= date('F d, Y', strtotime($activity['created_at'])) ?>
                             </div>
                         </div>
                         <div class="activity-id">
                             <div class="label">Activity ID</div>
-                            <div class="value">#ACT-001</div>
+                            <div class="value">#ACT-<?= str_pad($activity['id'], 3, '0', STR_PAD_LEFT) ?></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Activity Image -->
-                <div class="activity-image">
-                    <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200&h=600&fit=crop" alt="Tree Plantation Drive" class="img-fluid">
-                    <div class="image-caption">
-                        <i class="fa-solid fa-image me-1"></i> Tree Plantation Drive - Community Volunteer Event
-                    </div>
-                </div>
-
-                <!-- Activity Info Grid -->
+                <!-- Additional Information Grid -->
                 <div class="info-grid">
                     <div class="info-item">
                         <div class="icon">
                             <i class="fa-solid fa-calendar"></i>
                         </div>
                         <div class="label">Activity Date</div>
-                        <div class="value">March 15, 2024</div>
+                        <div class="value"><?= !empty($activity['activity_date']) ? date('F d, Y', strtotime($activity['activity_date'])) : 'Not set' ?></div>
                     </div>
                     <div class="info-item">
                         <div class="icon">
                             <i class="fa-solid fa-clock"></i>
                         </div>
                         <div class="label">Time</div>
-                        <div class="value">9:00 AM - 2:00 PM</div>
+                        <div class="value"><?= !empty($activity['time']) ? htmlspecialchars($activity['time']) : 'Not set' ?></div>
                     </div>
                     <div class="info-item">
                         <div class="icon">
                             <i class="fa-solid fa-location-dot"></i>
                         </div>
                         <div class="label">Location</div>
-                        <div class="value">Central Park, Dhaka</div>
+                        <div class="value"><?= !empty($activity['location']) ? htmlspecialchars($activity['location']) : 'Not set' ?></div>
                     </div>
                     <div class="info-item">
                         <div class="icon">
                             <i class="fa-solid fa-users"></i>
                         </div>
                         <div class="label">Participants</div>
-                        <div class="value">85 / 150</div>
+                        <div class="value"><?= !empty($activity['participants']) ? htmlspecialchars($activity['participants']) : 'Not set' ?></div>
                     </div>
                 </div>
 
-                <!-- Activity Description -->
+                <!-- Activity Image -->
+                <?php if (!empty($activity['image'])): ?>
+                <div class="activity-image">
+                    <img src="<?= htmlspecialchars($activity['image']) ?>" alt="<?= htmlspecialchars($activity['title']) ?>" class="img-fluid">
+                    <div class="image-caption">
+                        <i class="fa-solid fa-image me-1"></i> <?= htmlspecialchars($activity['title']) ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Activity Description with formatted content -->
                 <div class="mb-4">
                     <h5 class="section-title">
                         <i class="fa-solid fa-circle-info"></i>
                         Activity Description
                     </h5>
                     <div class="content-text">
-                        <p>Join us for our annual Tree Plantation Drive 2024, a community initiative aimed at creating a greener and more sustainable environment for future generations.</p>
-
-                        <p>This year, we aim to plant <strong>1,000 trees</strong> across various locations in Dhaka. The plantation drive will focus on native species that are well-adapted to our local climate and require minimal maintenance.</p>
-
-                        <h6>Event Highlights:</h6>
-                        <ul>
-                            <li>Plant native tree species in designated areas</li>
-                            <li>Educational sessions on environmental conservation</li>
-                            <li>Community engagement and team building activities</li>
-                            <li>Refreshments and certificates for all participants</li>
-                            <li>Photo opportunities and media coverage</li>
-                        </ul>
-
-                        <h6>What to Bring:</h6>
-                        <ul>
-                            <li>Comfortable outdoor clothing and closed-toe shoes</li>
-                            <li>Water bottle and sun protection (hat, sunscreen)</li>
-                            <li>Gardening gloves (if available)</li>
-                            <li>Enthusiasm and positive energy!</li>
-                        </ul>
-
-                        <p>This is a great opportunity to give back to the community, meet like-minded individuals, and make a lasting environmental impact. All ages are welcome, and families are encouraged to participate together.</p>
-
-                        <p class="mb-0"><strong>Note:</strong> Registration is required. Please sign up by February 20, 2024.</p>
+                        <?php if (!empty($activity['objectives'])): ?>
+                            <?= nl2br(htmlspecialchars($activity['objectives'])) ?>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($activity['short_description'])): ?>
+                            <p><?= nl2br(htmlspecialchars($activity['short_description'])) ?></p>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($activity['description'])): ?>
+                            <?= nl2br(htmlspecialchars($activity['description'])) ?>
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                <!-- Attachments Section -->
+                <!-- Dynamic Sections Display -->
+                <?php if (!empty($sections) && is_array($sections)): ?>
+                <div class="mb-4">
+                    <?php foreach ($sections as $section): ?>
+                        <?php if (!empty($section['title']) && !empty($section['items']) && is_array($section['items'])): ?>
+                        <div class="mb-4">
+                            <h6 style="color: #1e293b; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.75rem;">
+                                <?= htmlspecialchars($section['title']) ?>:
+                            </h6>
+                            <ul style="padding-left: 1.5rem; margin-bottom: 1rem;">
+                                <?php foreach ($section['items'] as $item): ?>
+                                    <?php if (!empty($item)): ?>
+                                    <li style="margin-bottom: 0.5rem; color: #475569;">
+                                        <?= htmlspecialchars($item) ?>
+                                    </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+
+                <!-- Related Documents Section -->
+                <?php if (!empty($activity['attachments'])): ?>
                 <div class="mb-4">
                     <h5 class="section-title">
                         <i class="fa-solid fa-paperclip"></i>
                         Related Documents
                     </h5>
                     <div class="row g-3">
+                        <?php 
+                        $attachments = json_decode($activity['attachments'], true);
+                        if (is_array($attachments)):
+                            foreach ($attachments as $attachment): 
+                        ?>
                         <div class="col-md-6">
                             <div class="attachment-item d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-3">
@@ -609,58 +861,22 @@ require './components/header.php';
                                         <i class="fa-solid fa-file-pdf text-danger"></i>
                                     </div>
                                     <div>
-                                        <div class="fw-semibold">Activity-Guidelines.pdf</div>
-                                        <div class="text-muted small">320 KB</div>
+                                        <div class="fw-semibold"><?= htmlspecialchars($attachment['name'] ?? 'Document') ?></div>
+                                        <div class="text-muted small"><?= htmlspecialchars($attachment['size'] ?? 'N/A') ?></div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-outline-secondary">
+                                <a href="<?= htmlspecialchars($attachment['url'] ?? '#') ?>" class="btn btn-sm btn-outline-secondary" download>
                                     <i class="fa-solid fa-download"></i> Download
-                                </button>
+                                </a>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="attachment-item d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="file-icon">
-                                        <i class="fa-solid fa-file-excel text-success"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold">Participant-List.xlsx</div>
-                                        <div class="text-muted small">145 KB</div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="fa-solid fa-download"></i> Download
-                                </button>
-                            </div>
-                        </div>
+                        <?php 
+                            endforeach;
+                        endif;
+                        ?>
                     </div>
                 </div>
-
-                <!-- Contact Information -->
-                <div class="contact-section">
-                    <h6>
-                        <i class="fa-solid fa-address-card me-2"></i>Contact Information
-                    </h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <i class="fa-solid fa-user me-2"></i>
-                            <strong>Coordinator:</strong> Sarah Johnson
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fa-solid fa-envelope me-2"></i>
-                            <strong>Email:</strong> sarah.j@organization.org
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fa-solid fa-phone me-2"></i>
-                            <strong>Phone:</strong> +880 1987-654321
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fa-solid fa-globe me-2"></i>
-                            <strong>Website:</strong> www.organization.org/events
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -676,16 +892,77 @@ require './components/header.php';
                     </button>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-danger" onclick="if(confirm('Are you sure you want to delete this activity?')) window.location.href='all-activities.php'">
+                    <button class="btn btn-outline-danger" id="deleteBtn" data-id="<?= $activity['id'] ?>" data-title="<?= htmlspecialchars($activity['title']) ?>">
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
-                    <button class="btn btn-primary" onclick="window.location.href='edit-activity.php?id=1'">
+                    <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn btn-primary">
                         <i class="fa-solid fa-pen-to-square"></i> Edit Activity
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('deleteBtn').addEventListener('click', function() {
+    const id = this.dataset.id;
+    const title = this.dataset.title;
+    
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `<div style="text-align: center;">
+                  <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                  <p>You are about to delete the activity:</p>
+                  <p><strong>"${title}"</strong></p>
+                  <p class="text-danger">This action cannot be undone!</p>
+               </div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        backdrop: true,
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            return new Promise((resolve) => {
+                // Redirect to delete page after confirmation
+                window.location.href = `delete-activity.php?id=${id}&from=view`;
+                resolve();
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // The redirection happens in preConfirm
+        }
+    });
+});
+
+// Add print styles
+const style = document.createElement('style');
+style.textContent = `
+    @media print {
+        .page-header, .action-buttons-container, .btn-back, .btn-edit-header {
+            display: none !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        body {
+            background: white !important;
+        }
+        .content-text {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
 
 <?php require './components/footer.php'; ?>

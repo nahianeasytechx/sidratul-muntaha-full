@@ -2,7 +2,24 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'All Activities';
 require './components/header.php';
+protectPage();
+
+// Get all activities from database
+$activities = getAllActivities();
+
+// Calculate statistics from actual database data
+$totalActivities = count($activities);
+$activeCount = getActivityCount('Active');
+$expiredCount = getActivityCount('Expired');
+
+// Count by type
+$regularCount = getActivityCountByType('Regular');
+$financialCount = getActivityCountByType('Financial');
+$socialCount = getActivityCountByType('Social');
 ?>
+
+<!-- Add SweetAlert CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
   /* Statistics Cards */
@@ -46,9 +63,9 @@ require './components/header.php';
   }
 
   .stat-card-modern.total { --gradient-start: #8b5cf6; --gradient-end: #7c3aed; }
-  .stat-card-modern.upcoming { --gradient-start: #10b981; --gradient-end: #059669; }
-  .stat-card-modern.ongoing { --gradient-start: #3b82f6; --gradient-end: #2563eb; }
-  .stat-card-modern.completed { --gradient-start: #f59e0b; --gradient-end: #d97706; }
+  .stat-card-modern.active { --gradient-start: #10b981; --gradient-end: #059669; }
+  .stat-card-modern.expired { --gradient-start: #ef4444; --gradient-end: #dc2626; }
+  .stat-card-modern.regular { --gradient-start: #3b82f6; --gradient-end: #2563eb; }
 
   .stat-content-flex {
     display: flex;
@@ -94,6 +111,62 @@ require './components/header.php';
   .stat-icon-modern i {
     font-size: 28px;
     color: #fff;
+  }
+
+  /* Page Header */
+  .page-header {
+    background: linear-gradient(135deg, #10b981, #059669);
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+  }
+
+  .page-header h1 {
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page-header .breadcrumb-item a {
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.3s ease;
+  }
+
+  .page-header .breadcrumb-item a:hover {
+    color: white;
+  }
+
+  .page-header .breadcrumb-item.active {
+    color: white;
+  }
+
+  .page-header .breadcrumb-item+.breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .btn-add-new {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-add-new:hover {
+    background: #fff;
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   }
 
   /* Filter Card */
@@ -157,7 +230,7 @@ require './components/header.php';
 
   .filter-select {
     width: 100%;
-    padding: 2px 18px;
+    padding: 12px 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
@@ -179,8 +252,8 @@ require './components/header.php';
     box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
   }
 
-  /* Notice Cards */
-  .notice-card {
+  /* Activity Cards */
+  .activity-card {
     background: #fff;
     border-radius: 16px;
     padding: 24px;
@@ -192,7 +265,7 @@ require './components/header.php';
     overflow: hidden;
   }
 
-  .notice-card::before {
+  .activity-card::before {
     content: '';
     position: absolute;
     left: 0;
@@ -202,16 +275,15 @@ require './components/header.php';
     background: linear-gradient(180deg, var(--accent-color), var(--accent-color-dark));
   }
 
-  .notice-card:hover {
+  .activity-card:hover {
     transform: translateX(4px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
   }
 
-  .notice-card.status-active { --accent-color: #10b981; --accent-color-dark: #059669; }
-  .notice-card.status-expired { --accent-color: #ef4444; --accent-color-dark: #dc2626; }
-  .notice-card.status-draft { --accent-color: #f59e0b; --accent-color-dark: #d97706; }
+  .activity-card.status-Active { --accent-color: #10b981; --accent-color-dark: #059669; }
+  .activity-card.status-Expired { --accent-color: #ef4444; --accent-color-dark: #dc2626; }
 
-  .notice-header {
+  .activity-header {
     display: flex;
     justify-content: space-between;
     align-items: start;
@@ -219,7 +291,7 @@ require './components/header.php';
     gap: 16px;
   }
 
-  .notice-title {
+  .activity-title {
     font-size: 20px;
     font-weight: 700;
     color: #1e293b;
@@ -227,7 +299,7 @@ require './components/header.php';
     line-height: 1.3;
   }
 
-  .notice-meta {
+  .activity-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
@@ -247,14 +319,14 @@ require './components/header.php';
     font-size: 14px;
   }
 
-  .notice-description {
+  .activity-description {
     color: #475569;
     font-size: 15px;
     line-height: 1.6;
     margin-bottom: 16px;
   }
 
-  .notice-footer {
+  .activity-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -262,7 +334,7 @@ require './components/header.php';
     border-top: 1px solid #f1f5f9;
   }
 
-  .notice-badges {
+  .activity-badges {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -287,24 +359,14 @@ require './components/header.php';
     color: #991b1b;
   }
 
-  .badge-draft {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #92400e;
-  }
-
   .badge-type {
     background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
     color: #6b21a8;
     padding: 5px 10px;
     border-radius: 50px;
   }
-.badge-upcoming{
-  margin-top: 5px;
-}
-.badge-ongoing{
-  margin-top: 5px;
-}
-  .notice-actions {
+
+  .activity-actions {
     display: flex;
     gap: 8px;
   }
@@ -343,47 +405,43 @@ require './components/header.php';
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   }
 
-  /* Pagination */
-  .pagination-modern {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 32px;
-  }
-
-  .page-btn {
-    min-width: 40px;
-    height: 40px;
-    padding: 0 12px;
-    border-radius: 10px;
-    border: 2px solid #e2e8f0;
-    background: #fff;
-    color: #64748b;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  /* Message Box */
+  .message-box {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    font-weight: 500;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+    animation: fadeIn 0.3s ease;
   }
 
-  .page-btn:hover:not(.disabled):not(.active) {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
-    transform: translateY(-2px);
+  .message-box.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
   }
 
-  .page-btn.active {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+  .message-box.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
   }
 
-  .page-btn.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  .message-box.info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+  }
+
+  .message-box i {
+    font-size: 18px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Empty State */
@@ -442,11 +500,11 @@ require './components/header.php';
       font-size: 22px;
     }
 
-    .notice-header {
+    .activity-header {
       flex-direction: column;
     }
 
-    .notice-footer {
+    .activity-footer {
       flex-direction: column;
       gap: 12px;
       align-items: flex-start;
@@ -454,7 +512,7 @@ require './components/header.php';
   }
 
   /* Animation */
-  @keyframes fadeIn {
+  @keyframes fadeInCard {
     from {
       opacity: 0;
       transform: translateY(20px);
@@ -465,8 +523,8 @@ require './components/header.php';
     }
   }
 
-  .notice-card {
-    animation: fadeIn 0.5s ease;
+  .activity-card {
+    animation: fadeInCard 0.5s ease;
   }
 </style>
 
@@ -476,13 +534,53 @@ require './components/header.php';
 <div class="content-wrapper">
   <div class="dashboard">
 
-    <!-- Page Title -->
-    <div class="page-title-section">
-      <div class="icon-box" style="background-color: #059669 !important;">
-        <i class="fa-solid fa-calendar-days"></i>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="w-100 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div>
+            <h1><i class="fa-solid fa-calendar-days me-2"></i>All Activities</h1>
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Activities</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <a class="btn btn-add-new" href="add-activity.php">
+            <i class="fa-solid fa-plus me-2"></i>Add New Activity
+          </a>
+        </div>
       </div>
-      <h1>All Activities</h1>
     </div>
+
+    <?php
+    // Display success/error messages
+    if (isset($_GET['success']) && $_GET['success'] == '1') {
+        echo '<div class="message-box success">
+                <i class="fa-solid fa-circle-check"></i>
+                Activity operation completed successfully!
+              </div>';
+    }
+    
+    if (isset($_GET['error'])) {
+        echo '<div class="message-box error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Error: ' . htmlspecialchars($_GET['error']) . '
+              </div>';
+    }
+    
+    // Show info if no activities
+    if ($totalActivities === 0) {
+        echo '<div class="message-box info">
+                <i class="fa-solid fa-circle-info"></i>
+                No activities found. <a href="add-activity.php">Create your first activity</a>.
+              </div>';
+    }
+    ?>
 
     <!-- Statistics Grid -->
     <div class="stats-grid">
@@ -490,7 +588,7 @@ require './components/header.php';
         <div class="stat-content-flex">
           <div class="stat-info">
             <div class="stat-label">Total Activities</div>
-            <h3 id="totalCount">0</h3>
+            <h3><?= $totalActivities ?></h3>
           </div>
           <div class="stat-icon-modern">
             <i class="fa-solid fa-calendar-days"></i>
@@ -498,38 +596,38 @@ require './components/header.php';
         </div>
       </div>
 
-      <div class="stat-card-modern upcoming">
+      <div class="stat-card-modern active">
         <div class="stat-content-flex">
           <div class="stat-info">
-            <div class="stat-label">Upcoming</div>
-            <h3 id="upcomingCount">0</h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-calendar-check"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card-modern ongoing">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Ongoing</div>
-            <h3 id="ongoingCount">0</h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-spinner"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card-modern completed">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Completed</div>
-            <h3 id="completedCount">0</h3>
+            <div class="stat-label">Active</div>
+            <h3><?= $activeCount ?></h3>
           </div>
           <div class="stat-icon-modern">
             <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card-modern expired">
+        <div class="stat-content-flex">
+          <div class="stat-info">
+            <div class="stat-label">Expired</div>
+            <h3><?= $expiredCount ?></h3>
+          </div>
+          <div class="stat-icon-modern">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card-modern regular">
+        <div class="stat-content-flex">
+          <div class="stat-info">
+            <div class="stat-label">Regular</div>
+            <h3><?= $regularCount ?></h3>
+          </div>
+          <div class="stat-icon-modern">
+            <i class="fa-solid fa-tag"></i>
           </div>
         </div>
       </div>
@@ -548,39 +646,25 @@ require './components/header.php';
             <input type="text" placeholder="Search activities..." id="searchInput">
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
           <select class="filter-select" id="statusFilter">
             <option value="all">All Status</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="ongoing">Ongoing</option>
-            <option value="completed">Completed</option>
+            <option value="Active">Active</option>
+            <option value="Expired">Expired</option>
           </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
           <select class="filter-select" id="typeFilter">
             <option value="all">All Types</option>
-            <option value="community service">Community Service</option>
-            <option value="workshop">Workshop</option>
-            <option value="training">Training</option>
-            <option value="event">Event</option>
-            <option value="outreach">Outreach</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <select class="filter-select" id="categoryFilter">
-            <option value="all">All Categories</option>
-            <option value="environmental">Environmental</option>
-            <option value="health">Health</option>
-            <option value="education">Education</option>
-            <option value="fundraising">Fundraising</option>
-            <option value="social welfare">Social Welfare</option>
+            <option value="Regular">Regular</option>
+            <option value="Financial">Financial</option>
+            <option value="Social">Social</option>
           </select>
         </div>
         <div class="col-md-2">
           <select class="filter-select" id="sortFilter">
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
-            <option value="date">By Date</option>
           </select>
         </div>
       </div>
@@ -588,154 +672,80 @@ require './components/header.php';
 
     <!-- Activities List -->
     <div id="activitiesList">
-      <!-- Sample Activity Card - Upcoming -->
-      <div class="activity-card status-upcoming">
-        <div class="activity-header">
-          <div>
-            <h4 class="activity-title">Community Clean-Up Drive 2025</h4>
-            <div class="activity-meta">
-              <div class="meta-item">
-                <i class="fa-solid fa-calendar"></i>
-                <span>Date: Feb 15, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-location-dot"></i>
-                <span>Central Park</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-users"></i>
-                <span>50 Volunteers</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p class="activity-description">
-          Join us for a major community clean-up initiative. We'll be cleaning Central Park and surrounding areas. 
-          Bring your enthusiasm and we'll provide all necessary equipment and refreshments.
-        </p>
-        <div class="activity-footer">
-          <div class="activity-badges">
-            <span class="badge-modern badge-upcoming mt-1">Upcoming</span>
-            <span class="badge-modern badge-type">Community Service</span>
-            <span class="badge-modern badge-category">Environmental</span>
-          </div>
-          <div class="activity-actions">
-            <button class="btn-action btn-view" title="View">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="btn-action btn-delete" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sample Activity Card - Ongoing -->
-      <div class="activity-card status-ongoing">
-        <div class="activity-header">
-          <div>
-            <h4 class="activity-title">Youth Leadership Workshop</h4>
-            <div class="activity-meta">
-              <div class="meta-item">
-                <i class="fa-solid fa-calendar"></i>
-                <span>Started: Nov 1, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-clock"></i>
-                <span>Ends: Nov 30, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-users"></i>
-                <span>25 Participants</span>
+      <?php if ($totalActivities > 0): ?>
+        <?php foreach ($activities as $activity): 
+          // Determine badge colors based on status
+          $statusClass = '';
+          $statusBadgeClass = '';
+          
+          if ($activity['status'] === 'Active') {
+              $statusClass = 'status-Active';
+              $statusBadgeClass = 'badge-active';
+          } elseif ($activity['status'] === 'Expired') {
+              $statusClass = 'status-Expired';
+              $statusBadgeClass = 'badge-expired';
+          }
+        ?>
+        <div class="activity-card <?= $statusClass ?>" 
+             data-title="<?= strtolower($activity['title']) ?>"
+             data-status="<?= $activity['status'] ?>"
+             data-type="<?= $activity['type'] ?>"
+             data-created="<?= $activity['created_at'] ?>">
+          <div class="activity-header">
+            <div>
+              <h4 class="activity-title"><?= htmlspecialchars($activity['title']) ?></h4>
+              <div class="activity-meta">
+                <div class="meta-item">
+                  <i class="fa-solid fa-calendar"></i>
+                  <span>Created: <?= date('M d, Y', strtotime($activity['created_at'])) ?></span>
+                </div>
+                <div class="meta-item">
+                  <i class="fa-solid fa-tag"></i>
+                  <span><?= htmlspecialchars($activity['type']) ?></span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <p class="activity-description">
-          A month-long intensive workshop focusing on leadership skills, team building, and community engagement 
-          for youth aged 16-24. Sessions held every weekend with expert facilitators.
-        </p>
-        <div class="activity-footer">
-          <div class="activity-badges">
-            <span class="badge-modern badge-ongoing">Ongoing</span>
-            <span class="badge-modern badge-type">Workshop</span>
-            <span class="badge-modern badge-category">Education</span>
-          </div>
-          <div class="activity-actions">
-            <button class="btn-action btn-view" title="View">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="btn-action btn-delete" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sample Activity Card - Completed -->
-      <div class="activity-card status-completed">
-        <div class="activity-header">
-          <div>
-            <h4 class="activity-title">Health Awareness Campaign</h4>
-            <div class="activity-meta">
-              <div class="meta-item">
-                <i class="fa-solid fa-calendar"></i>
-                <span>Completed: Oct 20, 2025</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-location-dot"></i>
-                <span>Community Center</span>
-              </div>
-              <div class="meta-item">
-                <i class="fa-solid fa-check-circle"></i>
-                <span>100% Complete</span>
-              </div>
+          <p class="activity-description">
+            <?= htmlspecialchars($activity['short_description']) ?>
+          </p>
+          <div class="activity-footer">
+            <div class="activity-badges">
+              <span class="badge-modern <?= $statusBadgeClass ?>">
+                <i class="fa-solid fa-<?= $activity['status'] === 'Active' ? 'circle-check' : 'circle-xmark' ?> me-1"></i>
+                <?= htmlspecialchars($activity['status']) ?>
+              </span>
+              <span class="badge-modern badge-type"><?= htmlspecialchars($activity['type']) ?></span>
+            </div>
+            <div class="activity-actions">
+              <a href="view-activity.php?id=<?= $activity['id'] ?>" class="btn-action btn-view" title="View">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn-action btn-edit" title="Edit">
+                <i class="fa-solid fa-pen"></i>
+              </a>
+              <button class="btn-action btn-delete btn-delete-activity" 
+                      title="Delete"
+                      data-id="<?= $activity['id'] ?>"
+                      data-title="<?= htmlspecialchars($activity['title']) ?>">
+                <i class="fa-solid fa-trash"></i>
+              </button>
             </div>
           </div>
         </div>
-        <p class="activity-description">
-          Successfully conducted a comprehensive health awareness campaign including free health checkups, 
-          nutritional counseling, and fitness demonstrations. Reached over 200 community members.
-        </p>
-        <div class="activity-footer">
-          <div class="activity-badges">
-            <span class="badge-modern badge-completed">Completed</span>
-            <span class="badge-modern badge-type">Outreach</span>
-            <span class="badge-modern badge-category">Health</span>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="fa-solid fa-inbox"></i>
           </div>
-          <div class="activity-actions">
-            <button class="btn-action btn-view" title="View">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="btn-action btn-delete" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
+          <h3>No activities found</h3>
+          <p>Start by adding your first activity</p>
+          <a href="add-activity.php" class="btn btn-add-new mt-3">
+            <i class="fa-solid fa-plus me-2"></i>Add Activity
+          </a>
         </div>
-      </div>
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination-modern">
-      <button class="page-btn disabled">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-      <button class="page-btn active">1</button>
-      <button class="page-btn">2</button>
-      <button class="page-btn">3</button>
-      <button class="page-btn">4</button>
-      <button class="page-btn">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
+      <?php endif; ?>
     </div>
 
   </div>
@@ -744,90 +754,102 @@ require './components/header.php';
 <!-- END MAIN AREA -->
 <!--------------------------->
 
+<!-- Add SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-  // Update statistics (example)
-  document.getElementById('totalCount').textContent = '3';
-  document.getElementById('upcomingCount').textContent = '1';
-  document.getElementById('ongoingCount').textContent = '1';
-  document.getElementById('completedCount').textContent = '1';
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtering functionality
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const sortFilter = document.getElementById("sortFilter");
+    const cards = document.querySelectorAll(".activity-card");
 
-  // Search functionality
-  const searchInput = document.getElementById('searchInput');
-  searchInput.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const noticeCards = document.querySelectorAll('.notice-card');
-    
-    noticeCards.forEach(card => {
-      const title = card.querySelector('.notice-title').textContent.toLowerCase();
-      const description = card.querySelector('.notice-description').textContent.toLowerCase();
-      
-      if (title.includes(searchTerm) || description.includes(searchTerm)) {
-        card.style.display = 'block';
-      } else {
-        card.style.display = 'none';
-      }
-    });
-  });
+    function filterCards() {
+        const search = searchInput.value.toLowerCase();
+        const type = typeFilter.value;
+        const status = statusFilter.value;
 
-  // Filter by status
-  const statusFilter = document.getElementById('statusFilter');
-  statusFilter.addEventListener('change', function(e) {
-    const status = e.target.value;
-    const noticeCards = document.querySelectorAll('.notice-card');
-    
-    noticeCards.forEach(card => {
-      if (status === 'all') {
-        card.style.display = 'block';
-      } else {
-        // Map activity statuses to card classes
-        let statusClass = '';
-        if (status === 'upcoming') statusClass = 'status-active';
-        else if (status === 'ongoing') statusClass = 'status-expired';
-        else if (status === 'completed') statusClass = 'status-draft';
-        
-        const cardStatus = card.classList.contains(statusClass);
-        card.style.display = cardStatus ? 'block' : 'none';
-      }
-    });
-  });
+        cards.forEach(card => {
+            const title = card.dataset.title;
+            const cardType = card.dataset.type;
+            const cardStatus = card.dataset.status;
+            let visible = true;
 
-  // Filter by type
-  const typeFilter = document.getElementById('typeFilter');
-  typeFilter.addEventListener('change', function(e) {
-    const type = e.target.value.toLowerCase();
-    const noticeCards = document.querySelectorAll('.notice-card');
-    
-    noticeCards.forEach(card => {
-      if (type === 'all') {
-        card.style.display = 'block';
-      } else {
-        const badges = card.querySelectorAll('.badge-type');
-        let matchFound = false;
-        badges.forEach(badge => {
-          if (badge.textContent.toLowerCase().includes(type)) {
-            matchFound = true;
-          }
+            if (search && !title.includes(search)) visible = false;
+            if (type !== "all" && cardType !== type) visible = false;
+            if (status !== "all" && cardStatus !== status) visible = false;
+
+            card.style.display = visible ? "" : "none";
         });
-        card.style.display = matchFound ? 'block' : 'none';
-      }
-    });
-  });
+    }
 
-  // Filter by category
-  const categoryFilter = document.getElementById('categoryFilter');
-  categoryFilter.addEventListener('change', function(e) {
-    const category = e.target.value.toLowerCase();
-    const noticeCards = document.querySelectorAll('.notice-card');
+    function sortCards() {
+        const sortValue = sortFilter.value;
+        const container = document.getElementById("activitiesList");
+        const cardsArr = Array.from(cards);
+
+        cardsArr.sort((a, b) => {
+            const aDate = new Date(a.dataset.created);
+            const bDate = new Date(b.dataset.created);
+            
+            if (sortValue === "oldest") {
+                return aDate - bDate;
+            }
+            // newest first (default)
+            return bDate - aDate;
+        });
+
+        // Reorder cards in the DOM
+        cardsArr.forEach(card => container.appendChild(card));
+    }
+
+    // SweetAlert Delete Confirmation
+    const deleteButtons = document.querySelectorAll('.btn-delete-activity');
     
-    noticeCards.forEach(card => {
-      if (category === 'all') {
-        card.style.display = 'block';
-      } else {
-        const description = card.querySelector('.notice-description').textContent.toLowerCase();
-        card.style.display = description.includes(category) ? 'block' : 'none';
-      }
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            const deleteUrl = `delete-activity.php?id=${id}`;
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                html: `<div style="text-align: center;">
+                          <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                          <p>You are about to delete the activity:</p>
+                          <p><strong>"${title}"</strong></p>
+                          <p class="text-danger">This action cannot be undone!</p>
+                       </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                backdrop: true,
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return new Promise((resolve) => {
+                        window.location.href = deleteUrl;
+                        resolve();
+                    });
+                }
+            });
+        });
     });
-  });
+
+    // Event listeners for filters
+    [searchInput, typeFilter, statusFilter].forEach(el => el.addEventListener("input", filterCards));
+    sortFilter.addEventListener("change", sortCards);
+});
 </script>
 
 <?php require './components/footer.php'; ?>

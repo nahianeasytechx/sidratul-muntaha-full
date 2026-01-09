@@ -27,6 +27,24 @@ CREATE TABLE notices (
 );
 
 
+-- Create activities table
+CREATE TABLE IF NOT EXISTS activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    objectives TEXT NOT NULL,
+    short_description TEXT NOT NULL,
+    description TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    image VARCHAR(255) NULL,
+    sections_data TEXT NULL COMMENT 'JSON data for dynamic sections',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_type (type),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE hero_sections (
   id INT AUTO_INCREMENT PRIMARY KEY,
   page_title VARCHAR(100) NOT NULL,
