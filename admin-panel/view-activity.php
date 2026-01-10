@@ -637,7 +637,6 @@ if (!empty($activity['sections_data'])) {
         }
 
         .action-buttons-container .d-flex {
-            flex-direction: column;
             gap: 1rem;
         }
 
@@ -753,6 +752,18 @@ if (!empty($activity['sections_data'])) {
                         </div>
                     </div>
                 </div>
+                                                        <!-- Activity Image -->
+                <?php if (!empty($activity['image'])): ?>
+                <div class="activity-image">
+                   <img src="../uploads/activities/<?= htmlspecialchars($activity['image']) ?>"
+     alt="<?= htmlspecialchars($activity['title']) ?>"
+     class="img-fluid">
+
+                    <div class="image-caption">
+                        <i class="fa-solid fa-image me-1"></i> <?= htmlspecialchars($activity['title']) ?>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <!-- Additional Information Grid -->
                 <div class="info-grid">
@@ -786,15 +797,7 @@ if (!empty($activity['sections_data'])) {
                     </div>
                 </div>
 
-                <!-- Activity Image -->
-                <?php if (!empty($activity['image'])): ?>
-                <div class="activity-image">
-                    <img src="<?= htmlspecialchars($activity['image']) ?>" alt="<?= htmlspecialchars($activity['title']) ?>" class="img-fluid">
-                    <div class="image-caption">
-                        <i class="fa-solid fa-image me-1"></i> <?= htmlspecialchars($activity['title']) ?>
-                    </div>
-                </div>
-                <?php endif; ?>
+
 
                 <!-- Activity Description with formatted content -->
                 <div class="mb-4">
@@ -883,14 +886,6 @@ if (!empty($activity['sections_data'])) {
         <!-- Action Buttons -->
         <div class="action-buttons-container">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-secondary" onclick="window.print()">
-                        <i class="fa-solid fa-print"></i> Print
-                    </button>
-                    <button class="btn btn-outline-info">
-                        <i class="fa-solid fa-share-nodes"></i> Share
-                    </button>
-                </div>
                 <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-outline-danger" id="deleteBtn" data-id="<?= $activity['id'] ?>" data-title="<?= htmlspecialchars($activity['title']) ?>">
                         <i class="fa-solid fa-trash"></i> Delete

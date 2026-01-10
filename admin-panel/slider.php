@@ -1,11 +1,78 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Slider Management';
+require './components/header.php';
+// Protect page - ensure user is logged in
+protectPage();
+// Handle delete slider
+if (isset($_GET['delete_id'])) {
+    $id = (int) $_GET['delete_id'];
+
+    if ($id > 0) {
+        $result = deleteSlider($id); // your function
+
+        if ($result['success']) {
+            $_SESSION['success_message'] = $result['message'];
+        } else {
+            $_SESSION['error_message'] = $result['message'];
+        }
+    }
+
+    echo "<script>
+        window.location.href = 'slider.php';
+    </script>";
+    exit;
+}
+// Get messages from session FIRST (before any processing)
+$success_message = '';
+$error_message = '';
+
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
+
+// Handle form submissions
+// Add Slider
+if (isset($_POST['add_slider'])) {
+    $result = createSlider($_POST, $_FILES);
+    if ($result['success']) {
+        $success_message = $result['message'];
+    } else {
+        $error_message = $result['message'];
+    }
+}
+
+// Update Slider
+if (isset($_POST['update_slider'])) {
+    $id = intval($_POST['slider_id']);
+    $result = updateSlider($id, $_POST, $_FILES);
+    if ($result['success']) {
+        $success_message = $result['message'];
+    } else {
+        $error_message = $result['message'];
+    }
+}
+
+
+// Get all sliders
+$sliders = getAllSliders();
+
+// Get slider for editing
+$edit_slider = null;
+if (isset($_GET['edit_id'])) {
+    $edit_id = intval($_GET['edit_id']);
+    $edit_slider = getSliderById($edit_id);
+}
 ?>
-<?php require './components/header.php'; ?>
 
 <style>
-    /* Page Header Styling - Matching donation-list.php */
+    /* Page Header Styling */
     .page-header {
         background: linear-gradient(135deg, #10b981, #059669);
         padding: 2rem;
@@ -45,6 +112,25 @@ $page_title = 'Slider Management';
         color: rgba(255, 255, 255, 0.6);
     }
 
+    /* Alert Styling */
+    .alert {
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+    }
+
     /* Section Headers */
     .section-header {
         font-size: 1.5rem;
@@ -73,7 +159,16 @@ $page_title = 'Slider Management';
     /* Slider Item Card */
     .slider-item {
         background: #f8fafc;
+        position: relative;
+        border-radius: 12px;
         overflow: hidden;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .slider-item:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
     }
 
     .slider-item::before {
@@ -85,7 +180,6 @@ $page_title = 'Slider Management';
         width: 4px;
         background: linear-gradient(180deg, #10b981, #059669);
     }
-
 
     .slider-item h4 {
         color: #2c3e50;
@@ -99,7 +193,9 @@ $page_title = 'Slider Management';
         transition: transform 0.3s ease;
     }
 
-
+    .slider-img:hover {
+        transform: scale(1.02);
+    }
 
     .slider-info h5 {
         color: #2c3e50;
@@ -113,7 +209,7 @@ $page_title = 'Slider Management';
         line-height: 1.6;
     }
 
-    /* Badge Styles - Matching donation-list.php */
+    /* Badge Styles */
     .badge {
         padding: 0.5rem 1rem;
         border-radius: 20px;
@@ -126,6 +222,16 @@ $page_title = 'Slider Management';
     .badge.bg-secondary {
         background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
         color: #475569;
+    }
+
+    .badge.bg-success {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+        color: #065f46;
+    }
+
+    .badge.bg-warning {
+        background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+        color: #92400e;
     }
 
     .badge.bg-primary {
@@ -188,21 +294,9 @@ $page_title = 'Slider Management';
         border-color: #059669;
     }
 
-    .custum-file-upload .icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .custum-file-upload .icon svg {
         height: 60px;
         fill: #10b981;
-    }
-
-    .custum-file-upload .text {
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
     .custum-file-upload .text span {
@@ -224,7 +318,7 @@ $page_title = 'Slider Management';
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    /* Button Styles - Matching donation-list.php */
+    /* Button Styles */
     .btn-primary {
         background: linear-gradient(135deg, #06b6d4, #0891b2);
         border: none;
@@ -257,6 +351,40 @@ $page_title = 'Slider Management';
         transform: translateY(-3px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(135deg, #d97706, #b45309);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #64748b, #475569);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(135deg, #475569, #334155);
     }
 
     .btn-submit {
@@ -346,6 +474,7 @@ $page_title = 'Slider Management';
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -379,69 +508,114 @@ $page_title = 'Slider Management';
         </div>
     </div>
 
+    <!-- Success/Error Messages -->
+    <?php if (!empty($success_message)): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>
+            <?= htmlspecialchars($success_message) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($error_message)): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>
+            <?= htmlspecialchars($error_message) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <!-- Display Existing Slider Images -->
     <div class="row">
         <div class="col-lg-7 mb-4">
             <h2 class="section-header">
                 <i class="fa-solid fa-images"></i>
-                Existing Slider Images
+                Existing Slider Images (<?= count($sliders) ?>)
             </h2>
 
             <div class="card">
                 <div class="slider-images">
-                    <!-- Slider Item 1 -->
-                    <div class="slider-item p-3 mb-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h4 class="mb-0">Image No: 1</h4>
-                            <span class="badge bg-secondary">Order: 1</span>
+                    <?php if (empty($sliders)): ?>
+                        <div class="empty-state">
+                            <i class="fa-solid fa-image"></i>
+                            <h3>No Slider Images Yet</h3>
+                            <p>Add your first slider image to get started</p>
                         </div>
-                        <img src="../img/compressed_banner1.jpg" alt="Slider Image" class="slider-img img-fluid mb-3" style="max-height: 300px; object-fit: cover; width: 100%;">
+                    <?php else: ?>
+                        <?php foreach ($sliders as $slider): ?>
+                            <div class="slider-item p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h4 class="mb-0">Slider #<?= $slider['id'] ?></h4>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-secondary">Order: <?= $slider['display_order'] ?></span>
+                                        <span class="badge <?= $slider['status'] === 'active' ? 'bg-success' : 'bg-warning' ?>">
+                                            <?= ucfirst($slider['status']) ?>
+                                        </span>
+                                    </div>
+                                </div>
 
-                        <div class="slider-info mb-3">
-                            <h5 class="mb-2">Welcome to Our Organization</h5>
-                            <p class="text-muted mb-2">Join us in making a difference in our community through various social initiatives and programs.</p>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <span class="badge bg-primary">
-                                    <i class="fa-solid fa-link me-1"></i>
-                                    Community Clean-up Drive
-                                </span>
-                                <span class="badge bg-info">
-                                    <i class="fa-solid fa-hand-pointer me-1"></i>
-                                    "Join Now"
-                                </span>
+                                <img src="<?= htmlspecialchars($slider['slider_img']) ?>"
+                                    alt="<?= htmlspecialchars($slider['slider_title']) ?>"
+                                    class="slider-img img-fluid mb-3"
+                                    style="max-height: 300px; object-fit: cover; width: 100%;"
+                                    onerror="this.src='../img/placeholder.jpg'">
+
+                                <div class="slider-info mb-3">
+                                    <h5 class="mb-2"><?= htmlspecialchars($slider['slider_title']) ?></h5>
+                                    <p class="text-muted mb-2"><?= htmlspecialchars($slider['slider_description']) ?></p>
+
+                                    <?php if (!empty($slider['link_text']) || !empty($slider['link_url'])): ?>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <?php if (!empty($slider['link_url'])): ?>
+                                                <span class="badge bg-primary">
+                                                    <i class="fa-solid fa-link me-1"></i>
+                                                    <?= htmlspecialchars($slider['link_url']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($slider['link_text'])): ?>
+                                                <span class="badge bg-info">
+                                                    <i class="fa-solid fa-hand-pointer me-1"></i>
+                                                    "<?= htmlspecialchars($slider['link_text']) ?>"
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="?edit_id=<?= $slider['id'] ?>" class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-pen me-1"></i>Edit
+                                    </a>
+                                    <a href="toggle-slider.php?id=<?= $slider['id'] ?>" class="btn btn-warning btn-sm">
+                                        <i class="fa-solid fa-toggle-<?= $slider['status'] === 'active' ? 'on' : 'off' ?> me-1"></i>
+                                        <?= $slider['status'] === 'active' ? 'Deactivate' : 'Activate' ?>
+                                    </a>
+                                    <a href="slider.php?delete_id=<?= $slider['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this slider?');">
+                                        <i class="fa-solid fa-trash me-1"></i>Delete
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-primary btn-sm" onclick="editSlider(1)">
-                                <i class="fa-solid fa-pen me-1"></i>Edit
-                            </button>
-                            <button onclick="confirmDelete(1)" class="btn btn-danger btn-sm">
-                                <i class="fa-solid fa-trash me-1"></i>Delete
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Empty State Example (if no sliders) -->
-                    <!-- <div class="empty-state">
-                        <i class="fa-solid fa-image"></i>
-                        <h3>No Slider Images Yet</h3>
-                        <p>Add your first slider image to get started</p>
-                    </div> -->
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-5 mb-4">
-            <!-- Add New Slider Image -->
+            <!-- Add/Edit Slider Form -->
             <form action="" method="POST" enctype="multipart/form-data" id="sliderForm">
                 <h2 class="section-header">
-                    <i class="fa-solid fa-plus-circle"></i>
-                    Add Slider Image
+                    <i class="fa-solid fa-<?= $edit_slider ? 'edit' : 'plus-circle' ?>"></i>
+                    <?= $edit_slider ? 'Edit Slider Image' : 'Add Slider Image' ?>
                 </h2>
+
+                <?php if ($edit_slider): ?>
+                    <input type="hidden" name="slider_id" value="<?= $edit_slider['id'] ?>">
+                <?php endif; ?>
+
                 <div class="card">
                     <!-- Image Upload -->
-                    <div class="mb-3  mx-auto">
+                    <div class="mb-3 mx-auto">
                         <label class="custum-file-upload" for="file">
                             <div class="icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="" viewBox="0 0 24 24">
@@ -455,10 +629,14 @@ $page_title = 'Slider Management';
                             <div class="text">
                                 <span>Click to upload image</span>
                             </div>
-                            <input type="file" id="file" name="slider_img" required accept="image/*">
+                            <input type="file" id="file" name="slider_img" <?= !$edit_slider ? 'required' : '' ?> accept="image/*">
                         </label>
-                        <div id="imagePreview" class="mt-2" style="display: none;">
-                            <img id="previewImg" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
+                        <div id="imagePreview" class="mt-2" <?= $edit_slider ? '' : 'style="display: none;"' ?>>
+                            <img id="previewImg"
+                                src="<?= $edit_slider ? htmlspecialchars($edit_slider['slider_img']) : '' ?>"
+                                alt="Preview"
+                                class="img-fluid rounded"
+                                style="max-height: 200px;">
                         </div>
                     </div>
 
@@ -473,6 +651,7 @@ $page_title = 'Slider Management';
                             id="slider_title"
                             name="slider_title"
                             placeholder="Enter slider title"
+                            value="<?= $edit_slider ? htmlspecialchars($edit_slider['slider_title']) : '' ?>"
                             required
                             maxlength="100">
                         <small class="text-muted">Maximum 100 characters</small>
@@ -490,15 +669,78 @@ $page_title = 'Slider Management';
                             rows="4"
                             placeholder="Enter slider description"
                             required
-                            maxlength="250"></textarea>
+                            maxlength="250"><?= $edit_slider ? htmlspecialchars($edit_slider['slider_description']) : '' ?></textarea>
                         <div class="d-flex justify-content-between">
                             <small class="text-muted">Maximum 250 characters</small>
-                            <small class="text-muted"><span id="charCount">0</span>/250</small>
+                            <small class="text-muted">
+                                <span id="charCount"><?= $edit_slider ? strlen($edit_slider['slider_description']) : 0 ?></span>/250
+                            </small>
                         </div>
                     </div>
 
+                    <!-- Link Text (Optional) -->
+                    <!-- <div class="mb-3">
+                        <label for="link_text" class="form-label">
+                            Button Text (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="link_text"
+                            name="link_text"
+                            placeholder="e.g., Learn More, Join Now"
+                            value="<?= $edit_slider ? htmlspecialchars($edit_slider['link_text'] ?? '') : '' ?>"
+                            maxlength="100">
+                    </div> -->
 
-                    <input class="btn btn-submit w-100" type="submit" name="add_slider" value="Add Slider">
+                    <!-- Link URL (Optional) -->
+                    <!-- <div class="mb-3">
+                        <label for="link_url" class="form-label">
+                            Link URL (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="link_url"
+                            name="link_url"
+                            placeholder="e.g., programs.php, #contact"
+                            value="<?= $edit_slider ? htmlspecialchars($edit_slider['link_url'] ?? '') : '' ?>"
+                            maxlength="255">
+                    </div> -->
+
+                    <!-- Status -->
+                    <?php if ($edit_slider): ?>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="active" <?= $edit_slider['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                                <option value="inactive" <?= $edit_slider['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                            </select>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="mb-3">
+                            <label for="display_order" class="form-label">Display Order</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="display_order"
+                                name="display_order"
+                                value="<?= $edit_slider['display_order'] ?>"
+                                min="1">
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="d-flex gap-2">
+                        <input class="btn btn-submit flex-grow-1"
+                            type="submit"
+                            name="<?= $edit_slider ? 'update_slider' : 'add_slider' ?>"
+                            value="<?= $edit_slider ? 'Update Slider' : 'Add Slider' ?>">
+
+                        <?php if ($edit_slider): ?>
+                            <a href="slider.php" class="btn btn-secondary">Cancel</a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </form>
         </div>
@@ -507,47 +749,153 @@ $page_title = 'Slider Management';
 <!--------------------------->
 <!-- END MAIN AREA -->
 <!--------------------------->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Image Preview
-document.getElementById('file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('previewImg').src = e.target.result;
-            document.getElementById('imagePreview').style.display = 'block';
-        }
-        reader.readAsDataURL(file);
+    /* ===============================
+   Image Preview
+================================ */
+    const fileInput = document.getElementById('file');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
     }
+
+    /* ===============================
+       Character Counter
+    ================================ */
+    document.addEventListener('DOMContentLoaded', function() {
+        const description = document.getElementById('slider_description');
+        const charCount = document.getElementById('charCount');
+
+        if (!description || !charCount) return;
+
+        const updateCount = () => {
+            const count = description.value.length;
+            charCount.textContent = count;
+            charCount.style.color = count > 200 ? '#ef4444' : '#10b981';
+        };
+
+        description.addEventListener('input', updateCount);
+        updateCount(); // initialize
+
+        /* ===============================
+           SweetAlert for Success Messages
+        ================================ */
+        <?php if (!empty($success_message)): ?>
+            Swal.fire({
+                title: 'Success!',
+                text: '<?= addslashes($success_message) ?>',
+                icon: 'success',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'OK',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        <?php endif; ?>
+
+        <?php if (!empty($error_message)): ?>
+            Swal.fire({
+                title: 'Error!',
+                text: '<?= addslashes($error_message) ?>',
+                icon: 'error',
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'OK'
+            });
+        <?php endif; ?>
+    });
+
+    /* ===============================
+       SweetAlert Delete Confirmation
+    ================================ */
+    /* ===============================
+       SweetAlert Delete Confirmation
+    ================================ */
+    function confirmDelete(id) {
+        document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.btn-delete-slider');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            const deleteUrl = `slider.php?delete_id=${id}`;
+
+            Swal.fire({
+                title: 'Are you sure?',
+                html: `<div style="text-align:center;">
+                          <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                          <p>You are about to delete the slider:</p>
+                          <p><strong>"${title}"</strong></p>
+                          <p class="text-danger">This action cannot be undone!</p>
+                       </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                preConfirm: () => {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+    });
 });
-
-// Character Counter
-document.getElementById('slider_description').addEventListener('input', function() {
-    const count = this.value.length;
-    document.getElementById('charCount').textContent = count;
-    
-    if (count > 200) {
-        document.getElementById('charCount').style.color = '#ef4444';
-    } else {
-        document.getElementById('charCount').style.color = '#10b981';
     }
-});
 
-// Edit Slider Function
-function editSlider(id) {
-    alert('Edit slider #' + id);
-    // Add your edit logic here
-}
+    /* ===============================
+       Handle SweetAlert Messages on Page Load
+    ================================ */
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if (!empty($success_message)): ?>
+            Swal.fire({
+                title: 'Success!',
+                text: '<?= addslashes($success_message) ?>',
+                icon: 'success',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'OK',
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: () => {
+                    // Remove Bootstrap alerts
+                    const alerts = document.querySelectorAll('.alert');
+                    alerts.forEach(alert => alert.remove());
+                }
+            });
+        <?php endif; ?>
 
-// Confirm Delete Function
-function confirmDelete(id) {
-    if (confirm('Are you sure you want to delete this slider? This action cannot be undone.')) {
-        alert('Slider #' + id + ' deleted successfully!');
-        // Add your delete logic here
-        location.reload();
-    }
-}
+        <?php if (!empty($error_message)): ?>
+            Swal.fire({
+                title: 'Error!',
+                text: '<?= addslashes($error_message) ?>',
+                icon: 'error',
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'OK',
+                didOpen: () => {
+                    // Remove Bootstrap alerts
+                    const alerts = document.querySelectorAll('.alert');
+                    alerts.forEach(alert => alert.remove());
+                }
+            });
+        <?php endif; ?>
+    });
 </script>
+
+
+
 
 <?php require './components/footer.php'; ?>

@@ -1,13 +1,12 @@
 <?php
 $page_title = 'Add Activity';
 require './components/header.php';
-protectPage(); // Protect this page - only logged in users can access
+protectPage();
 
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 
 <style>
-  /* Modern Form Styles */
   .notice-form-container {
     background: #fff;
     border-radius: 24px;
@@ -79,7 +78,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
   .modern-select,
   .modern-textarea {
     width: 100%;
-    padding: 14px 18px;
+    padding: 10px 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
@@ -173,7 +172,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     transform: translateY(-2px);
   }
 
-  /* Dynamic Sections Styling */
   .dynamic-section {
     background: #fff;
     border: 2px solid #e2e8f0;
@@ -308,7 +306,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
   }
 
-  /* File Upload Styling */
   input[type="file"] {
     padding: 12px;
     border: 2px dashed #e2e8f0;
@@ -363,7 +360,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     }
   }
 
-  /* Responsive Design */
   @media (max-width: 768px) {
     .notice-form-container {
       padding: 28px 20px;
@@ -398,191 +394,170 @@ $current_page = basename($_SERVER['PHP_SELF']);
     }
   }
 
-  /* Animation */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .notice-form-container {
-    animation: fadeInUp 0.6s ease;
-  }
-
-  .modern-form-group {
-    animation: fadeInUp 0.6s ease;
-    animation-fill-mode: both;
-  }
-
-  .modern-form-group:nth-child(1) { animation-delay: 0.1s; }
-  .modern-form-group:nth-child(2) { animation-delay: 0.15s; }
-  .modern-form-group:nth-child(3) { animation-delay: 0.2s; }
-  .modern-form-group:nth-child(4) { animation-delay: 0.25s; }
-  .modern-form-group:nth-child(5) { animation-delay: 0.3s; }
-  .modern-form-group:nth-child(6) { animation-delay: 0.35s; }
-  
   .icon-box {
     background-color: #059669 !important;
   }
 </style>
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
 <div class="content-wrapper">
   <div class="dashboard">
-
-    <!-- Page Title -->
     <div class="page-title-section">
       <div class="icon-box">
-        <i class="fa-solid fa-bell-ring text"></i>
+        <i class="mdi mdi-calendar-account-outline"></i>
       </div>
       <h1>Add New Activity</h1>
     </div>
 
-    <!-- Form Container -->
     <div class="row">
       <div class="col-lg-10 col-xl-9 mx-auto">
         <div class="notice-form-container">
-
-          <!-- Form Header -->
           <div class="form-header">
             <h1>Create New Activity</h1>
             <p>Fill in the details below to publish a new activity</p>
           </div>
 
-          <?php
-          // Handle form submission
-          if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Get form data
-            $title = trim($_POST['title']);
-            $objectives = trim($_POST['objectives']);
-            $short_description = trim($_POST['short_description']);
-            $description = trim($_POST['description']);
-            $type = $_POST['type'];
-            $status = $_POST['status'];
-            
-            // Handle image upload
-            $image = null;
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-              $uploadDir = '../uploads/activities/';
-              if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-              }
-              
-              $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
-              $targetFile = $uploadDir . $fileName;
-              
-              // Check file type
-              $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
-              $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-              
-              if (in_array($imageFileType, $allowedTypes)) {
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                  $image = $fileName; // Store only the filename
-                } else {
-                  echo '<div class="message-box error">
-                          <i class="fa-solid fa-circle-exclamation"></i>
-                          Error uploading image file.
-                        </div>';
-                }
-              } else {
-                echo '<div class="message-box error">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        Only JPG, JPEG, PNG, GIF & WEBP files are allowed.
-                      </div>';
-              }
-            }
-            
-            // Handle dynamic sections data
-            $sections_data = null;
-            if (isset($_POST['section_titles']) && isset($_POST['section_items'])) {
-              $sections = [];
-              $section_titles = $_POST['section_titles'];
-              $section_items = $_POST['section_items'];
-              
-              for ($i = 0; $i < count($section_titles); $i++) {
-                if (!empty($section_titles[$i])) {
-                  $sections[] = [
-                    'title' => $section_titles[$i],
-                    'items' => isset($section_items[$i]) ? $section_items[$i] : []
-                  ];
-                }
-              }
-              
-              if (!empty($sections)) {
-                $sections_data = json_encode($sections);
-              }
-            }
-            
-            // Validate required fields
-            if (empty($title) || empty($objectives) || empty($short_description) || empty($description) || empty($type) || empty($status)) {
-              echo '<div class="message-box error">
-                      <i class="fa-solid fa-circle-exclamation"></i>
-                      All required fields must be filled!
-                    </div>';
-            } else {
-              // Prepare data array
-              $activityData = [
-                'title' => $title,
-                'objectives' => $objectives,
-                'short_description' => $short_description,
-                'description' => $description,
-                'type' => $type,
-                'status' => $status
-              ];
-              
-              // Add image only if uploaded
-              if ($image !== null) {
-                $activityData['image'] = $image;
-              }
-              
-              // Add sections data only if exists
-              if ($sections_data !== null) {
-                $activityData['sections_data'] = $sections_data;
-              }
-              
-              // Create activity using your function
-              $result = createActivity($activityData);
-              
-              if ($result['success']) {
-                echo '<div class="message-box success">
-                        <i class="fa-solid fa-circle-check"></i>
-                        Activity created successfully!
-                      </div>';
-                
-                // Clear form after successful submission
-                echo '<script>
-                        setTimeout(function() {
-                          window.location.href = "all-activities.php";
-                        }, 1500);
-                      </script>';
-              } else {
-                echo '<div class="message-box error">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        Error: ' . htmlspecialchars($result['message']) . '
-                      </div>';
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $title = trim($_POST['title']);
+  $objectives = trim($_POST['objectives']);
+  $short_description = trim($_POST['short_description']);
+  $description = trim($_POST['description']);
+  $type = $_POST['type'];
+  $status = $_POST['status'];
+
+  // First, check required fields
+  if (empty($title) || empty($objectives) || empty($short_description) || empty($description) || empty($type) || empty($status)) {
+    echo '<div class="message-box error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            All required fields must be filled!
+          </div>';
+  } else {
+    // All required fields are valid, now process the form
+    
+    // Handle image upload
+    $image = null;
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+      $uploadDir = '../uploads/activities/';
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+      }
+
+      $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+      $targetFile = $uploadDir . $fileName;
+
+      $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+      $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+      if (in_array($imageFileType, $allowedTypes)) {
+        // Check file size (5MB max)
+        if ($_FILES['image']['size'] <= 5242880) {
+          if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+            $image = $fileName;
+          } else {
+            echo '<div class="message-box error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    Error uploading image file. Check folder permissions.
+                  </div>';
+          }
+        } else {
+          echo '<div class="message-box error">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+                  Image file is too large. Maximum size is 5MB.
+                </div>';
+        }
+      } else {
+        echo '<div class="message-box error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Only JPG, JPEG, PNG, GIF & WEBP files are allowed.
+              </div>';
+      }
+    }
+
+    // Handle dynamic sections
+    $sections_data = null;
+    if (isset($_POST['section_titles']) && isset($_POST['section_items'])) {
+      $sections = [];
+      $section_titles = $_POST['section_titles'];
+      $section_items = $_POST['section_items'];
+
+      foreach ($section_titles as $index => $title_text) {
+        $title_text = trim($title_text);
+
+        if (!empty($title_text)) {
+          $items = [];
+
+          if (isset($section_items[$index]) && is_array($section_items[$index])) {
+            foreach ($section_items[$index] as $item) {
+              $item = trim($item);
+              if (!empty($item)) {
+                $items[] = $item;
               }
             }
           }
-          ?>
 
-          <!-- Form -->
+          if (!empty($items)) {
+            $sections[] = [
+              'title' => $title_text,
+              'items' => $items
+            ];
+          }
+        }
+      }
+
+      if (!empty($sections)) {
+        $sections_data = json_encode($sections, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+      }
+    }
+
+    // Build activity data array
+    $activityData = [
+      'title' => $title,
+      'objectives' => $objectives,
+      'short_description' => $short_description,
+      'description' => $description,
+      'type' => $type,
+      'status' => $status
+    ];
+
+    // Add optional fields only if they exist
+    if ($image !== null) {
+      $activityData['image'] = $image;
+    }
+
+    if ($sections_data !== null) {
+      $activityData['sections_data'] = $sections_data;
+    }
+
+    // Create activity in database
+    $result = createActivity($activityData);
+
+    if ($result['success']) {
+      echo '<div class="message-box success">
+              <i class="fa-solid fa-circle-check"></i>
+              Activity created successfully!
+            </div>';
+
+      echo '<script>
+              setTimeout(function() {
+                window.location.href = "all-activities.php";
+              }, 1500);
+            </script>';
+    } else {
+      echo '<div class="message-box error">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              Error: ' . htmlspecialchars($result['message']) . '
+            </div>';
+    }
+  }
+}
+?>
           <form action="" method="post" enctype="multipart/form-data" id="activityForm">
-
-            <!-- Title -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-heading"></i> Activity Title</label>
               <input type="text" name="title" class="modern-input" placeholder="Enter activity title..." required
                 value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>">
             </div>
 
-            <!-- Type & Status -->
             <div class="form-row">
               <div class="modern-form-group">
                 <label><i class="fa-solid fa-tag"></i> Type</label>
@@ -605,74 +580,40 @@ $current_page = basename($_SERVER['PHP_SELF']);
               </div>
             </div>
 
-            <!-- Image -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-image"></i> Activity Image (Optional)</label>
               <input type="file" name="image" class="modern-input" accept="image/*">
               <small class="text-muted">Upload JPG, PNG, GIF or WEBP image (max 5MB)</small>
             </div>
 
-            <!-- Objectives -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-bullseye"></i> Objectives (Activity Goals)</label>
               <textarea name="objectives" class="modern-textarea" rows="3" placeholder="Write the activity objectives here..." required><?php echo isset($_POST['objectives']) ? htmlspecialchars($_POST['objectives']) : ''; ?></textarea>
             </div>
 
-            <!-- Short Description -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-align-left"></i> Short Description</label>
               <textarea name="short_description" class="modern-textarea" rows="3" placeholder="Write a brief description..." required><?php echo isset($_POST['short_description']) ? htmlspecialchars($_POST['short_description']) : ''; ?></textarea>
             </div>
 
-            <!-- Description -->
             <div class="modern-form-group">
               <label><i class="fa-solid fa-file-lines"></i> Detailed Description</label>
               <textarea name="description" class="modern-textarea" rows="5" placeholder="Write the detailed activity description..." required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
             </div>
 
-            <!-- Add List Section -->
+            <!-- DYNAMIC SECTIONS -->
             <div class="modern-form-group">
-              <label style="font-size: 16px; margin-bottom: 20px;"><i class="fa-solid fa-list-check"></i> List Sections (Optional)</label>
+              <label style="font-size: 16px; margin-bottom: 20px;">
+                <i class="fa-solid fa-list-check"></i> List Sections (Optional)
+              </label>
 
-              <div id="dynamicSectionsContainer">
-                <div class="card shadow-sm dynamic-section" data-section-id="1">
-                  <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-2 flex-grow-1">
-                      <span class="input-group-text"><i class="fas fa-list"></i></span>
-                      <input type="text" class="section-title-input" name="section_titles[]" placeholder="Enter section title (e.g., Requirements, Procedures)" style="max-width: 400px;">
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSectionDynamic(this)">
-                      <i class="fas fa-trash"></i> Remove
-                    </button>
-                  </div>
-                  <div class="card-body">
-                    <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #334155; margin-bottom: 12px;">Items</label>
-                      <div class="items-list">
-                        <div class="item-row">
-                          <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>
-                            <input type="text" class="form-control" name="section_items[0][]" placeholder="Enter item text">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeItemDynamic(this)">
-                              <i class="fas fa-trash"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addNewItemDynamic(this, 0)">
-                      <i class="fas fa-plus"></i> Add New Item
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <div id="activitySectionsContainer"></div>
 
-              <button type="button" class="btn btn-primary mt-3" onclick="addNewSectionDynamic()">
+              <button type="button" class="btn btn-primary mt-3" onclick="ActivitySections.addSection()">
                 <i class="fas fa-plus"></i> Add New Section
               </button>
             </div>
 
-            <!-- Form Actions -->
             <div class="form-actions">
               <button type="button" class="btn-cancel" onclick="window.history.back()">
                 <i class="fa-solid fa-times"></i> Cancel
@@ -681,161 +622,194 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <i class="fa-solid fa-paper-plane"></i> Create Activity
               </button>
             </div>
-
           </form>
         </div>
       </div>
     </div>
-
   </div>
 </div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
 
 <script>
-  var activitySectionCounter = 1;
-  var sectionItemCounters = [0]; // Track items for each section
+// Create namespace to avoid conflicts
+const ActivitySections = (function() {
+  'use strict';
 
-  function addNewItemDynamic(button, sectionIndex) {
-    var section = button.closest('.dynamic-section');
-    var itemsList = section.querySelector('.items-list');
+  function addItem(button) {
+    const section = button.closest('.dynamic-section');
+    const sectionIndex = parseInt(section.getAttribute('data-section-index'));
+    const itemsList = section.querySelector('.items-list');
 
-    var newItem = document.createElement('div');
+    const newItem = document.createElement('div');
     newItem.className = 'item-row';
-    newItem.innerHTML = '<div class="input-group">' +
-      '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
-      '<input type="text" class="form-control" name="section_items[' + sectionIndex + '][]" placeholder="Enter item text">' +
-      '<button type="button" class="btn btn-outline-danger" onclick="removeItemDynamic(this)">' +
-      '<i class="fas fa-trash"></i>' +
-      '</button>' +
+    newItem.innerHTML = 
+      '<div class="input-group">' +
+        '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
+        '<input type="text" class="form-control" name="section_items[' + sectionIndex + '][]" placeholder="Enter item text">' +
+        '<button type="button" class="btn btn-outline-danger" onclick="ActivitySections.removeItem(this)">' +
+          '<i class="fas fa-trash"></i>' +
+        '</button>' +
       '</div>';
 
     itemsList.appendChild(newItem);
-    newItem.querySelector('input').focus();
+
   }
 
-  function removeItemDynamic(button) {
-    var itemRow = button.closest('.item-row');
-    var itemsList = itemRow.closest('.items-list');
+  function removeItem(button) {
+    const itemRow = button.closest('.item-row');
+    const itemsList = itemRow.closest('.items-list');
 
     if (itemsList.querySelectorAll('.item-row').length <= 1) {
       alert('Section must have at least one item');
       return;
     }
 
-    if (confirm('Are you sure you want to remove this item?')) {
+    if (confirm('Remove this item?')) {
       itemRow.remove();
     }
   }
 
-  function addNewSectionDynamic() {
-    activitySectionCounter++;
-    sectionItemCounters.push(0);
-    var container = document.getElementById('dynamicSectionsContainer');
-    var sectionIndex = activitySectionCounter - 1;
+  function addSection() {
+    const container = document.getElementById('activitySectionsContainer');
+    
+    if (!container) {
+      console.error('Container not found!');
+      return;
+    }
+    
+    const newIndex = container.querySelectorAll('.dynamic-section').length;
+    console.log('Adding section index:', newIndex);
 
-    var newSection = document.createElement('div');
+    const newSection = document.createElement('div');
     newSection.className = 'card shadow-sm dynamic-section';
-    newSection.setAttribute('data-section-id', activitySectionCounter);
-    newSection.innerHTML = '<div class="card-header d-flex justify-content-between align-items-center">' +
-      '<div class="d-flex align-items-center gap-2 flex-grow-1">' +
-      '<span class="input-group-text"><i class="fas fa-list"></i></span>' +
-      '<input type="text" class="section-title-input" name="section_titles[]" placeholder="Enter section title (e.g., Requirements, Procedures)" style="max-width: 400px;">' +
-      '</div>' +
-      '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSectionDynamic(this)">' +
-      '<i class="fas fa-trash"></i> Remove' +
-      '</button>' +
+    newSection.setAttribute('data-section-index', newIndex);
+
+    newSection.innerHTML = 
+      '<div class="card-header d-flex justify-content-between align-items-center">' +
+        '<div class="d-flex align-items-center gap-2 flex-grow-1">' +
+          '<span class="input-group-text"><i class="fas fa-list"></i></span>' +
+          '<input type="text" class="section-title-input" name="section_titles[]" placeholder="Enter section title" style="max-width: 400px;">' +
+        '</div>' +
+        '<button type="button" class="btn btn-sm btn-outline-danger" onclick="ActivitySections.removeSection(this)">' +
+          '<i class="fas fa-trash"></i> Remove' +
+        '</button>' +
       '</div>' +
       '<div class="card-body">' +
-      '<div class="mb-3">' +
-      '<label class="form-label" style="font-weight: 600; color: #334155; margin-bottom: 12px;">Items</label>' +
-      '<div class="items-list">' +
-      '<div class="item-row">' +
-      '<div class="input-group">' +
-      '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
-      '<input type="text" class="form-control" name="section_items[' + sectionIndex + '][]" placeholder="Enter item text">' +
-      '<button type="button" class="btn btn-outline-danger" onclick="removeItemDynamic(this)">' +
-      '<i class="fas fa-trash"></i>' +
-      '</button>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<button type="button" class="btn btn-outline-primary btn-sm" onclick="addNewItemDynamic(this, ' + sectionIndex + ')">' +
-      '<i class="fas fa-plus"></i> Add New Item' +
-      '</button>' +
+        '<div class="mb-3">' +
+          '<label class="form-label" style="font-weight: 600; color: #334155; margin-bottom: 12px;">Items</label>' +
+          '<div class="items-list">' +
+            '<div class="item-row">' +
+              '<div class="input-group">' +
+                '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
+                '<input type="text" class="form-control" name="section_items[' + newIndex + '][]" placeholder="Enter item text">' +
+                '<button type="button" class="btn btn-outline-danger" onclick="ActivitySections.removeItem(this)">' +
+                  '<i class="fas fa-trash"></i>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline-primary btn-sm" onclick="ActivitySections.addItem(this)">' +
+          '<i class="fas fa-plus"></i> Add Item' +
+        '</button>' +
       '</div>';
 
     container.appendChild(newSection);
-    newSection.querySelector('.section-title-input').focus();
+
   }
 
-  function removeSectionDynamic(button) {
-    var section = button.closest('.dynamic-section');
-    var container = document.getElementById('dynamicSectionsContainer');
+  function removeSection(button) {
+    const section = button.closest('.dynamic-section');
+    const container = document.getElementById('activitySectionsContainer');
 
     if (container.querySelectorAll('.dynamic-section').length <= 1) {
       alert('You must have at least one section');
       return;
     }
 
-    if (confirm('Are you sure you want to remove this entire section?')) {
+    if (confirm('Remove this entire section?')) {
       section.remove();
+      reindexSections();
     }
   }
 
-  // Form validation before submit
-  document.getElementById('activityForm').addEventListener('submit', function(e) {
-    const title = this.querySelector('input[name="title"]').value.trim();
-    const objectives = this.querySelector('textarea[name="objectives"]').value.trim();
-    const shortDescription = this.querySelector('textarea[name="short_description"]').value.trim();
-    const description = this.querySelector('textarea[name="description"]').value.trim();
-    const type = this.querySelector('select[name="type"]').value;
-    const status = this.querySelector('select[name="status"]').value;
+  function reindexSections() {
+    const container = document.getElementById('activitySectionsContainer');
+    const sections = container.querySelectorAll('.dynamic-section');
 
-    if (title.length === 0) {
-      e.preventDefault();
-      alert('Please enter an activity title');
-      this.querySelector('input[name="title"]').focus();
-      return false;
-    }
+    sections.forEach(function(section, newIndex) {
+      section.setAttribute('data-section-index', newIndex);
+      
+      const itemInputs = section.querySelectorAll('.items-list input[type="text"]');
+      itemInputs.forEach(function(input) {
+        input.setAttribute('name', 'section_items[' + newIndex + '][]');
+      });
+    });
+  }
 
-    if (objectives.length === 0) {
-      e.preventDefault();
-      alert('Please enter activity objectives');
-      this.querySelector('textarea[name="objectives"]').focus();
-      return false;
-    }
+  // Public API
+  return {
+    addSection: addSection,
+    removeSection: removeSection,
+    addItem: addItem,
+    removeItem: removeItem
+  };
+})();
 
-    if (shortDescription.length === 0) {
-      e.preventDefault();
-      alert('Please enter a short description');
-      this.querySelector('textarea[name="short_description"]').focus();
-      return false;
-    }
+// Fix for page scrolling down on load - THIS IS THE FIX
+document.addEventListener('DOMContentLoaded', function() {
+  // Scroll to top when page loads
+  window.scrollTo(0, 0);
+  
+  // Also try to scroll to top of the form container
+  const formContainer = document.querySelector('.notice-form-container');
+  if (formContainer) {
+    formContainer.scrollIntoView({ behavior: 'instant' });
+  }
+  
+  ActivitySections.addSection();
+  
+  // Form validation
+  const form = document.getElementById('activityForm');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      const title = this.querySelector('input[name="title"]').value.trim();
+      const objectives = this.querySelector('textarea[name="objectives"]').value.trim();
+      const shortDesc = this.querySelector('textarea[name="short_description"]').value.trim();
+      const description = this.querySelector('textarea[name="description"]').value.trim();
+      const type = this.querySelector('select[name="type"]').value;
+      const status = this.querySelector('select[name="status"]').value;
 
-    if (description.length === 0) {
-      e.preventDefault();
-      alert('Please enter a detailed description');
-      this.querySelector('textarea[name="description"]').focus();
-      return false;
-    }
+      if (!title || !objectives || !shortDesc || !description || !type || !status) {
+        e.preventDefault();
+        alert('Please fill in all required fields');
+        return false;
+      }
 
-    if (type === '') {
-      e.preventDefault();
-      alert('Please select an activity type');
-      this.querySelector('select[name="type"]').focus();
-      return false;
-    }
+      const submitBtn = this.querySelector('.btn-submit');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+      }
+    });
+  }
+});
 
-    if (status === '') {
-      e.preventDefault();
-      alert('Please select a status');
-      this.querySelector('select[name="status"]').focus();
-      return false;
-    }
-  });
+// Additional fix: Handle window load to ensure scroll works
+window.addEventListener('load', function() {
+  // Force scroll to top after all content is loaded
+  setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
+  }, 100);
+});
+
+// Fix for form submission to prevent scrolling to bottom
+window.addEventListener('beforeunload', function() {
+  window.scrollTo(0, 0);
+});
 </script>
 
 <?php require './components/footer.php'; ?>

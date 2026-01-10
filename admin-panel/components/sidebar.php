@@ -62,12 +62,12 @@
         <i class="mdi mdi-tune-variant menu-icon"></i>
       </a>
     </li>
-    <li class="nav-item">
+    <!-- <li class="nav-item">
       <a class="nav-link" href="gallery.php">
         <span class="menu-title">Gallery</span>
         <i class="mdi mdi-tune-variant menu-icon"></i>
       </a>
-    </li>
+    </li> -->
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#donate" aria-expanded="false" aria-controls="notice">
         <span class="menu-title">Donation List</span>
@@ -81,9 +81,9 @@
           <li class="nav-item">
             <a class="nav-link" href="donation-categories.php">Donation Categories</a>
           </li>
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link" href="all-donation.php">All Donation </a>
-          </li>
+          </li> -->
         </ul>
       </div>
     </li>

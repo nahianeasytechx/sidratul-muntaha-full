@@ -1,684 +1,711 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Edit Activity';
 require './components/header.php';
+protectPage();
+
+// Get activity ID from URL
+$activity_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($activity_id <= 0) {
+  header('Location: all-activities.php');
+  exit();
+}
+
+// Fetch activity data
+$activity = getActivityById($activity_id);
+
+if (!$activity) {
+  header('Location: all-activities.php');
+  exit();
+}
+
+// Decode sections data
+$sections = [];
+if (!empty($activity['sections_data'])) {
+  $sections = json_decode($activity['sections_data'], true);
+  if (!is_array($sections)) {
+    $sections = [];
+  }
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $title = trim($_POST['title']);
+  $objectives = trim($_POST['objectives']);
+  $short_description = trim($_POST['short_description']);
+  $description = trim($_POST['description']);
+  $type = $_POST['type'];
+  $status = $_POST['status'];
+
+  // Validate required fields
+  if (empty($title) || empty($objectives) || empty($short_description) || empty($description) || empty($type) || empty($status)) {
+    echo '<script>
+            Swal.fire({
+              icon: "error",
+              title: "Validation Error",
+              text: "All required fields must be filled!",
+              confirmButtonColor: "#10b981",
+              confirmButtonText: "OK"
+            });
+          </script>';
+  } else {
+    // Handle image upload
+    $image = $activity['image']; // Keep existing image by default
+    
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+      $uploadDir = '../uploads/activities/';
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+      }
+
+      $fileName = uniqid() . '_' . basename($_FILES['image']['name']);
+      $targetFile = $uploadDir . $fileName;
+      $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+      $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+      if (in_array($imageFileType, $allowedTypes)) {
+        if ($_FILES['image']['size'] <= 5242880) {
+          if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+            // Delete old image if exists
+            if (!empty($activity['image']) && file_exists($uploadDir . $activity['image'])) {
+              unlink($uploadDir . $activity['image']);
+            }
+            $image = $fileName;
+          }
+        }
+      }
+    }
+
+    // Handle dynamic sections
+    $sections_data = null;
+    if (isset($_POST['section_titles']) && isset($_POST['section_items'])) {
+      $sections = [];
+      $section_titles = $_POST['section_titles'];
+      $section_items = $_POST['section_items'];
+
+      foreach ($section_titles as $index => $title_text) {
+        $title_text = trim($title_text);
+
+        if (!empty($title_text)) {
+          $items = [];
+
+          if (isset($section_items[$index]) && is_array($section_items[$index])) {
+            foreach ($section_items[$index] as $item) {
+              $item = trim($item);
+              if (!empty($item)) {
+                $items[] = $item;
+              }
+            }
+          }
+
+          if (!empty($items)) {
+            $sections[] = [
+              'title' => $title_text,
+              'items' => $items
+            ];
+          }
+        }
+      }
+
+      if (!empty($sections)) {
+        $sections_data = json_encode($sections, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+      }
+    }
+
+    // Build update data
+    $activityData = [
+      'title' => $title,
+      'objectives' => $objectives,
+      'short_description' => $short_description,
+      'description' => $description,
+      'type' => $type,
+      'status' => $status,
+      'image' => $image,
+      'sections_data' => $sections_data
+    ];
+
+    $result = updateActivity($activity_id, $activityData);
+
+    if ($result['success']) {
+      echo '<script>
+              Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Activity updated successfully!",
+                confirmButtonColor: "#10b981",
+                confirmButtonText: "OK",
+                timer: 2000,
+                timerProgressBar: true,
+                willClose: () => {
+                  window.location.href = "all-activities.php";
+                }
+              });
+            </script>';
+    } else {
+      echo '<script>
+              Swal.fire({
+                icon: "error",
+                title: "Update Failed",
+                text: "' . addslashes($result['message']) . '",
+                confirmButtonColor: "#ef4444",
+                confirmButtonText: "Try Again"
+              });
+            </script>';
+    }
+  }
+}
 ?>
 
 <style>
-    /* Page Header Styling */
-    .page-header {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        padding: 2rem;
-        border-radius: 20px;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-    }
+  .notice-form-container {
+    background: #fff;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
 
-    .page-header h1 {
-        color: white;
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
+  .form-header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+  }
 
-    .page-header .breadcrumb {
-        background: transparent;
-        padding: 0;
-        margin: 0;
-    }
+  .form-header::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 2px;
+  }
 
-    .page-header .breadcrumb-item a {
-        color: rgba(255, 255, 255, 0.8);
-        transition: color 0.3s ease;
-    }
+  .form-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
 
-    .page-header .breadcrumb-item a:hover {
-        color: white;
-    }
+  .modern-form-group {
+    margin-bottom: 28px;
+    position: relative;
+  }
 
-    .page-header .breadcrumb-item.active {
-        color: white;
-    }
+  .modern-form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-    .page-header .breadcrumb-item+.breadcrumb-item::before {
-        color: rgba(255, 255, 255, 0.6);
-    }
+  .modern-input, .modern-select, .modern-textarea {
+    width: 100%;
+    padding: 10px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #1e293b;
+    background: #fff;
+    transition: all 0.3s ease;
+    font-family: inherit;
+  }
 
-    /* Cancel Button in Header */
-    .btn-cancel-header {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        padding: 0.6rem 1.2rem;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
+  .modern-input:focus, .modern-select:focus, .modern-textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    transform: translateY(-2px);
+  }
 
-    .btn-cancel-header:hover {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.5);
-        color: white;
-        transform: translateY(-2px);
-    }
+  .modern-textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
 
-    /* Card Styling */
-    .card {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-    }
+  .modern-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 45px;
+  }
 
-    .card:hover {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
 
-    .card-header {
-        background: linear-gradient(135deg, #f8f9fa, #ffffff) !important;
-        border-bottom: 2px solid #e9ecef;
-        border-radius: 16px 16px 0 0 !important;
-        padding: 1.25rem 1.5rem !important;
-    }
+  .form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f1f5f9;
+  }
 
-    .card-header h5 {
-        color: #1e293b;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
+  .btn-submit, .btn-cancel {
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-    .card-header h5 i {
-        color: #10b981;
-    }
+  .btn-submit {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  }
 
-    .card-body {
-        padding: 1.5rem;
-    }
+  .btn-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4);
+  }
 
-    /* Form Controls */
-    .form-label {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.5rem;
-        font-size: 0.95rem;
-    }
+  .btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+  }
 
-    .form-control,
-    .form-select {
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        padding: 0.65rem 1rem;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
-    }
+  .btn-cancel:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+  }
 
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #10b981;
-        box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
-        outline: none;
-    }
+  .dynamic-section {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
 
-    textarea.form-control {
-        min-height: 200px;
-        resize: vertical;
-    }
+  .card-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    padding: 20px !important;
+    border-bottom: 2px solid #e2e8f0;
+  }
 
-    .form-text {
-        color: #64748b;
-        font-size: 0.85rem;
-        margin-top: 0.5rem;
-    }
+  .section-title-input {
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+  }
 
-    .text-danger {
-        color: #ef4444 !important;
-    }
+  .card-body {
+    padding: 24px !important;
+    background: #fafbfc;
+  }
 
-    /* File Item Styling */
-    .file-item {
-        background: #f8f9fa;
-        border: 2px solid #e9ecef !important;
-        border-radius: 12px;
-        padding: 1rem !important;
-        transition: all 0.3s ease;
-    }
+  .items-list {
+    margin-bottom: 16px;
+  }
 
-    .file-item:hover {
-        border-color: #10b981 !important;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
-    }
+  .item-row {
+    margin-bottom: 12px;
+  }
 
-    .file-item .fw-semibold {
-        color: #1e293b;
-        font-weight: 600;
-    }
+  .input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
 
-    .file-item .text-muted {
-        color: #94a3b8 !important;
-        font-size: 0.85rem;
-    }
+  .input-group-text {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+  }
 
-    /* Alert Styling */
-    .alert {
-        border-radius: 12px;
-        border: none;
-        padding: 1rem;
-    }
+  .input-group .form-control {
+    flex: 1;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
 
-    .alert-info {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-    }
+  .btn-outline-danger {
+    background: #fff;
+    border: 2px solid #ef4444;
+    color: #ef4444;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    min-width: 48px;
+    height: 48px;
+  }
 
-    .alert-info i {
-        color: #1e40af;
-    }
+  .btn-outline-danger:hover {
+    background: #ef4444;
+    color: #fff;
+  }
 
-    /* Status Card Special Styling */
-    .card.border-primary {
-        border: 2px solid #10b981 !important;
-    }
+  .btn-outline-primary {
+    background: #fff;
+    border: 2px solid #10b981;
+    color: #10b981;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+  }
 
-    .card-header.bg-primary {
-        background: linear-gradient(135deg, #10b981, #059669) !important;
-        color: white !important;
-        border: none !important;
-    }
+  .btn-outline-primary:hover {
+    background: #10b981;
+    color: #fff;
+  }
 
-    .card-header.bg-primary h6 {
-        color: white !important;
-        font-weight: 600;
-    }
+  .btn-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px 28px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
 
-    /* Quick Tips List */
-    .card-body ul {
-        list-style: none;
-        padding-left: 0;
-    }
-
-    .card-body ul li {
-        position: relative;
-        padding-left: 1.5rem;
-        color: #475569;
-    }
-
-    .card-body ul li:before {
-        content: "✓";
-        position: absolute;
-        left: 0;
-        color: #10b981;
-        font-weight: 700;
-    }
-
-    /* Activity Details Card */
-    .card-body .fw-bold {
-        color: #1e293b;
-        font-size: 1rem;
-    }
-
-    .card-body .form-label.text-muted {
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #64748b !important;
-    }
-
-    /* Button Styling */
-    .btn {
-        border-radius: 10px;
-        padding: 0.65rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        border: none;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        background: linear-gradient(135deg, #059669, #047857);
-        color: white;
-    }
-
-    .btn-outline-secondary {
-        background: white;
-        color: #64748b;
-        border: 2px solid #e9ecef;
-    }
-
-    .btn-outline-secondary:hover {
-        background: #f8f9fa;
-        border-color: #cbd5e1;
-        color: #475569;
-        transform: translateY(-2px);
-    }
-
-    .btn-outline-danger {
-        background: white;
-        color: #ef4444;
-        border: 2px solid #fee2e2;
-    }
-
-    .btn-outline-danger:hover {
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        border-color: #ef4444;
-        color: #dc2626;
-        transform: translateY(-2px);
-    }
-
-    .btn i {
-        margin-right: 0.5rem;
-    }
-
-    .btn-sm {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 991px) {
-        .page-header {
-            padding: 1.5rem;
-        }
-
-        .page-header h1 {
-            font-size: 1.5rem;
-        }
-
-        .card-body {
-            padding: 1.25rem;
-        }
-    }
-
-    @media (max-width: 767px) {
-        .page-header h1 {
-            font-size: 1.3rem;
-        }
-
-        .card-header h5 {
-            font-size: 1rem;
-        }
-
-        .btn {
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
-        }
-    }
-
-    /* Animation */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .card {
-        animation: fadeIn 0.5s ease-out;
-    }
-
-    /* Icon Colors */
-    .text-primary {
-        color: #2b579a !important;
-    }
-
-    .text-danger.fs-4 {
-        color: #ef4444 !important;
-    }
+  .current-image {
+    max-width: 300px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+  }
 </style>
 
 <div class="content-wrapper">
-    <div class="edit-activity">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="w-100 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div>
-                        <h1><i class="fa-solid fa-pen-to-square me-2"></i>Edit Activity</h1>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="all-activities.php" class="text-decoration-none">All Activities</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Edit Activity</li>
-                            </ol>
-                        </nav>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button class="btn btn-cancel-header" onclick="window.location.href='all-activities.php'">
-                        <i class="fa-solid fa-xmark me-1"></i> Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Form -->
-        <form method="POST" action="" enctype="multipart/form-data">
-            <div class="row g-4">
-                <!-- Left Column -->
-                <div class="col-lg-8">
-                    <!-- Basic Information Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-circle-info"></i>Basic Information
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="activityTitle" class="form-label">Activity Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="activityTitle" name="title" value="Community Health Camp 2024" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="activityDescription" class="form-label">Activity Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="activityDescription" name="description" rows="10" required>Join us for a comprehensive health camp aimed at providing free medical checkups and health awareness to our community members.
-
-Event Highlights:
-- Free health screenings and consultations
-- Blood pressure and diabetes checkups
-- Nutrition counseling sessions
-- Distribution of free medicines
-- Health awareness workshops
-
-Our team of qualified doctors and healthcare professionals will be present to assist you. This is a great opportunity for community members to get their health checked and receive valuable medical advice.
-
-Registration is required. Please bring a valid ID card with you.</textarea>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="activityType" class="form-label">Activity Type <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="activityType" name="type" required>
-                                        <option value="">Select Type</option>
-                                        <option value="community" selected>Community Service</option>
-                                        <option value="education">Education</option>
-                                        <option value="health">Health</option>
-                                        <option value="environment">Environment</option>
-                                        <option value="fundraising">Fundraising</option>
-                                        <option value="awareness">Awareness Campaign</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="activityCategory" class="form-label">Category <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="activityCategory" name="category" required>
-                                        <option value="">Select Category</option>
-                                        <option value="program" selected>Program</option>
-                                        <option value="workshop">Workshop</option>
-                                        <option value="seminar">Seminar</option>
-                                        <option value="training">Training</option>
-                                        <option value="campaign">Campaign</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Schedule & Location Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-calendar-days"></i>Schedule & Location
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="activityDate" class="form-label">Activity Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="activityDate" name="activity_date" value="2024-03-20" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="activityTime" class="form-label">Activity Time <span class="text-danger">*</span></label>
-                                    <input type="time" class="form-control" id="activityTime" name="activity_time" value="09:00" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="duration" class="form-label">Duration (Hours) <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="duration" name="duration" value="6" min="1" step="0.5" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="maxParticipants" class="form-label">Max Participants</label>
-                                    <input type="number" class="form-control" id="maxParticipants" name="max_participants" value="100" min="1">
-                                </div>
-
-                                <div class="col-md-12">
-                                    <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="location" name="location" value="Community Center, Mirpur-10, Dhaka" required>
-                                </div>
-
-                                <div class="col-md-12">
-                                    <label for="locationLink" class="form-label">Location Link (Google Maps)</label>
-                                    <input type="url" class="form-control" id="locationLink" name="location_link" value="https://maps.google.com/..." placeholder="https://maps.google.com/...">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Registration & Requirements Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-clipboard-check"></i>Registration & Requirements
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="registrationDeadline" class="form-label">Registration Deadline</label>
-                                    <input type="date" class="form-control" id="registrationDeadline" name="registration_deadline" value="2024-03-15">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="ageRequirement" class="form-label">Age Requirement</label>
-                                    <input type="text" class="form-control" id="ageRequirement" name="age_requirement" value="All Ages" placeholder="e.g., 18-35, All Ages">
-                                </div>
-
-                                <div class="col-md-12">
-                                    <label for="requirements" class="form-label">Special Requirements</label>
-                                    <textarea class="form-control" id="requirements" name="requirements" rows="4" placeholder="List any special requirements or prerequisites...">- Valid ID card
-- Registration confirmation
-- Comfortable clothing
-- Water bottle</textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Contact Information Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-address-card"></i>Contact Information
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="coordinatorName" class="form-label">Coordinator Name</label>
-                                    <input type="text" class="form-control" id="coordinatorName" name="coordinator_name" value="Dr. Sarah Ahmed">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="coordinatorEmail" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="coordinatorEmail" name="coordinator_email" value="sarah.ahmed@organization.org">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="coordinatorPhone" class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" id="coordinatorPhone" name="coordinator_phone" value="+880 1712-345678">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="alternateContact" class="form-label">Alternate Contact</label>
-                                    <input type="tel" class="form-control" id="alternateContact" name="alternate_contact" value="+880 1823-456789">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Attachments Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-paperclip"></i>Attachments
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <!-- Existing Attachments -->
-                            <div class="mb-3">
-                                <label class="form-label">Current Attachments</label>
-                                <div class="existing-files">
-                                    <div class="file-item d-flex align-items-center justify-content-between mb-2">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <i class="fa-solid fa-file-pdf text-danger fs-4"></i>
-                                            <div>
-                                                <div class="fw-semibold">Health-Camp-Schedule.pdf</div>
-                                                <div class="text-muted small">320 KB</div>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-danger">
-                                            <i class="fa-solid fa-trash"></i> Remove
-                                        </button>
-                                    </div>
-                                    <div class="file-item d-flex align-items-center justify-content-between mb-2">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <i class="fa-solid fa-file-image text-primary fs-4"></i>
-                                            <div>
-                                                <div class="fw-semibold">Event-Poster.jpg</div>
-                                                <div class="text-muted small">850 KB</div>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-danger">
-                                            <i class="fa-solid fa-trash"></i> Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Add New Attachments -->
-                            <div>
-                                <label for="newAttachments" class="form-label">Add New Attachments</label>
-                                <input type="file" class="form-control" id="newAttachments" name="attachments[]" multiple>
-                                <div class="form-text">You can upload multiple files. Max size: 5MB per file.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column -->
-                <div class="col-lg-4">
-                    <!-- Status Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-toggle-on"></i>Status
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="activityStatus" class="form-label">Activity Status <span class="text-danger">*</span></label>
-                                <select class="form-select" id="activityStatus" name="status" required>
-                                    <option value="upcoming" selected>Upcoming</option>
-                                    <option value="ongoing">Ongoing</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                    <option value="draft">Draft</option>
-                                </select>
-                            </div>
-
-                            <div class="alert alert-info mb-0">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <small>Setting status to "Upcoming" will publish this activity immediately.</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Activity Details Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0">
-                                <i class="fa-solid fa-hashtag"></i>Activity Details
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Activity ID</label>
-                                <div class="fw-bold">#ACT-001</div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Created By</label>
-                                <div>Admin User</div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Created On</label>
-                                <div>January 10, 2024</div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Last Modified</label>
-                                <div>January 18, 2024</div>
-                            </div>
-                            <div class="mb-0">
-                                <label class="form-label text-muted small">Current Participants</label>
-                                <div class="fw-bold text-success">45 / 100</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Tips Card -->
-                    <div class="card mb-4 border-primary">
-                        <div class="card-header bg-primary py-3">
-                            <h6 class="mb-0">
-                                <i class="fa-solid fa-lightbulb me-2"></i>Quick Tips
-                            </h6>
-                        </div>
-                        <div class="card-body p-3">
-                            <ul class="mb-0 small">
-                                <li class="mb-2">Use clear and descriptive titles</li>
-                                <li class="mb-2">Include detailed location info</li>
-                                <li class="mb-2">Set realistic participant limits</li>
-                                <li class="mb-2">Add relevant photos or documents</li>
-                                <li class="mb-0">Update status regularly</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="card">
-                        <div class="card-body p-3">
-                            <button type="submit" name="update" class="btn btn-primary w-100 mb-2">
-                                <i class="fa-solid fa-floppy-disk"></i> Update Activity
-                            </button>
-                            <button type="submit" name="save_draft" class="btn btn-outline-secondary w-100 mb-2">
-                                <i class="fa-solid fa-file-pen"></i> Save as Draft
-                            </button>
-                            <button type="button" class="btn btn-outline-danger w-100" onclick="if(confirm('Are you sure you want to delete this activity?')) window.location.href='all-activities.php'">
-                                <i class="fa-solid fa-trash"></i> Delete Activity
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
+  <div class="dashboard">
+    <div class="page-title-section">
+      <div class="icon-box" style="background-color: #059669 !important;">
+        <i class="fa-solid fa-pen-to-square text"></i>
+      </div>
+      <h1>Edit Activity</h1>
     </div>
+
+    <div class="row">
+      <div class="col-lg-10 col-xl-9 mx-auto">
+        <div class="notice-form-container">
+          <div class="form-header">
+            <h1>Edit Activity</h1>
+            <p>Update activity details below</p>
+          </div>
+
+          <form action="" method="post" enctype="multipart/form-data" id="activityForm">
+            <div class="modern-form-group">
+              <label><i class="fa-solid fa-heading"></i> Activity Title</label>
+              <input type="text" name="title" class="modern-input" required
+                value="<?php echo htmlspecialchars($activity['title']); ?>">
+            </div>
+
+            <div class="form-row">
+              <div class="modern-form-group">
+                <label><i class="fa-solid fa-tag"></i> Type</label>
+                <select name="type" class="modern-select" required>
+                  <option value="">Select Type</option>
+                  <option value="Regular" <?php echo $activity['type'] == 'Regular' ? 'selected' : ''; ?>>Regular</option>
+                  <option value="Financial" <?php echo $activity['type'] == 'Financial' ? 'selected' : ''; ?>>Financial</option>
+                  <option value="Social" <?php echo $activity['type'] == 'Social' ? 'selected' : ''; ?>>Social</option>
+                </select>
+              </div>
+
+              <div class="modern-form-group">
+                <label><i class="fa-solid fa-toggle-on"></i> Status</label>
+                <select name="status" class="modern-select" required>
+                  <option value="">Select Status</option>
+                  <option value="Active" <?php echo $activity['status'] == 'Active' ? 'selected' : ''; ?>>Active</option>
+                  <option value="Inactive" <?php echo $activity['status'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
+                  <option value="Draft" <?php echo $activity['status'] == 'Draft' ? 'selected' : ''; ?>>Draft</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="modern-form-group">
+              <label><i class="fa-solid fa-image"></i> Activity Image</label>
+              <?php if (!empty($activity['image'])): ?>
+                <div class="mb-3">
+                  <img src="../uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>" 
+                       alt="Current Image" class="current-image">
+                  <p class="text-muted mt-2">Current image (upload new to replace)</p>
+                </div>
+              <?php endif; ?>
+              <input type="file" name="image" class="modern-input" accept="image/*">
+              <small class="text-muted">Upload JPG, PNG, GIF or WEBP image (max 5MB)</small>
+            </div>
+
+            <div class="modern-form-group">
+              <label><i class="fa-solid fa-bullseye"></i> Objectives</label>
+              <textarea name="objectives" class="modern-textarea" rows="3" required><?php echo htmlspecialchars($activity['objectives']); ?></textarea>
+            </div>
+
+            <div class="modern-form-group">
+              <label><i class="fa-solid fa-align-left"></i> Short Description</label>
+              <textarea name="short_description" class="modern-textarea" rows="3" required><?php echo htmlspecialchars($activity['short_description']); ?></textarea>
+            </div>
+
+            <div class="modern-form-group">
+              <label><i class="fa-solid fa-file-lines"></i> Detailed Description</label>
+              <textarea name="description" class="modern-textarea" rows="5" required><?php echo htmlspecialchars($activity['description']); ?></textarea>
+            </div>
+
+            <!-- DYNAMIC SECTIONS -->
+            <div class="modern-form-group">
+              <label style="font-size: 16px; margin-bottom: 20px;">
+                <i class="fa-solid fa-list-check"></i> List Sections (Optional)
+              </label>
+
+              <div id="activitySectionsContainer">
+                <?php if (!empty($sections)): ?>
+                  <?php foreach ($sections as $index => $section): ?>
+                    <div class="card shadow-sm dynamic-section" data-section-index="<?php echo $index; ?>">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2 flex-grow-1">
+                          <span class="input-group-text"><i class="fas fa-list"></i></span>
+                          <input type="text" class="section-title-input" name="section_titles[]" 
+                                 value="<?php echo htmlspecialchars($section['title']); ?>" 
+                                 placeholder="Enter section title" style="max-width: 400px;">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="ActivitySections.removeSection(this)">
+                          <i class="fas fa-trash"></i> Remove
+                        </button>
+                      </div>
+                      <div class="card-body">
+                        <div class="mb-3">
+                          <label class="form-label" style="font-weight: 600; color: #334155;">Items</label>
+                          <div class="items-list">
+                            <?php foreach ($section['items'] as $item): ?>
+                              <div class="item-row">
+                                <div class="input-group">
+                                  <span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>
+                                  <input type="text" class="form-control" name="section_items[<?php echo $index; ?>][]" 
+                                         value="<?php echo htmlspecialchars($item); ?>" placeholder="Enter item text">
+                                  <button type="button" class="btn btn-outline-danger" onclick="ActivitySections.removeItem(this)">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            <?php endforeach; ?>
+                          </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="ActivitySections.addItem(this)">
+                          <i class="fas fa-plus"></i> Add Item
+                        </button>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                <?php endif; ?>
+              </div>
+
+              <button type="button" class="btn btn-primary mt-3" onclick="ActivitySections.addSection()">
+                <i class="fas fa-plus"></i> Add New Section
+              </button>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-cancel" onclick="window.location.href='all-activities.php'">
+                <i class="fa-solid fa-times"></i> Cancel
+              </button>
+              <button type="submit" class="btn-submit">
+                <i class="fa-solid fa-floppy-disk"></i> Update Activity
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+var ActivitySections = (function() {
+  'use strict';
+
+  async function confirmRemove(message) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: message,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, remove it!',
+      cancelButtonText: 'Cancel'
+    });
+    return result.isConfirmed;
+  }
+
+  async function removeItem(button) {
+    var itemRow = button.closest('.item-row');
+    var itemsList = itemRow.closest('.items-list');
+
+    if (itemsList.querySelectorAll('.item-row').length <= 1) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Cannot Remove',
+        text: 'Section must have at least one item',
+        confirmButtonColor: '#10b981'
+      });
+      return;
+    }
+
+    const confirmed = await confirmRemove('Remove this item?');
+    if (confirmed) {
+      itemRow.remove();
+    }
+  }
+
+  async function removeSection(button) {
+    const confirmed = await confirmRemove('Remove this entire section?');
+    if (confirmed) {
+      var section = button.closest('.dynamic-section');
+      section.remove();
+      reindexSections();
+    }
+  }
+
+  function addItem(button) {
+    var section = button.closest('.dynamic-section');
+    var sectionIndex = parseInt(section.getAttribute('data-section-index'));
+    var itemsList = section.querySelector('.items-list');
+
+    var newItem = document.createElement('div');
+    newItem.className = 'item-row';
+    newItem.innerHTML = 
+      '<div class="input-group">' +
+        '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
+        '<input type="text" class="form-control" name="section_items[' + sectionIndex + '][]" placeholder="Enter item text">' +
+        '<button type="button" class="btn btn-outline-danger" onclick="ActivitySections.removeItem(this)">' +
+          '<i class="fas fa-trash"></i>' +
+        '</button>' +
+      '</div>';
+
+    itemsList.appendChild(newItem);
+    newItem.querySelector('input').focus();
+  }
+
+  function addSection() {
+    var container = document.getElementById('activitySectionsContainer');
+    var newIndex = container.querySelectorAll('.dynamic-section').length;
+
+    var newSection = document.createElement('div');
+    newSection.className = 'card shadow-sm dynamic-section';
+    newSection.setAttribute('data-section-index', newIndex);
+
+    newSection.innerHTML = 
+      '<div class="card-header d-flex justify-content-between align-items-center">' +
+        '<div class="d-flex align-items-center gap-2 flex-grow-1">' +
+          '<span class="input-group-text"><i class="fas fa-list"></i></span>' +
+          '<input type="text" class="section-title-input" name="section_titles[]" placeholder="Enter section title" style="max-width: 400px;">' +
+        '</div>' +
+        '<button type="button" class="btn btn-sm btn-outline-danger" onclick="ActivitySections.removeSection(this)">' +
+          '<i class="fas fa-trash"></i> Remove' +
+        '</button>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="mb-3">' +
+          '<label class="form-label" style="font-weight: 600; color: #334155;">Items</label>' +
+          '<div class="items-list">' +
+            '<div class="item-row">' +
+              '<div class="input-group">' +
+                '<span class="input-group-text"><i class="fas fa-circle-check text-success"></i></span>' +
+                '<input type="text" class="form-control" name="section_items[' + newIndex + '][]" placeholder="Enter item text">' +
+                '<button type="button" class="btn btn-outline-danger" onclick="ActivitySections.removeItem(this)">' +
+                  '<i class="fas fa-trash"></i>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-outline-primary btn-sm" onclick="ActivitySections.addItem(this)">' +
+          '<i class="fas fa-plus"></i> Add Item' +
+        '</button>' +
+      '</div>';
+
+    container.appendChild(newSection);
+    newSection.querySelector('.section-title-input').focus();
+  }
+
+  function reindexSections() {
+    var container = document.getElementById('activitySectionsContainer');
+    var sections = container.querySelectorAll('.dynamic-section');
+
+    sections.forEach(function(section, newIndex) {
+      section.setAttribute('data-section-index', newIndex);
+      
+      var itemInputs = section.querySelectorAll('.items-list input[type="text"]');
+      itemInputs.forEach(function(input) {
+        input.setAttribute('name', 'section_items[' + newIndex + '][]');
+      });
+    });
+  }
+
+  return {
+    addSection: addSection,
+    removeSection: removeSection,
+    addItem: addItem,
+    removeItem: removeItem
+  };
+})();
+
+// Form submission confirmation
+document.getElementById('activityForm').addEventListener('submit', function(e) {
+  const form = this;
+  const submitButton = form.querySelector('button[type="submit"]');
+  
+  // Check if form has been validated already
+  if (!form.checkValidity()) {
+    return;
+  }
+  
+  e.preventDefault();
+  
+  Swal.fire({
+    title: 'Update Activity?',
+    text: 'Are you sure you want to update this activity?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#10b981',
+    cancelButtonColor: '#ef4444',
+    confirmButtonText: 'Yes, update it!',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Disable submit button to prevent double submission
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
+      form.submit();
+    }
+  });
+});
+</script>
 
 <?php require './components/footer.php'; ?>

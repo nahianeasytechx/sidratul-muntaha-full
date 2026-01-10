@@ -1,18 +1,301 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Settings';
+require './components/header.php';
 
-// Mock current user data - Replace with actual session data
+// Protect page - redirect to login if not authenticated
+protectPage();
+
+// Get current user ID from session
+$user_id = $_SESSION['user_id'];
+
+// Handle form submissions
+$success_message = '';
+$error_message = '';
+
+// DEBUG: Log ALL POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("=== POST REQUEST RECEIVED ===");
+    error_log("POST data: " . print_r($_POST, true));
+    error_log("change_password isset: " . (isset($_POST['change_password']) ? 'YES' : 'NO'));
+    error_log("update_profile isset: " . (isset($_POST['update_profile']) ? 'YES' : 'NO'));
+}
+
+// Handle password change - DIRECT DATABASE UPDATE (WORKING METHOD)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+    error_log("=== Settings Page: Password change attempt ===");
+    
+    $current_password = trim($_POST['current_password']);
+    $new_password = trim($_POST['new_password']);
+    $confirm_password = trim($_POST['confirm_password']);
+    
+    error_log("User ID: " . $user_id);
+    error_log("Current password length: " . strlen($current_password));
+    error_log("New password length: " . strlen($new_password));
+    
+    // Validation
+    $errors = [];
+    
+    if (empty($current_password)) {
+        $errors[] = 'Current password is required';
+    }
+    
+    if (empty($new_password)) {
+        $errors[] = 'New password is required';
+    } elseif (strlen($new_password) < 8) {
+        $errors[] = 'New password must be at least 8 characters long';
+    } elseif (
+        !preg_match('/[A-Z]/', $new_password) ||
+        !preg_match('/[a-z]/', $new_password) ||
+        !preg_match('/[0-9]/', $new_password) ||
+        !preg_match('/[^a-zA-Z0-9]/', $new_password)
+    ) {
+        $errors[] = 'Password must contain: uppercase, lowercase, number, and special character';
+    }
+    
+    if (empty($confirm_password)) {
+        $errors[] = 'Please confirm your new password';
+    } elseif ($new_password !== $confirm_password) {
+        $errors[] = 'New passwords do not match';
+    }
+    
+    if (!empty($errors)) {
+        $error_message = implode('<br>', $errors);
+        error_log("Validation errors: " . implode(', ', $errors));
+        
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    html: '" . addslashes($error_message) . "',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'OK'
+                });
+            });
+        </script>";
+    } else {
+        // DIRECT DATABASE UPDATE - SAME AS TEST.PHP
+        $conn = getDatabaseConnection();
+        
+        // Step 1: Get current password hash
+        $check_stmt = $conn->prepare("SELECT password_hash FROM users WHERE id = ?");
+        $check_stmt->bind_param("i", $user_id);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            error_log("ERROR: User not found with ID: " . $user_id);
+            echo "<script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'User account not found',
+                        confirmButtonColor: '#ef4444'
+                    });
+                });
+            </script>";
+        } else {
+            $user_data = $result->fetch_assoc();
+            $stored_hash = $user_data['password_hash'];
+            
+            error_log("Stored hash: " . $stored_hash);
+            error_log("Verifying current password...");
+            
+            // Step 2: Verify current password
+            if (!password_verify($current_password, $stored_hash)) {
+                error_log("ERROR: Current password verification FAILED");
+                echo "<script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Incorrect Password',
+                            text: 'The current password you entered is incorrect',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    });
+                </script>";
+            } else {
+                error_log("SUCCESS: Current password verified");
+                
+                // Step 3: Generate new hash
+                $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
+                error_log("New hash generated: " . $new_hash);
+                
+                // Step 4: Update database
+                $update_stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+                $update_stmt->bind_param("si", $new_hash, $user_id);
+                
+                if ($update_stmt->execute()) {
+                    error_log("SUCCESS: Password updated in database");
+                    error_log("Rows affected: " . $update_stmt->affected_rows);
+                    
+                    // Step 5: Verify the update
+                    $verify_stmt = $conn->prepare("SELECT password_hash FROM users WHERE id = ?");
+                    $verify_stmt->bind_param("i", $user_id);
+                    $verify_stmt->execute();
+                    $verify_result = $verify_stmt->get_result();
+                    $updated_hash = $verify_result->fetch_assoc()['password_hash'];
+                    
+                    $verify_check = password_verify($new_password, $updated_hash);
+                    error_log("Verification check: " . ($verify_check ? "PASS" : "FAIL"));
+                    
+                    if ($verify_check) {
+                        echo "<script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Password Changed!',
+                                    text: 'Your password has been updated successfully.',
+                                    confirmButtonColor: '#10b981',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    document.getElementById('passwordForm').reset();
+                                    document.getElementById('strengthBar').className = 'password-strength-bar';
+                                    document.getElementById('strengthText').textContent = 'Password strength: None';
+                                    document.getElementById('passwordMatch').style.display = 'none';
+                                });
+                            });
+                        </script>";
+                    } else {
+                        error_log("ERROR: Verification failed after update");
+                        echo "<script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning',
+                                    text: 'Password may not have updated correctly. Please try again.',
+                                    confirmButtonColor: '#f59e0b'
+                                });
+                            });
+                        </script>";
+                    }
+                    
+                    $verify_stmt->close();
+                } else {
+                    error_log("ERROR: Database update failed: " . $update_stmt->error);
+                    echo "<script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Database Error',
+                                text: 'Could not update password. Please try again.',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        });
+                    </script>";
+                }
+                
+                $update_stmt->close();
+            }
+        }
+        
+        $check_stmt->close();
+        $conn->close();
+    }
+    
+    error_log("=== End password change attempt ===");
+}
+
+// Handle profile update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    error_log("=== Profile update attempt ===");
+    
+    $full_name = trim($_POST['full_name']);
+    $phone = trim($_POST['phone']);
+    
+    // Update user settings
+    $conn = getDatabaseConnection();
+    $update_stmt = $conn->prepare("UPDATE user_settings SET full_name = ?, phone = ? WHERE user_id = ?");
+    $update_stmt->bind_param("ssi", $full_name, $phone, $user_id);
+    
+    if ($update_stmt->execute()) {
+        $success_message = "Profile updated successfully!";
+        error_log("Profile updated for user ID: " . $user_id);
+    } else {
+        $error_message = "Failed to update profile. Please try again.";
+        error_log("Profile update failed: " . $update_stmt->error);
+    }
+    
+    $update_stmt->close();
+    $conn->close();
+}
+
+// Handle profile photo upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
+    error_log("=== Profile photo upload attempt ===");
+    
+    $file = $_FILES['profile_image'];
+    
+    if ($file['error'] === UPLOAD_ERR_OK) {
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        
+        if (in_array($file['type'], $allowed_types)) {
+            $upload_dir = '../uploads/profiles/';
+            
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            // Generate unique filename
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'profile_' . $user_id . '_' . time() . '.' . $extension;
+            $upload_path = $upload_dir . $filename;
+            
+            if (move_uploaded_file($file['tmp_name'], $upload_path)) {
+                // Update database
+                $relative_path = 'uploads/profiles/' . $filename;
+                $conn = getDatabaseConnection();
+                $update_stmt = $conn->prepare("UPDATE user_settings SET profile_image = ? WHERE user_id = ?");
+                $update_stmt->bind_param("si", $relative_path, $user_id);
+                
+                if ($update_stmt->execute()) {
+                    $success_message = "Profile photo updated successfully!";
+                    error_log("Profile photo updated: " . $relative_path);
+                    
+                    // Redirect to refresh the page and show new image
+                    header("Location: settings.php");
+                    exit();
+                } else {
+                    $error_message = "Failed to save profile photo.";
+                    error_log("Database update failed: " . $update_stmt->error);
+                }
+                
+                $update_stmt->close();
+                $conn->close();
+            } else {
+                $error_message = "Failed to upload file.";
+                error_log("File upload failed");
+            }
+        } else {
+            $error_message = "Invalid file type. Only JPG, PNG, and GIF allowed.";
+        }
+    }
+}
+
+// Get user settings with JOIN to users table
+$user_settings = getUserSettings($user_id);
+
+// If no settings exist, create default ones
+if (!$user_settings) {
+    $user_data = getUserById($user_id);
+    if ($user_data) {
+        createUserSettings($user_id, $user_data['username']);
+        $user_settings = getUserSettings($user_id);
+    }
+}
+
+// Prepare current user data from joined query result
 $current_user = [
-    'name' => 'Admin User',
-    'email' => 'admin@socialorg.com',
-    'phone' => '+880 1234-567890',
-    'profile_photo' => '../images/sidratulnewLogo1 (1).jpeg',
-    'joined_date' => 'Jan 15, 2024'
+    'name' => $user_settings['full_name'] ?? ($_SESSION['username'] ?? 'User'),
+    'email' => $user_settings['username'] ?? ($_SESSION['username'] ?? ''),
+    'phone' => $user_settings['phone'] ?? '',
+    'profile_photo' => $user_settings['profile_image'] ?? '../images/default-avatar.png',
+    'joined_date' => isset($user_settings['user_created_at']) ? date('M d, Y', strtotime($user_settings['user_created_at'])) : 'N/A'
 ];
 ?>
-<?php require './components/header.php'; ?>
-
 <style>
     /* Page Header - Updated to match notices styling */
     .page-title-section {
@@ -30,14 +313,14 @@ $current_user = [
     .page-title-section .icon-box {
         width: 60px;
         height: 60px;
-           background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, #10b981, #059669);
         border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 24px;
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
     }
 
     .page-title-section h1 {
@@ -76,7 +359,7 @@ $current_user = [
 
     .section-title i {
         font-size: 20px;
-       color: linear-gradient(135deg, #10b981, #059669);
+        color: #10b981;
     }
 
     .section-title h3 {
@@ -125,13 +408,13 @@ $current_user = [
         color: white;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         border: 2px solid #fff;
     }
 
     .photo-upload-btn:hover {
         transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
     }
 
     .photo-input {
@@ -170,8 +453,8 @@ $current_user = [
 
     .form-control:focus {
         outline: none;
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        border-color: #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
     }
 
     .input-group .form-control {
@@ -179,7 +462,7 @@ $current_user = [
         border-radius: 0 12px 12px 0;
     }
 
-    .input-group .input-group-text + .form-control {
+    .input-group .input-group-text+.form-control {
         border-left: 2px solid #e2e8f0;
         border-radius: 12px;
     }
@@ -201,7 +484,7 @@ $current_user = [
 
     .password-toggle:hover {
         background: #f1f5f9;
-    color: linear-gradient(135deg, #10b981, #059669);
+        color: #10b981;
     }
 
     /* Password Strength */
@@ -211,7 +494,7 @@ $current_user = [
 
     .password-strength-bar {
         height: 6px;
-    background: linear-gradient(135deg, #10b981, #059669);
+        background: #e2e8f0;
         border-radius: 10px;
         overflow: hidden;
         margin-bottom: 4px;
@@ -227,21 +510,36 @@ $current_user = [
         transition: all 0.3s ease;
     }
 
-    .password-strength-bar.weak::before { width: 25%; background: #ef4444; }
-    .password-strength-bar.fair::before { width: 50%; background: #f59e0b; }
-    .password-strength-bar.good::before { width: 75%; background: #10b981; }
-    .password-strength-bar.strong::before { width: 100%; background: #059669; }
+    .password-strength-bar.weak::before {
+        width: 25%;
+        background: #ef4444;
+    }
+
+    .password-strength-bar.fair::before {
+        width: 50%;
+        background: #f59e0b;
+    }
+
+    .password-strength-bar.good::before {
+        width: 75%;
+        background: #10b981;
+    }
+
+    .password-strength-bar.strong::before {
+        width: 100%;
+        background: #059669;
+    }
 
     /* Button Styling */
     .btn-save {
-          background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, #10b981, #059669);
         color: white;
         border: none;
         border-radius: 12px;
         padding: 14px 28px;
         font-weight: 600;
         transition: all 0.3s ease;
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -249,7 +547,7 @@ $current_user = [
 
     .btn-save:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         color: white;
     }
 
@@ -299,6 +597,12 @@ $current_user = [
         border-left: 4px solid #10b981;
     }
 
+    .alert-danger {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+        border-left: 4px solid #ef4444;
+    }
+
     /* Account Info Badges */
     .info-badge {
         background: #f8fafc;
@@ -339,460 +643,404 @@ $current_user = [
         }
 
         .profile-photo {
-            width: 100px;
-            height: 100px;
+            width: 150px;
+            height: 150px;
         }
 
-        .btn-save, .btn-cancel {
+        .btn-save,
+        .btn-cancel {
             width: 100%;
             justify-content: center;
         }
 
-        .d-flex.gap-2 {
+        .d-flex.gap-3 {
             flex-direction: column;
             gap: 12px !important;
         }
     }
 
     @media (max-width: 576px) {
-                .btn-save, .btn-cancel {
-            width:50%;
+
+        .btn-save,
+        .btn-cancel {
+            width: 100%;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
         }
-        .section-title {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .profile-photo-section {
-            padding: 20px;
-        }
-
-        .input-group-text {
-            padding: 12px 14px;
-        }
-
-        .form-control {
-            padding: 12px 14px;
-        }
-
     }
 
-    /* Animation */
     @keyframes fadeIn {
         from {
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
-        
     }
 
     .settings-card {
         animation: fadeIn 0.5s ease;
     }
-    @media(max-width:350px){
-            .btn-save {
-        border-radius: 12px;
-        padding: 12px 24px;
-        font-size: large;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-}
 </style>
 
 <!--------------------------->
 <!-- START MAIN AREA -->
 <!--------------------------->
 <div class="content-wrapper">
-<div class="row ">
-    <div class="col-lg-10 mx-auto">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
             <div class="settings">
-        <!-- Page Title -->
-        <div class="page-title-section">
-            <div class="d-flex align-items-center gap-3">
-                <div class="icon-box">
-                    <i class="fa-solid fa-gear"></i>
-                </div>
-                <div>
-                    <h1>Account Settings</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php" class="text-decoration-none">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Settings</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <!-- Profile Information -->
-            <div class="col-md-8">
-                <div class="settings-card">
-                    <div class="section-title">
-                        <i class="fa-solid fa-user-circle"></i>
-                        <h3>Profile Information</h3>
+                <!-- Success/Error Messages -->
+                <?php if (!empty($success_message)): ?>
+                    <div class="alert-modern alert-success">
+                        <i class="fa-solid fa-circle-check me-2"></i>
+                        <?php echo htmlspecialchars($success_message); ?>
                     </div>
+                <?php endif; ?>
 
-                    <!-- Profile Photo -->
-                    <div class="profile-photo-section">
-                        <div class="profile-photo-container">
-                            <img src="<?php echo $current_user['profile_photo']; ?>" alt="Profile Photo" class="profile-photo" id="profilePhotoPreview">
-                            <label for="profilePhotoInput" class="photo-upload-btn">
-                                <i class="fa-solid fa-camera"></i>
-                            </label>
-                            <input type="file" id="profilePhotoInput" class="photo-input" accept="image/*">
-                        </div>
-                        <p class="text-muted small">Click the camera icon to change <strong>Profile Photo</strong></p>
+                <?php if (!empty($error_message)): ?>
+                    <div class="alert-modern alert-danger">
+                        <i class="fa-solid fa-circle-exclamation me-2"></i>
+                        <?php echo htmlspecialchars($error_message); ?>
                     </div>
+                <?php endif; ?>
 
-                    <form id="profileForm" method="POST" enctype="multipart/form-data">
-                        <!-- Full Name -->
-                        <div class="mb-4">
-                            <label for="fullName" class="form-label">
-                                Full Name <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-user"></i>
-                                </span>
-                                <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    id="fullName" 
-                                    name="full_name" 
-                                    value="<?php echo $current_user['name']; ?>"
-                                    required
-                                    placeholder="Enter your full name"
-                                >
-                            </div>
+                <!-- Page Title -->
+                <div class="page-title-section">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-box">
+                            <i class="fa-solid fa-gear"></i>
                         </div>
-
-                        <!-- Email (Read-only) -->
-                        <div class="mb-4">
-                            <label for="email" class="form-label">
-                                Email Address
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-envelope"></i>
-                                </span>
-                                <input 
-                                    type="email" 
-                                    class="form-control" 
-                                    id="email" 
-                                    value="<?php echo $current_user['email']; ?>"
-                                    readonly
-                                >
-                            </div>
-                            <small class="text-muted mt-2 d-block">Email cannot be changed. Contact system administrator if needed.</small>
-                        </div>
-
-                        <!-- Phone Number -->
-                        <div class="mb-4">
-                            <label for="phone" class="form-label">
-                                Phone Number <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-phone"></i>
-                                </span>
-                                <input 
-                                    type="tel" 
-                                    class="form-control" 
-                                    id="phone" 
-                                    name="phone" 
-                                    value="<?php echo $current_user['phone']; ?>"
-                                    required
-                                    placeholder="+880 1234-567890"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="d-flex gap-3 mt-4">
-                            <button type="submit" class="btn-save" name="update_profile">
-                                <i class="fa-solid fa-floppy-disk"></i>Save Changes
-                            </button>
-                            <button type="button" class="btn-cancel" onclick="resetForm()">
-                                <i class="fa-solid fa-xmark"></i>Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Change Password -->
-                <div class="settings-card">
-                    <div class="section-title">
-                        <i class="fa-solid fa-lock"></i>
-                        <h3>Change Password</h3>
-                    </div>
-
-                    <div class="alert-modern alert-info mb-4">
-                        <i class="fa-solid fa-circle-info me-2"></i>
-                        <strong>Password Requirements:</strong> Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number, and one special character.
-                    </div>
-
-                    <form id="passwordForm" method="POST">
-                        <!-- Current Password -->
-                        <div class="mb-4">
-                            <label for="currentPassword" class="form-label">
-                                Current Password <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group position-relative">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-key"></i>
-                                </span>
-                                <input 
-                                    type="password" 
-                                    class="form-control" 
-                                    id="currentPassword" 
-                                    name="current_password" 
-                                    required
-                                    placeholder="Enter current password"
-                                >
-                                <span class="password-toggle" onclick="togglePassword('currentPassword')">
-                                    <i class="fa-solid fa-eye" id="currentPasswordIcon"></i>
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- New Password -->
-                        <div class="mb-4">
-                            <label for="newPassword" class="form-label">
-                                New Password <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group position-relative">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-lock"></i>
-                                </span>
-                                <input 
-                                    type="password" 
-                                    class="form-control" 
-                                    id="newPassword" 
-                                    name="new_password" 
-                                    required
-                                    minlength="8"
-                                    placeholder="Enter new password"
-                                    oninput="checkPasswordStrength(this.value)"
-                                >
-                                <span class="password-toggle" onclick="togglePassword('newPassword')">
-                                    <i class="fa-solid fa-eye" id="newPasswordIcon"></i>
-                                </span>
-                            </div>
-                            <div class="password-strength mt-3">
-                                <div class="password-strength-bar" id="strengthBar"></div>
-                            </div>
-                            <small class="text-muted mt-2 d-block" id="strengthText">Password strength: None</small>
-                        </div>
-
-                        <!-- Confirm Password -->
-                        <div class="mb-4">
-                            <label for="confirmPassword" class="form-label">
-                                Confirm New Password <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group position-relative">
-                                <span class="input-group-text">
-                                    <i class="fa-solid fa-lock"></i>
-                                </span>
-                                <input 
-                                    type="password" 
-                                    class="form-control" 
-                                    id="confirmPassword" 
-                                    name="confirm_password" 
-                                    required
-                                    placeholder="Confirm new password"
-                                    oninput="checkPasswordMatch()"
-                                >
-                                <span class="password-toggle" onclick="togglePassword('confirmPassword')">
-                                    <i class="fa-solid fa-eye" id="confirmPasswordIcon"></i>
-                                </span>
-                            </div>
-                            <small class="text-danger mt-2 d-block" id="passwordMatch" style="display: none;">
-                                <i class="fa-solid fa-circle-exclamation me-1"></i>Passwords do not match
-                            </small>
-                        </div>
-
-                        <button type="submit" class="btn-save" name="change_password">
-                            <i class="fa-solid fa-shield-halved"></i>Change Password
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Account Info Sidebar -->
-            <div class="col-md-4">
-                <div class="settings-card">
-                    <div class="section-title">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <h3>Account Information</h3>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Account Status</label>
                         <div>
-                            <span class="badge-modern badge-success">Active</span>
+                            <h1>Account Settings</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="dashboard.php" class="text-decoration-none">Dashboard</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Settings</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Profile Information -->
+                    <div class="col-md-8">
+                  
+                        <div class="settings-card">
+                            <div class="section-title">
+                                <i class="fa-solid fa-user-circle"></i>
+                                <h3>Profile Information</h3>
+                            </div>
+
+                            <!-- Profile Photo -->
+                            <div class="profile-photo-section">
+                                <div class="profile-photo-container">
+                                    <img src="<?php echo htmlspecialchars($current_user['profile_photo']); ?>" alt="Profile Photo" class="profile-photo" id="profilePhotoPreview">
+                                    <label for="profilePhotoInput" class="photo-upload-btn">
+                                        <i class="fa-solid fa-camera"></i>
+                                    </label>
+                                </div>
+                                <p class="text-muted small">Click the camera icon to change <strong>Profile Photo</strong></p>
+                            </div>
+
+                            <form id="profileForm" method="POST" enctype="multipart/form-data">
+                                <input type="file" id="profilePhotoInput" name="profile_image" class="photo-input" accept="image/*">
+
+                                <!-- Full Name -->
+                                <div class="mb-4">
+                                    <label for="fullName" class="form-label">
+                                        Full Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-user"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="fullName"
+                                            name="full_name"
+                                            value="<?php echo htmlspecialchars($current_user['name']); ?>"
+                                            required
+                                            placeholder="Enter your full name">
+                                    </div>
+                                </div>
+
+                                <!-- Email (Read-only) -->
+                                <div class="mb-4">
+                                    <label for="email" class="form-label">
+                                        Email Address
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-envelope"></i>
+                                        </span>
+                                        <input
+                                            type="email"
+                                            class="form-control"
+                                            id="email"
+                                            value="<?php echo htmlspecialchars($current_user['email']); ?>"
+                                            readonly>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block">Email cannot be changed. Contact system administrator if needed.</small>
+                                </div>
+
+                                <!-- Phone Number -->
+                                <div class="mb-4">
+                                    <label for="phone" class="form-label">
+                                        Phone Number
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-phone"></i>
+                                        </span>
+                                        <input
+                                            type="tel"
+                                            class="form-control"
+                                            id="phone"
+                                            name="phone"
+                                            value="<?php echo htmlspecialchars($current_user['phone']); ?>"
+                                            placeholder="+880 1234-567890">
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-3 mt-4">
+                                    <button type="submit" class="btn-save" name="update_profile">
+                                        <i class="fa-solid fa-floppy-disk"></i>Save Changes
+                                    </button>
+                                    <button type="button" class="btn-cancel" onclick="window.location.reload()">
+                                        <i class="fa-solid fa-xmark"></i>Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="settings-card">
+                            <div class="section-title">
+                                <i class="fa-solid fa-lock"></i>
+                                <h3>Change Password</h3>
+                            </div>
+
+                            <div class="alert-modern alert-info mb-4">
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                                <strong>Password Requirements:</strong> Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number, and one special character.
+                            </div>
+
+                            <form id="passwordForm" method="POST" action="">
+                                <!-- Current Password -->
+                                <div class="mb-4">
+                                    <label for="currentPassword" class="form-label">
+                                        Current Password <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group position-relative">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-key"></i>
+                                        </span>
+                                        <input
+                                            type="password"
+                                            class="form-control"
+                                            id="currentPassword"
+                                            name="current_password"
+                                            required
+                                            placeholder="Enter current password"
+                                            autocomplete="current-password">
+                                        <span class="password-toggle" onclick="togglePassword('currentPassword')">
+                                            <i class="fa-solid fa-eye" id="currentPasswordIcon"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- New Password -->
+                                <div class="mb-4">
+                                    <label for="newPassword" class="form-label">
+                                        New Password <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group position-relative">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-lock"></i>
+                                        </span>
+                                        <input
+                                            type="password"
+                                            class="form-control"
+                                            id="newPassword"
+                                            name="new_password"
+                                            required
+                                            minlength="8"
+                                            placeholder="Enter new password"
+                                            autocomplete="new-password"
+                                            oninput="checkPasswordStrength(this.value)">
+                                        <span class="password-toggle" onclick="togglePassword('newPassword')">
+                                            <i class="fa-solid fa-eye" id="newPasswordIcon"></i>
+                                        </span>
+                                    </div>
+                                    <div class="password-strength mt-3">
+                                        <div class="password-strength-bar" id="strengthBar"></div>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block" id="strengthText">Password strength: None</small>
+                                </div>
+
+                                <!-- Confirm Password -->
+                                <div class="mb-4">
+                                    <label for="confirmPassword" class="form-label">
+                                        Confirm New Password <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group position-relative">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-lock"></i>
+                                        </span>
+                                        <input
+                                            type="password"
+                                            class="form-control"
+                                            id="confirmPassword"
+                                            name="confirm_password"
+                                            required
+                                            placeholder="Confirm new password"
+                                            autocomplete="new-password"
+                                            oninput="checkPasswordMatch()">
+                                        <span class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                            <i class="fa-solid fa-eye" id="confirmPasswordIcon"></i>
+                                        </span>
+                                    </div>
+                                    <small class="text-danger mt-2 d-block" id="passwordMatch" style="display: none;">
+                                        <i class="fa-solid fa-circle-exclamation me-1"></i>Passwords do not match
+                                    </small>
+                                </div>
+
+                                <button type="submit" class="btn-save" name="change_password" value="1">
+                                    <i class="fa-solid fa-shield-halved"></i>Change Password
+                                </button>
+                            </form>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label">Member Since</label>
-                        <div class="info-badge">
-                            <i class="fa-solid fa-calendar-days"></i>
-                            <?php echo $current_user['joined_date']; ?>
+                    <!-- Account Info Sidebar -->
+                    <div class="col-md-4">
+                        <div class="settings-card">
+                            <div class="section-title">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <h3>Account Information</h3>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Account Status</label>
+                                <div>
+                                    <span class="badge-modern badge-success">Active</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Member Since</label>
+                                <div class="info-badge">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    <?php echo htmlspecialchars($current_user['joined_date']); ?>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Role</label>
+                                <div class="info-badge">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                    Administrator
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="alert-modern alert-warning">
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                                <strong>Security Tip:</strong> Never share your password with anyone. Change your password regularly for better security.
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Last Login</label>
-                        <div class="info-badge">
-                            <i class="fa-solid fa-clock"></i>
-                            Today at 10:30 AM
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Role</label>
-                        <div class="info-badge">
-                            <i class="fa-solid fa-user-shield"></i>
-                            Administrator
-                        </div>
-                    </div>
-
-                    <hr class="my-4">
-
-                    <div class="alert-modern alert-warning">
-                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                        <strong>Security Tip:</strong> Never share your password with anyone. Enable two-factor authentication for better security.
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
-</div>
 </div>
 <!--------------------------->
 <!-- END MAIN AREA -->
 <!--------------------------->
-
 <script>
-// Password toggle functionality
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    const icon = document.getElementById(inputId + 'Icon');
-    
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
+    // Password toggle functionality
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(inputId + 'Icon');
 
-// Password strength checker
-function checkPasswordStrength(password) {
-    const strengthBar = document.getElementById('strengthBar');
-    const strengthText = document.getElementById('strengthText');
-    
-    let strength = 0;
-    let text = '';
-    
-    if (password.length >= 8) strength += 25;
-    if (password.match(/[a-z]/)) strength += 25;
-    if (password.match(/[A-Z]/)) strength += 25;
-    if (password.match(/[0-9]/)) strength += 15;
-    if (password.match(/[^a-zA-Z0-9]/)) strength += 10;
-    
-    strengthBar.className = 'password-strength-bar';
-    
-    if (strength < 50) {
-        strengthBar.classList.add('weak');
-        text = 'Weak';
-    } else if (strength < 75) {
-        strengthBar.classList.add('fair');
-        text = 'Fair';
-    } else if (strength < 90) {
-        strengthBar.classList.add('good');
-        text = 'Good';
-    } else {
-        strengthBar.classList.add('strong');
-        text = 'Strong';
-    }
-    
-    strengthText.textContent = `Password strength: ${text}`;
-}
-
-// Password match checker
-function checkPasswordMatch() {
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const matchText = document.getElementById('passwordMatch');
-    
-    if (confirmPassword && newPassword !== confirmPassword) {
-        matchText.style.display = 'block';
-    } else {
-        matchText.style.display = 'none';
-    }
-}
-
-// Profile photo preview
-document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('profilePhotoPreview').src = e.target.result;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
-        reader.readAsDataURL(file);
     }
-});
 
-// Form reset
-function resetForm() {
-    document.getElementById('profileForm').reset();
-    document.getElementById('passwordForm').reset();
-    document.getElementById('strengthBar').className = 'password-strength-bar';
-    document.getElementById('strengthText').textContent = 'Password strength: None';
-    document.getElementById('passwordMatch').style.display = 'none';
-}
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
 
-// Form submission handlers
-document.getElementById('profileForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    // Add your profile update logic here
-    alert('Profile updated successfully!');
-});
+        let strength = 0;
+        let text = '';
 
-document.getElementById('passwordForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (newPassword !== confirmPassword) {
-        alert('Passwords do not match!');
-        return;
+        if (password.length >= 8) strength += 25;
+        if (password.match(/[a-z]/)) strength += 25;
+        if (password.match(/[A-Z]/)) strength += 25;
+        if (password.match(/[0-9]/)) strength += 15;
+        if (password.match(/[^a-zA-Z0-9]/)) strength += 10;
+
+        strengthBar.className = 'password-strength-bar';
+
+        if (strength < 50) {
+            strengthBar.classList.add('weak');
+            text = 'Weak';
+        } else if (strength < 75) {
+            strengthBar.classList.add('fair');
+            text = 'Fair';
+        } else if (strength < 90) {
+            strengthBar.classList.add('good');
+            text = 'Good';
+        } else {
+            strengthBar.classList.add('strong');
+            text = 'Strong';
+        }
+
+        strengthText.textContent = `Password strength: ${text}`;
     }
-    
-    // Add your password change logic here
-    alert('Password changed successfully!');
-    this.reset();
-    resetForm();
-});
+
+    // Password match checker
+    function checkPasswordMatch() {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const matchText = document.getElementById('passwordMatch');
+
+        if (confirmPassword && newPassword !== confirmPassword) {
+            matchText.style.display = 'block';
+        } else {
+            matchText.style.display = 'none';
+        }
+    }
+
+    // Profile photo preview
+    document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profilePhotoPreview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+
+            // Auto-submit form when photo is selected
+            document.getElementById('profileForm').submit();
+        }
+    });
 </script>
-
 <?php require './components/footer.php'; ?>
