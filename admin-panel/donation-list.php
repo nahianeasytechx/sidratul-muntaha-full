@@ -3,25 +3,58 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Donation List';
 require './components/header.php';
 
-// Sample donation data (replace with DB data later)
-$donations = [
-    ["id" => 1, "category" => "education", "name" => "Md. Rahim Uddin", "phone" => "+880 1712-345678", "address" => "Mirpur, Dhaka", "amount" => 5000, "trx" => "TRX123456789", "month" => "10"],
-    ["id" => 2, "category" => "health", "name" => "Fatima Khatun", "phone" => "+880 1812-987654", "address" => "Banani, Dhaka", "amount" => 10000, "trx" => "TRX987654321", "month" => "10"],
-    ["id" => 3, "category" => "emergency", "name" => "Kamal Hossain", "phone" => "+880 1912-456789", "address" => "Chittagong", "amount" => 15000, "trx" => "TRX456789123", "month" => "09"],
-    ["id" => 4, "category" => "food", "name" => "Ayesha Siddika", "phone" => "+880 1612-789456", "address" => "Uttara, Dhaka", "amount" => 3000, "trx" => "TRX789456123", "month" => "08"],
-    ["id" => 5, "category" => "general", "name" => "Ibrahim Khan", "phone" => "+880 1512-321654", "address" => "Rajshahi", "amount" => 7500, "trx" => "TRX321654987", "month" => "09"],
-    ["id" => 6, "category" => "education", "name" => "Nasrin Akter", "phone" => "+880 1712-654321", "address" => "Barisal", "amount" => 2000, "trx" => "TRX654321789", "month" => "08"],
-    ["id" => 7, "category" => "health", "name" => "Mizanur Rahman", "phone" => "+880 1812-147258", "address" => "Sylhet", "amount" => 12000, "trx" => "TRX147258369", "month" => "07"],
-    ["id" => 8, "category" => "food", "name" => "Sultana Begum", "phone" => "+880 1912-963852", "address" => "Khulna", "amount" => 4500, "trx" => "TRX963852741", "month" => "10"],
-    ["id" => 9, "category" => "emergency", "name" => "Abdul Jabbar", "phone" => "+880 1612-852963", "address" => "Gazipur", "amount" => 20000, "trx" => "TRX852963147", "month" => "09"],
-];
 
-// Statistics
-$totalDonations = count($donations);
-$totalAmount = array_sum(array_column($donations, 'amount'));
-$thisMonth = date('m');
-$thisMonthAmount = array_sum(array_map(fn($d) => $d['month'] === $thisMonth ? $d['amount'] : 0, $donations));
-$totalDonors = count(array_unique(array_column($donations, 'name')));
+
+
+
+// Handle delete action
+if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
+    $result = deleteDonation($_GET['delete']);
+    $message = $result['message'];
+    $message_type = $result['success'] ? 'success' : 'error';
+    
+    // Show message if any
+    if ($message) {
+        echo '<script>alert("' . addslashes($message) . '");</script>';
+    }
+}
+
+// Get filter parameters
+$filters = [];
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $filters['search'] = $_GET['search'];
+}
+if (isset($_GET['payment_status']) && !empty($_GET['payment_status'])) {
+    $filters['payment_status'] = $_GET['payment_status'];
+}
+if (isset($_GET['category_id']) && !empty($_GET['category_id'])) {
+    $filters['category_id'] = $_GET['category_id'];
+}
+if (isset($_GET['start_date']) && !empty($_GET['start_date'])) {
+    $filters['start_date'] = $_GET['start_date'];
+}
+if (isset($_GET['end_date']) && !empty($_GET['end_date'])) {
+    $filters['end_date'] = $_GET['end_date'];
+}
+
+// Get donations from database
+$donations = getAllDonations($filters);
+
+// Get statistics
+$stats_all = getDonationStatistics('all');
+$stats_month = getDonationStatistics('month');
+$stats_today = getDonationStatistics('today');
+
+// Get unique donors count
+$conn = getDatabaseConnection();
+$donors_sql = "SELECT COUNT(DISTINCT email) as total_donors FROM donation_list WHERE email IS NOT NULL AND email != ''";
+$donors_result = mysqli_query($conn, $donors_sql);
+$donors_data = $donors_result->fetch_assoc();
+$total_donors = $donors_data['total_donors'] ?? 0;
+mysqli_close($conn);
+
+// Get categories for filter
+$categories = getDonationsByCategory(100); // Get all categories
 ?>
 
 <style>
@@ -263,39 +296,31 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
         vertical-align: middle;
     }
 
-    /* Badge Styles */
-    .badge {
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.8rem;
-        letter-spacing: 0.3px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .badge-education {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-    }
-
-    .badge-health {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-    }
-
-    .badge-emergency {
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        color: #991b1b;
-    }
-
-    .badge-food {
+    /* Badge Styles for Status */
+    .badge-pending {
         background: linear-gradient(135deg, #fef3c7, #fde68a);
         color: #92400e;
     }
 
-    .badge-general {
-        background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
-        color: #6b21a8;
+    .badge-completed {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+    }
+
+    .badge-failed {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+    }
+
+    .badge-cancelled {
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        color: #374151;
+    }
+
+    /* Category Badges */
+    .badge-category {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        color: #1e40af;
     }
 
     /* Transaction Code Styling */
@@ -405,7 +430,6 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
             opacity: 0;
             transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -420,6 +444,9 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
 </style>
 
 <div class="content-wrapper">
+         <div class="feature-alert alert alert-danger fs-1">
+    ⚠️ Feature in Progress
+</div>
     <div class="donation-list">
 
         <!-- Page Header -->
@@ -436,7 +463,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
                         </nav>
                     </div>
                 </div>
-                <a class="btn btn-add-new" href="../donate.php">
+                <a class="btn btn-add-new" href="donate.php">
                     <i class="fa-solid fa-plus me-2"></i>Add New Donation
                 </a>
             </div>
@@ -451,7 +478,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
                     </div>
                     <div class="stats-content">
                         <h6 class="stats-label">Total Donations</h6>
-                        <h2 class="stats-value"><?= $totalDonations ?></h2>
+                        <h2 class="stats-value"><?= $stats_all['total_donations'] ?></h2>
                     </div>
                 </div>
             </div>
@@ -463,7 +490,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
                     </div>
                     <div class="stats-content">
                         <h6 class="stats-label">Total Amount</h6>
-                        <h2 class="stats-value">৳<?= number_format($totalAmount) ?></h2>
+                        <h2 class="stats-value">৳<?= number_format($stats_all['total_amount'] ?? 0, 2) ?></h2>
                     </div>
                 </div>
             </div>
@@ -475,7 +502,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
                     </div>
                     <div class="stats-content">
                         <h6 class="stats-label">This Month</h6>
-                        <h2 class="stats-value">৳<?= number_format($thisMonthAmount) ?></h2>
+                        <h2 class="stats-value">৳<?= number_format($stats_month['total_amount'] ?? 0, 2) ?></h2>
                     </div>
                 </div>
             </div>
@@ -487,7 +514,7 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
                     </div>
                     <div class="stats-content">
                         <h6 class="stats-label">Total Donors</h6>
-                        <h2 class="stats-value"><?= $totalDonors ?></h2>
+                        <h2 class="stats-value"><?= $total_donors ?></h2>
                     </div>
                 </div>
             </div>
@@ -498,121 +525,184 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
             <div class="filter-title mb-3">
                 <i class="fa-solid fa-filter me-2"></i>Filters & Search
             </div>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" id="searchInput" placeholder=" Search by name, phone, or transaction ID...">
+            <form method="GET" action="">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Search by name, email, phone, or transaction ID"
+                               value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="payment_status">
+                            <option value="">All Status</option>
+                            <option value="pending" <?= isset($_GET['payment_status']) && $_GET['payment_status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
+                            <option value="completed" <?= isset($_GET['payment_status']) && $_GET['payment_status'] == 'completed' ? 'selected' : '' ?>>Completed</option>
+                            <option value="failed" <?= isset($_GET['payment_status']) && $_GET['payment_status'] == 'failed' ? 'selected' : '' ?>>Failed</option>
+                            <option value="cancelled" <?= isset($_GET['payment_status']) && $_GET['payment_status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="category_id">
+                            <option value="">All Categories</option>
+                            <?php foreach ($categories as $category): ?>
+                                <?php if (!empty($category['category_name'])): ?>
+                                    <option value="<?= $category['category_name'] ?>" 
+                                            <?= isset($_GET['category_id']) && $_GET['category_id'] == $category['category_name'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($category['category_name']) ?>
+                                    </option>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" name="start_date" 
+                               value="<?= isset($_GET['start_date']) ? htmlspecialchars($_GET['start_date']) : '' ?>"
+                               placeholder="Start Date">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" name="end_date" 
+                               value="<?= isset($_GET['end_date']) ? htmlspecialchars($_GET['end_date']) : '' ?>"
+                               placeholder="End Date">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-success w-100">Filter</button>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="categoryFilter">
-                        <option value="all">All Categories</option>
-                        <option value="education">Education</option>
-                        <option value="health">Health</option>
-                        <option value="emergency">Emergency Relief</option>
-                        <option value="food">Food Distribution</option>
-                        <option value="general">General</option>
-                    </select>
+            </form>
+            <?php if (!empty($_GET)): ?>
+                <div class="mt-3">
+                    <a href="donation-list.php" class="btn btn-sm btn-outline-danger">Clear Filters</a>
+                    <small class="text-muted ms-2">Showing <?= count($donations) ?> donation(s)</small>
                 </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="monthFilter">
-                        <option value="all">All Months</option>
-                        <option value="10">October 2024</option>
-                        <option value="09">September 2024</option>
-                        <option value="08">August 2024</option>
-                        <option value="07">July 2024</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="amountFilter">
-                        <option value="all">All Amounts</option>
-                        <option value="0-1000">৳0 - ৳1,000</option>
-                        <option value="1000-5000">৳1,000 - ৳5,000</option>
-                        <option value="5000-10000">৳5,000 - ৳10,000</option>
-                        <option value="10000+">৳10,000+</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="sortFilter">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="highest">Highest Amount</option>
-                        <option value="lowest">Lowest Amount</option>
-                    </select>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Donation Table -->
         <div class="table-container mt-4">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="donationTable">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-header">
                         <tr>
                             <th>#</th>
-                            <th>Category</th>
+                            <th>Date</th>
                             <th>Donor Name</th>
-                            <th>Phone</th>
-                            <th>Address</th>
+                            <th>Contact Info</th>
+                            <th>Category</th>
                             <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Status</th>
                             <th>Transaction ID</th>
-                            <th>Invoice</th>
                             <th colspan="3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($donations as $d): ?>
-                            <tr data-category="<?= $d['category'] ?>" data-month="<?= $d['month'] ?>" data-amount="<?= $d['amount'] ?>">
-                                <td>
-                                    <strong style="color: #2c3e50;">#<?= str_pad($d['id'], 3, '0', STR_PAD_LEFT) ?></strong>
-                                </td>
-                                <td>
-                                    <span class="badge badge-<?= $d['category'] ?>">
-                                        <i class="fa-solid fa-tag me-1"></i>
-                                        <?= ucfirst($d['category']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <strong style="color: #2c3e50;"><?= htmlspecialchars($d['name']) ?></strong>
-                                </td>
-                                <td>
-                                    <small style="color: #64748b;">
-                                        <i class="fa-solid fa-phone me-1"></i>
-                                        <?= htmlspecialchars($d['phone']) ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <small style="color: #64748b;">
-                                        <i class="fa-solid fa-location-dot me-1"></i>
-                                        <?= htmlspecialchars($d['address']) ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <span class="amount-cell">৳<?= number_format($d['amount']) ?></span>
-                                </td>
-                                <td>
-                                    <code class="trx-code"><?= htmlspecialchars($d['trx']) ?></code>
-                                </td>
-                                <td>
-                                    <a href="donation-list-invoice.php?id=<?= $d['id'] ?>" class="btn btn-sm btn-dark d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Invoice" target="_blank">
-                                        <i class="fa-solid fa-file-invoice"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="view-donation-fund.php?id=<?= $d['id'] ?>" class="btn btn-sm btn-info d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="View Details">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="edit-donation-category.php?id=<?= $d['id'] ?>" class="btn btn-sm btn-warning d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Edit">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <button onclick="deleteDonation(<?= $d['id'] ?>)" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Delete">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
+                        <?php if (empty($donations)): ?>
+                            <tr>
+                                <td colspan="12" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="fa-solid fa-inbox fa-2x mb-3"></i>
+                                        <p class="mb-0">No donations found</p>
+                                    </div>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php else: ?>
+                            <?php foreach ($donations as $index => $donation): ?>
+                                <tr>
+                                    <td>
+                                        <strong style="color: #2c3e50;">#<?= str_pad($donation['id'], 3, '0', STR_PAD_LEFT) ?></strong>
+                                    </td>
+                                    <td>
+                                        <small style="color: #64748b;">
+                                            <?= date('M d, Y', strtotime($donation['created_at'])) ?><br>
+                                            <small class="text-muted"><?= date('h:i A', strtotime($donation['created_at'])) ?></small>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <strong style="color: #2c3e50;"><?= htmlspecialchars($donation['name']) ?></strong>
+                                        <?php if (!empty($donation['behalf_of'])): ?>
+                                            <br>
+                                            <small class="text-muted">On behalf of: <?= htmlspecialchars($donation['behalf_of']) ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($donation['email'])): ?>
+                                            <small style="color: #64748b;">
+                                                <i class="fa-solid fa-envelope me-1"></i>
+                                                <?= htmlspecialchars($donation['email']) ?>
+                                            </small><br>
+                                        <?php endif; ?>
+                                        <?php if (!empty($donation['contact'])): ?>
+                                            <small style="color: #64748b;">
+                                                <i class="fa-solid fa-phone me-1"></i>
+                                                <?= htmlspecialchars($donation['contact']) ?>
+                                            </small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($donation['category_name'])): ?>
+                                            <span class="badge badge-category">
+                                                <i class="fa-solid fa-tag me-1"></i>
+                                                <?= htmlspecialchars($donation['category_name']) ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge badge-secondary">N/A</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="amount-cell">৳<?= number_format($donation['amount'], 2) ?></span>
+                                    </td>
+                                    <td>
+                                        <small class="text-capitalize"><?= htmlspecialchars($donation['payment_method']) ?></small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-<?= $donation['payment_status'] ?>">
+                                            <?= ucfirst($donation['payment_status']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code class="trx-code"><?= htmlspecialchars($donation['transaction_id']) ?></code>
+                                    </td>
+                                    <td>
+                                        <!-- Invoice Button -->
+                                        <a href="donation-list-invoice.php?id=<?= $donation['id'] ?>" 
+                                           class="btn btn-sm btn-dark d-inline-flex align-items-center justify-content-center p-0" 
+                                           style="height: 32px; width: 32px; min-width: 32px;" 
+                                           title="Invoice" 
+                                           target="_blank">
+                                            <i class="fa-solid fa-file-invoice"></i>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <!-- View Button - Goes to separate page -->
+                                        <a href="view-donation-fund.php?id=<?= $donation['id'] ?>" 
+                                           class="btn btn-sm btn-info d-inline-flex align-items-center justify-content-center p-0" 
+                                           style="height: 32px; width: 32px; min-width: 32px;" 
+                                           title="View Details">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <!-- Edit Button - Goes to separate page -->
+                                        <a href="edit-donation.php?id=<?= $donation['id'] ?>" 
+                                           class="btn btn-sm btn-warning d-inline-flex align-items-center justify-content-center p-0" 
+                                           style="height: 32px; width: 32px; min-width: 32px;" 
+                                           title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <!-- Delete Button - Simple link to delete -->
+                                        <a href="donation-list.php?delete=<?= $donation['id'] ?>" 
+                                           class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-0" 
+                                           style="height: 32px; width: 32px; min-width: 32px;" 
+                                           title="Delete"
+                                           onclick="return confirm('Are you sure you want to delete donation #<?= $donation['id'] ?>? This action cannot be undone.')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -622,69 +712,9 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
 </div>
 
 <script>
-const searchInput = document.getElementById("searchInput");
-const categoryFilter = document.getElementById("categoryFilter");
-const monthFilter = document.getElementById("monthFilter");
-const amountFilter = document.getElementById("amountFilter");
-const sortFilter = document.getElementById("sortFilter");
-const rows = document.querySelectorAll("#donationTable tbody tr");
-
-function filterTable() {
-    const search = searchInput.value.toLowerCase();
-    const category = categoryFilter.value;
-    const month = monthFilter.value;
-    const amount = amountFilter.value;
-
-    rows.forEach(row => {
-        const name = row.children[2].innerText.toLowerCase();
-        const phone = row.children[3].innerText.toLowerCase();
-        const trx = row.children[6].innerText.toLowerCase();
-        const rowCategory = row.dataset.category;
-        const rowMonth = row.dataset.month;
-        const rowAmount = parseInt(row.dataset.amount);
-        let visible = true;
-
-        if (search && !name.includes(search) && !phone.includes(search) && !trx.includes(search)) visible = false;
-        if (category !== "all" && rowCategory !== category) visible = false;
-        if (month !== "all" && rowMonth !== month) visible = false;
-        if (amount !== "all") {
-            const [min, max] = amount.split("-");
-            if (amount.includes("+") && rowAmount < parseInt(min)) visible = false;
-            else if (max && (rowAmount < parseInt(min) || rowAmount > parseInt(max))) visible = false;
-        }
-        row.style.display = visible ? "" : "none";
-    });
-}
-
-function sortTable() {
-    const sortValue = sortFilter.value;
-    const tbody = document.querySelector("#donationTable tbody");
-    const rowsArr = Array.from(tbody.querySelectorAll("tr"));
-
-    rowsArr.sort((a, b) => {
-        const aAmount = parseInt(a.dataset.amount);
-        const bAmount = parseInt(b.dataset.amount);
-        const aId = parseInt(a.children[0].innerText.replace("#", "").replace(/^0+/, ""));
-        const bId = parseInt(b.children[0].innerText.replace("#", "").replace(/^0+/, ""));
-        if (sortValue === "highest") return bAmount - aAmount;
-        if (sortValue === "lowest") return aAmount - bAmount;
-        if (sortValue === "oldest") return aId - bId;
-        return bId - aId;
-    });
-
-    tbody.innerHTML = "";
-    rowsArr.forEach(r => tbody.appendChild(r));
-}
-
-[searchInput, categoryFilter, monthFilter, amountFilter].forEach(el => el.addEventListener("input", filterTable));
-sortFilter.addEventListener("change", sortTable);
-
-function deleteDonation(id) {
-    if (confirm(`Are you sure you want to delete donation #${id}? This action cannot be undone.`)) {
-        alert(`Donation #${id} deleted successfully!`);
-        // Here you would make an AJAX call to delete from database
-        location.reload();
-    }
+// Simple confirmation for delete
+function confirmDelete(id) {
+    return confirm('Are you sure you want to delete donation #' + id + '? This action cannot be undone.');
 }
 </script>
 

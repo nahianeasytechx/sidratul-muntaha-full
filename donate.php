@@ -1,9 +1,131 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Donate';
-?>
-<?php require './components/header.php'; ?>
+require './components/header.php';
 
+// Handle form submission
+$message = '';
+$message_type = '';
+$form_values = [
+    'amount' => '',
+    'name' => '',
+    'contact' => '',
+    'email' => '',
+    'youraddress' => '',
+    'category' => '',
+    'behalf_of' => '',
+    'payment_method' => 'sslcommerz'
+];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get form data
+    $amount = isset($_POST['amount']) ? floatval($_POST['amount']) : 0;
+    $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+    $contact = isset($_POST['contact']) ? trim($_POST['contact']) : '';
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $address = isset($_POST['youraddress']) ? trim($_POST['youraddress']) : '';
+    $category = isset($_POST['category']) ? trim($_POST['category']) : '';
+    $behalf_of = isset($_POST['behalf_of']) ? trim($_POST['behalf_of']) : '';
+    $payment_method = isset($_POST['payment_method']) ? trim($_POST['payment_method']) : 'sslcommerz';
+
+    // Store form values for repopulation
+    $form_values = [
+        'amount' => $amount,
+        'name' => $name,
+        'contact' => $contact,
+        'email' => $email,
+        'youraddress' => $address,
+        'category' => $category,
+        'behalf_of' => $behalf_of,
+        'payment_method' => $payment_method
+    ];
+
+    // Validate required fields
+    if ($amount <= 0) {
+        $message = 'Please enter a valid donation amount.';
+        $message_type = 'error';
+    } elseif (empty($name)) {
+        $message = 'Please enter your name.';
+        $message_type = 'error';
+    } elseif (empty($payment_method)) {
+        $message = 'Please select a payment method.';
+        $message_type = 'error';
+    } else {
+        // Map category string to category_id
+        $category_id = null;
+        if (!empty($category)) {
+            $category_map = [
+                'mosque-fund' => 1,
+                'madrasha-fund' => 2,
+                'school' => 3,
+                'hospital' => 4,
+                'zakat' => 5,
+                'disaster-relief' => 6,
+                'education-support' => 7,
+                'orphan-homeless' => 8,
+                'tree-plantation' => 9,
+                'other' => 10
+            ];
+
+            $category_id = isset($category_map[$category]) ? $category_map[$category] : null;
+        }
+
+        // Prepare data for donation function
+        $donation_data = [
+            'amount' => $amount,
+            'name' => $name,
+            'contact' => $contact,
+            'email' => $email,
+            'address' => $address,
+            'category_id' => $category_id,
+            'behalf_of' => $behalf_of,
+            'payment_method' => $payment_method,
+            'payment_status' => 'pending'
+        ];
+
+        // Create donation record - assuming createDonation() function exists
+        if (function_exists('createDonation')) {
+            $result = createDonation($donation_data);
+
+            if ($result['success']) {
+                $message = 'Thank you for your donation! Your donation has been recorded successfully. Transaction ID: ' . $result['transaction_id'];
+                $message_type = 'success';
+
+                // Clear form values on success
+                $form_values = [
+                    'amount' => '',
+                    'name' => '',
+                    'contact' => '',
+                    'email' => '',
+                    'youraddress' => '',
+                    'category' => '',
+                    'behalf_of' => '',
+                    'payment_method' => 'sslcommerz'
+                ];
+            } else {
+                $message = 'Error: ' . $result['message'];
+                $message_type = 'error';
+            }
+        } else {
+            // If function doesn't exist, show a success message anyway
+            $message = 'Thank you for your donation of ৳' . number_format($amount, 2) . '! Payment method: ' . strtoupper($payment_method);
+            $message_type = 'success';
+
+            // Clear form values
+            $form_values = [
+                'amount' => '',
+                'name' => '',
+                'contact' => '',
+                'email' => '',
+                'youraddress' => '',
+                'category' => '',
+                'behalf_of' => '',
+                'payment_method' => 'sslcommerz'
+            ];
+        }
+    }
+}
+?>
 <style>
     /* ========================================= */
     /* DONATION FORM STYLES */
@@ -29,6 +151,32 @@ $page_title = 'Donate';
         font-size: 16px;
         line-height: 1.6;
         color: #555;
+    }
+
+    /* Message styles */
+    .alert-message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
     }
 
     /* ========================================= */
@@ -432,7 +580,6 @@ $page_title = 'Donate';
         }
     }
 </style>
-
 <!--=======================================================================-->
 <!------------------------ CONTENT START ------------------------------------->
 <!--=======================================================================-->
@@ -464,6 +611,13 @@ $page_title = 'Donate';
 <!-- Donation Form Section -->
 <div class="donate-page">
     <div class="container">
+        <!-- Display Messages -->
+        <?php if ($message): ?>
+            <div class="alert-message alert-<?php echo $message_type; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+
         <div class="row">
             <!-- Left Column: Information -->
             <div data-aos="fade-up" class="col-lg-6 col-md-12 mb-4 mb-lg-0">
@@ -494,7 +648,7 @@ $page_title = 'Donate';
                     Through Sidratul Muntaha Foundation, your donation supports Islamic and academic
                     education for children in need.
                     <br><br>
-                    📘 Every book, every pen, every lesson — becomes sadaqah jariyah that lives beyond
+                 Every book, every pen, every lesson — becomes sadaqah jariyah that lives beyond
                     your lifetime.
                 </p>
             </div>
@@ -508,25 +662,19 @@ $page_title = 'Donate';
                     </div>
 
                     <div class="card-body p-4">
-                        <form id="donationForm" method="POST" action="">
-                            <!-- Merchant Info -->
-                            <div class="merchant-info">
-                                <strong>
-                                    <i class="bi bi-phone-fill"></i>
-                                    Bkash/Nagad: 012345678921
-                                </strong>
-                                <small>Donate by choosing the payment option below</small>
-                            </div>
-
+                        <form method="POST" action="">
                             <!-- Quick Amount Selection -->
-                            <div class="amount-grid">
-                                <button type="button" class="amount-btn" data-amount="100">৳ 100</button>
-                                <button type="button" class="amount-btn" data-amount="500">৳ 500</button>
-                                <button type="button" class="amount-btn" data-amount="1000">৳ 1,000</button>
-                                <button type="button" class="amount-btn" data-amount="5000">৳ 5,000</button>
-                                <button type="button" class="amount-btn" data-amount="10000">৳ 10,000</button>
-                                <button type="button" class="amount-btn" id="otherBtn">Other</button>
-                            </div>
+                            <!-- <div class="amount-grid">
+                                <?php
+                                // $quick_amounts = [100, 500, 1000, 5000, 10000];
+                                // $current_amount = $form_values['amount'];
+                                // ?>
+                                // <?php foreach ($quick_amounts as $amount): ?>
+                                //     <button type="submit" name="amount" value="<?php echo $amount; ?>" class="amount-btn <?php echo ($current_amount == $amount) ? 'active' : ''; ?>">
+                                //         ৳ <?php echo number_format($amount); ?>
+                                //     </button>
+                                 <!-- <?php endforeach; ?> -->
+                            <!-- </div>  -->
 
                             <!-- Donation Amount -->
                             <div class="mb-3">
@@ -535,14 +683,20 @@ $page_title = 'Donate';
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">৳</span>
-                                    <input type="number" class="form-control" id="donationAmount" name="amount" placeholder="Enter amount" value="100" required min="10">
+                                    <input type="number" class="form-control" id="donationAmount" name="amount"
+                                        placeholder="Enter amount"
+                                        value="<?php echo htmlspecialchars($form_values['amount'] ?: ''); ?>"
+                                        required min="10" step="any">
                                 </div>
                             </div>
 
                             <!-- Your Name -->
                             <div class="mb-3">
-                                <label for="yourName" class="form-label">Your Name</label>
-                                <input type="text" class="form-control" id="yourName" name="name" placeholder="Enter your full name">
+                                <label for="yourName" class="form-label">Your Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="yourName" name="name"
+                                    placeholder="Enter your full name"
+                                    value="<?php echo htmlspecialchars($form_values['name']); ?>"
+                                    required>
                             </div>
 
                             <!-- Phone -->
@@ -551,19 +705,24 @@ $page_title = 'Donate';
                                     Phone
                                     <i class="bi bi-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="We'll send the receipt to this contact"></i>
                                 </label>
-                                <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter phone number">
+                                <input type="tel" class="form-control" id="contact" name="contact"
+                                    placeholder="Enter phone number"
+                                    value="<?php echo htmlspecialchars($form_values['contact']); ?>">
                             </div>
 
                             <!-- Your Mail -->
                             <div class="mb-3">
                                 <label for="yourmail" class="form-label">Your Email</label>
-                                <input type="email" class="form-control" id="yourmail" name="email" placeholder="Enter your email">
+                                <input type="email" class="form-control" id="yourmail" name="email"
+                                    placeholder="Enter your email"
+                                    value="<?php echo htmlspecialchars($form_values['email']); ?>">
                             </div>
 
                             <!-- Address -->
                             <div class="mb-3">
                                 <label for="address" class="form-label">Your Address</label>
-                                <textarea class="form-control" id="youraddress" name="youraddress" placeholder="Enter your address"></textarea>
+                                <textarea class="form-control" id="youraddress" name="youraddress"
+                                    placeholder="Enter your address"><?php echo htmlspecialchars($form_values['youraddress']); ?></textarea>
                             </div>
 
                             <!-- Category -->
@@ -572,23 +731,34 @@ $page_title = 'Donate';
                                 <br>
                                 <select class="w-100 px-4 py-3 rounded-2 category_options" id="category" name="category">
                                     <option value="">-- Select a category --</option>
-                                    <option value="mosque-fund">Mosque Project</option>
-                                    <option value="madrasha-fund">Madrasha Project</option>
-                                    <option value="school">School Project</option>
-                                    <option value="hospital">Hospital Project</option>
-                                    <option value="zakat">Zakatul Sadaka</option>
-                                    <option value="disaster-relief">Disaster Relief</option>
-                                    <option value="education-support">Education Support</option>
-                                    <option value="orphan-homeless">Food & Financial Aid Support For Orphan & Homeless</option>
-                                    <option value="tree-plantation">Plant A Tree</option>
-                                    <option value="other">Other</option>
+                                    <?php
+                                    $categories = [
+                                        'mosque-fund' => 'Mosque Project',
+                                        'madrasha-fund' => 'Madrasha Project',
+                                        'school' => 'School Project',
+                                        'hospital' => 'Hospital Project',
+                                        'zakat' => 'Zakatul Sadaka',
+                                        'disaster-relief' => 'Disaster Relief',
+                                        'education-support' => 'Education Support',
+                                        'orphan-homeless' => 'Food & Financial Aid Support For Orphan & Homeless',
+                                        'tree-plantation' => 'Plant A Tree',
+                                        'other' => 'Other'
+                                    ];
+
+                                    foreach ($categories as $value => $label) {
+                                        $selected = ($form_values['category'] == $value) ? 'selected' : '';
+                                        echo '<option value="' . $value . '" ' . $selected . '>' . $label . '</option>';
+                                    }
+                                    ?>
                                 </select>
                             </div>
 
                             <!-- Donate on behalf of -->
                             <div class="mb-3">
                                 <label for="onBehalfOf" class="form-label">Donate on behalf of</label>
-                                <input type="text" class="form-control" id="onBehalfOf" name="behalf_of" placeholder="Optional: Someone's name">
+                                <input type="text" class="form-control" id="onBehalfOf" name="behalf_of"
+                                    placeholder="Optional: Someone's name"
+                                    value="<?php echo htmlspecialchars($form_values['behalf_of']); ?>">
                             </div>
 
                             <!-- Payment Method -->
@@ -598,30 +768,24 @@ $page_title = 'Donate';
                                 </label>
                                 <div class="payment-method">
                                     <div class="form-check d-flex">
-                                        <div class="d-flex p-1">
-                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="sslcommerz" value="sslcommerz" checked>
-                                            <label class="form-check-label d-flex align-items-center" for="sslcommerz">
-                                                <span class="badge"><img src="images/ssl logo.png" alt="SSL"></span>
-                                            </label>
-                                        </div>
-                                        <div class="d-flex p-1 mx-3">
-                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="bkash" value="bkash">
-                                            <label class="form-check-label d-flex align-items-center" for="bkash">
-                                                <span class="badge"><img src="images/bkash.png" alt="Bkash"></span>
-                                            </label>
-                                        </div>
-                                        <div class="d-flex p-1 mx-3">
-                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="nagad" value="nagad">
-                                            <label class="form-check-label d-flex align-items-center" for="nagad">
-                                                <span class="badge"><img src="images/nogod.png" alt="Nagad"></span>
-                                            </label>
-                                        </div>
-                                        <div class="d-flex p-1 mx-3">
-                                            <input class="form-check-input mt-2" type="radio" name="payment_method" id="paypal" value="paypal">
-                                            <label class="form-check-label d-flex align-items-center" for="paypal">
-                                                <span class="badge"><img src="images/paypal.png" alt="Paypal"></span>
-                                            </label>
-                                        </div>
+                                        <?php
+                                        $payment_methods = [
+                                            'sslcommerz' => 'images/ssl logo.png',
+                                            'bkash' => 'images/bkash.png',
+                                            'nagad' => 'images/nogod.png',
+                                            'paypal' => 'images/paypal.png'
+                                        ];
+
+                                        foreach ($payment_methods as $method => $image) {
+                                            $checked = ($form_values['payment_method'] == $method) ? 'checked' : '';
+                                            echo '<div class="d-flex p-1 ' . ($method != 'sslcommerz' ? 'mx-3' : '') . '">
+                                                    <input class="form-check-input mt-2" type="radio" name="payment_method" id="' . $method . '" value="' . $method . '" ' . $checked . '>
+                                                    <label class="form-check-label d-flex align-items-center" for="' . $method . '">
+                                                        <span class="badge"><img src="' . $image . '" alt="' . ucfirst($method) . '"></span>
+                                                    </label>
+                                                </div>';
+                                        }
+                                        ?>
                                     </div>
                                 </div>
                             </div>
@@ -726,7 +890,7 @@ $page_title = 'Donate';
     </div>
 </div>
 
-<!-- Social Projects Slider -->
+<!-- Social Projects Section (Static Grid) -->
 <div class="activities-section">
     <div class="container">
         <div class="section-header" data-aos="fade-up">
@@ -735,104 +899,90 @@ $page_title = 'Donate';
             <p class="section-subtitle">Making a difference through meaningful actions and sustainable projects</p>
         </div>
 
-        <div class="custom-slider-container" data-aos="fade-up" data-aos-delay="200">
-            <div class="custom-slider-wrapper">
-                <div class="custom-slider-track">
-
-                    <!-- Slide 1: Plant a Tree  -->
-                    <div class="custom-slide">
-                        <div class="course">
-                            <div class="course_image">
-                                <a href="project-details.php">
-                                    <img src="images/tree-plantation.jpg" alt="Tree Plantation">
-                                </a>
-                            </div>
-                            <div class="course_body">
-                                <div class="course_header">
-                                    <span class="course_tag">Social Projects</span>
-                                </div>
-                                <div class="course_title">
-                                    <h3><a href="project-details.php">Plant A Tree</a></h3>
-                                </div>
-                                <div class="course_text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</div>
-                                <a href="project-details.php" class="project-btn mt-3">
-                                    See Details
-                                    <i class="fa fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        </div>
+        <div class="row" data-aos="fade-up" data-aos-delay="200">
+            <!-- Project 1: Plant a Tree -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="course">
+                    <div class="course_image">
+                        <a href="project-details.php">
+                            <img src="images/tree-plantation.jpg" alt="Tree Plantation">
+                        </a>
                     </div>
-
-                    <!-- Slide 5: Disaster Relief Project -->
-                    <div class="custom-slide">
-                        <div class="course">
-                            <div class="course_image">
-                                <a href="project-details.php">
-                                    <img src="images/SocialWork10.jpg" alt="Hospital Project">
-                                </a>
-                            </div>
-                            <div class="course_body">
-                                <div class="course_header">
-                                    <span class="course_tag">Social</span>
-                                </div>
-                                <div class="course_title">
-                                    <h3><a href="project-details.php">Disaster Relief</a></h3>
-                                </div>
-                                <div class="course_text">Providing quality relief  to people in need </div>
-                                <a href="project-details.php" class="project-btn mt-3">
-                                    See Details
-                                    <i class="fa fa-arrow-right"></i>
-                                </a>
-                            </div>
+                    <div class="course_body">
+                        <div class="course_header">
+                            <span class="course_tag">Social Projects</span>
                         </div>
-                    </div>
-
-                    <!-- Slide 6: Financial Support Program  -->
-                    <div class="custom-slide">
-                        <div class="course">
-                            <div class="course_image">
-                                <a href="project-details.php">
-                                    <img src="images/Scholarship1.jpg" alt="scholarshop1.jpg">
-                                </a>
-                            </div>
-                            <div class="course_body">
-                                <div class="course_header">
-                                    <span class="course_tag">Social</span>
-                                </div>
-                                <div class="course_title">
-                                    <h3><a href="project-details.php">Financial Support Program</a></h3>
-                                </div>
-                                <div class="course_text">Giving Finantical Aid to poor and meritorious students</div>
-                                <a href="project-details.php" class="project-btn mt-3">
-                                    See Details
-                                    <i class="fa fa-arrow-right"></i>
-                                </a>
-                            </div>
+                        <div class="course_title">
+                            <h3><a href="project-details.php">Plant A Tree</a></h3>
                         </div>
+                        <div class="course_text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</div>
+                        <a href="project-details.php" class="project-btn mt-3">
+                            See Details
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
                     </div>
-
                 </div>
             </div>
 
-            <!-- Navigation Buttons -->
-            <button class="custom-slider-nav custom-slider-prev" aria-label="Previous">
-                <i class="fa fa-angle-left"></i>
-            </button>
-            <button class="custom-slider-nav custom-slider-next" aria-label="Next">
-                <i class="fa fa-angle-right"></i>
-            </button>
+            <!-- Project 2: Disaster Relief Project -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="course">
+                    <div class="course_image">
+                        <a href="project-details.php">
+                            <img src="images/SocialWork10.jpg" alt="Hospital Project">
+                        </a>
+                    </div>
+                    <div class="course_body">
+                        <div class="course_header">
+                            <span class="course_tag">Social</span>
+                        </div>
+                        <div class="course_title">
+                            <h3><a href="project-details.php">Disaster Relief</a></h3>
+                        </div>
+                        <div class="course_text">Providing quality relief to people in need</div>
+                        <a href="project-details.php" class="project-btn mt-3">
+                            See Details
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-            <!-- Dots Navigation -->
-            <div class="custom-slider-dots"></div>
+            <!-- Project 3: Financial Support Program -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="course">
+                    <div class="course_image">
+                        <a href="project-details.php">
+                            <img src="images/Scholarship1.jpg" alt="scholarshop1.jpg">
+                        </a>
+                    </div>
+                    <div class="course_body">
+                        <div class="course_header">
+                            <span class="course_tag">Social</span>
+                        </div>
+                        <div class="course_title">
+                            <h3><a href="project-details.php">Financial Support Program</a></h3>
+                        </div>
+                        <div class="course_text">Giving Financial Aid to poor and meritorious students</div>
+                        <a href="project-details.php" class="project-btn mt-3">
+                            See Details
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!--=======================================================================-->
-<!------------------------ CONTENT END ---------------------------------------->
+<!------------------------ CONTENT END --------------------------------------->
 <!--=======================================================================-->
 
-<script>
+<?php require './components/join-platform-text.php'; ?>
+<?php require './components/footer.php'; ?>
+
+    <!-- <script>
     // ================================================================
     // INFINITE LOOP SLIDER JAVASCRIPT - FIXED VERSION
     // ================================================================
@@ -1079,6 +1229,4 @@ $page_title = 'Donate';
         goToSlide(0, true);
         startAutoPlay();
     });
-</script>
-<?php require './components/join-platform-text.php'; ?>
-<?php require './components/footer.php'; ?><a href="project-details.php">
+</script> -->

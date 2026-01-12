@@ -1,1046 +1,905 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'Settings';
+$current_page = basename($_SERVER['PHP_SELF']); 
+$page_title = 'Settings'; 
 require './components/header.php';
 
-// Protect page - redirect to login if not authenticated
-protectPage();
+// Protect page - check admin or user login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 
-// Get current user ID from session
 $user_id = $_SESSION['user_id'];
 
-// Handle form submissions
-$success_message = '';
-$error_message = '';
-
-// DEBUG: Log ALL POST requests
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    error_log("=== POST REQUEST RECEIVED ===");
-    error_log("POST data: " . print_r($_POST, true));
-    error_log("change_password isset: " . (isset($_POST['change_password']) ? 'YES' : 'NO'));
-    error_log("update_profile isset: " . (isset($_POST['update_profile']) ? 'YES' : 'NO'));
-}
-
-// Handle password change - DIRECT DATABASE UPDATE (WORKING METHOD)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
-    error_log("=== Settings Page: Password change attempt ===");
-    
-    $current_password = trim($_POST['current_password']);
-    $new_password = trim($_POST['new_password']);
-    $confirm_password = trim($_POST['confirm_password']);
-    
-    error_log("User ID: " . $user_id);
-    error_log("Current password length: " . strlen($current_password));
-    error_log("New password length: " . strlen($new_password));
-    
-    // Validation
-    $errors = [];
-    
-    if (empty($current_password)) {
-        $errors[] = 'Current password is required';
-    }
-    
-    if (empty($new_password)) {
-        $errors[] = 'New password is required';
-    } elseif (strlen($new_password) < 8) {
-        $errors[] = 'New password must be at least 8 characters long';
-    } elseif (
-        !preg_match('/[A-Z]/', $new_password) ||
-        !preg_match('/[a-z]/', $new_password) ||
-        !preg_match('/[0-9]/', $new_password) ||
-        !preg_match('/[^a-zA-Z0-9]/', $new_password)
-    ) {
-        $errors[] = 'Password must contain: uppercase, lowercase, number, and special character';
-    }
-    
-    if (empty($confirm_password)) {
-        $errors[] = 'Please confirm your new password';
-    } elseif ($new_password !== $confirm_password) {
-        $errors[] = 'New passwords do not match';
-    }
-    
-    if (!empty($errors)) {
-        $error_message = implode('<br>', $errors);
-        error_log("Validation errors: " . implode(', ', $errors));
-        
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    html: '" . addslashes($error_message) . "',
-                    confirmButtonColor: '#ef4444',
-                    confirmButtonText: 'OK'
-                });
-            });
-        </script>";
-    } else {
-        // DIRECT DATABASE UPDATE - SAME AS TEST.PHP
-        $conn = getDatabaseConnection();
-        
-        // Step 1: Get current password hash
-        $check_stmt = $conn->prepare("SELECT password_hash FROM users WHERE id = ?");
-        $check_stmt->bind_param("i", $user_id);
-        $check_stmt->execute();
-        $result = $check_stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            error_log("ERROR: User not found with ID: " . $user_id);
-            echo "<script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'User account not found',
-                        confirmButtonColor: '#ef4444'
-                    });
-                });
-            </script>";
-        } else {
-            $user_data = $result->fetch_assoc();
-            $stored_hash = $user_data['password_hash'];
-            
-            error_log("Stored hash: " . $stored_hash);
-            error_log("Verifying current password...");
-            
-            // Step 2: Verify current password
-            if (!password_verify($current_password, $stored_hash)) {
-                error_log("ERROR: Current password verification FAILED");
-                echo "<script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Incorrect Password',
-                            text: 'The current password you entered is incorrect',
-                            confirmButtonColor: '#ef4444'
-                        });
-                    });
-                </script>";
-            } else {
-                error_log("SUCCESS: Current password verified");
-                
-                // Step 3: Generate new hash
-                $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
-                error_log("New hash generated: " . $new_hash);
-                
-                // Step 4: Update database
-                $update_stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-                $update_stmt->bind_param("si", $new_hash, $user_id);
-                
-                if ($update_stmt->execute()) {
-                    error_log("SUCCESS: Password updated in database");
-                    error_log("Rows affected: " . $update_stmt->affected_rows);
-                    
-                    // Step 5: Verify the update
-                    $verify_stmt = $conn->prepare("SELECT password_hash FROM users WHERE id = ?");
-                    $verify_stmt->bind_param("i", $user_id);
-                    $verify_stmt->execute();
-                    $verify_result = $verify_stmt->get_result();
-                    $updated_hash = $verify_result->fetch_assoc()['password_hash'];
-                    
-                    $verify_check = password_verify($new_password, $updated_hash);
-                    error_log("Verification check: " . ($verify_check ? "PASS" : "FAIL"));
-                    
-                    if ($verify_check) {
-                        echo "<script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Password Changed!',
-                                    text: 'Your password has been updated successfully.',
-                                    confirmButtonColor: '#10b981',
-                                    confirmButtonText: 'OK'
-                                }).then(() => {
-                                    document.getElementById('passwordForm').reset();
-                                    document.getElementById('strengthBar').className = 'password-strength-bar';
-                                    document.getElementById('strengthText').textContent = 'Password strength: None';
-                                    document.getElementById('passwordMatch').style.display = 'none';
-                                });
-                            });
-                        </script>";
-                    } else {
-                        error_log("ERROR: Verification failed after update");
-                        echo "<script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Warning',
-                                    text: 'Password may not have updated correctly. Please try again.',
-                                    confirmButtonColor: '#f59e0b'
-                                });
-                            });
-                        </script>";
-                    }
-                    
-                    $verify_stmt->close();
-                } else {
-                    error_log("ERROR: Database update failed: " . $update_stmt->error);
-                    echo "<script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Database Error',
-                                text: 'Could not update password. Please try again.',
-                                confirmButtonColor: '#ef4444'
-                            });
-                        });
-                    </script>";
-                }
-                
-                $update_stmt->close();
-            }
-        }
-        
-        $check_stmt->close();
-        $conn->close();
-    }
-    
-    error_log("=== End password change attempt ===");
-}
-
 // Handle profile update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    error_log("=== Profile update attempt ===");
-    
-    $full_name = trim($_POST['full_name']);
-    $phone = trim($_POST['phone']);
-    
-    // Update user settings
-    $conn = getDatabaseConnection();
-    $update_stmt = $conn->prepare("UPDATE user_settings SET full_name = ?, phone = ? WHERE user_id = ?");
-    $update_stmt->bind_param("ssi", $full_name, $phone, $user_id);
-    
-    if ($update_stmt->execute()) {
-        $success_message = "Profile updated successfully!";
-        error_log("Profile updated for user ID: " . $user_id);
+$success_msg = '';
+$error_msg = '';
+if (isset($_POST['update_profile'])) {
+    $result = updateUserProfile($user_id, $_POST, $_FILES);
+    if ($result['success']) {
+        $_SESSION['success_msg'] = $result['message'];
+        echo "<script>
+        window.location.href = 'settings.php';
+    </script>";
+        exit;
     } else {
-        $error_message = "Failed to update profile. Please try again.";
-        error_log("Profile update failed: " . $update_stmt->error);
+        $error_msg = $result['message'];
     }
-    
-    $update_stmt->close();
-    $conn->close();
 }
 
-// Handle profile photo upload
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
-    error_log("=== Profile photo upload attempt ===");
-    
-    $file = $_FILES['profile_image'];
-    
-    if ($file['error'] === UPLOAD_ERR_OK) {
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-        
-        if (in_array($file['type'], $allowed_types)) {
-            $upload_dir = '../uploads/profiles/';
-            
-            // Create directory if it doesn't exist
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            
-            // Generate unique filename
-            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $filename = 'profile_' . $user_id . '_' . time() . '.' . $extension;
-            $upload_path = $upload_dir . $filename;
-            
-            if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-                // Update database
-                $relative_path = 'uploads/profiles/' . $filename;
-                $conn = getDatabaseConnection();
-                $update_stmt = $conn->prepare("UPDATE user_settings SET profile_image = ? WHERE user_id = ?");
-                $update_stmt->bind_param("si", $relative_path, $user_id);
-                
-                if ($update_stmt->execute()) {
-                    $success_message = "Profile photo updated successfully!";
-                    error_log("Profile photo updated: " . $relative_path);
-                    
-                    // Redirect to refresh the page and show new image
-                    header("Location: settings.php");
-                    exit();
-                } else {
-                    $error_message = "Failed to save profile photo.";
-                    error_log("Database update failed: " . $update_stmt->error);
-                }
-                
-                $update_stmt->close();
-                $conn->close();
-            } else {
-                $error_message = "Failed to upload file.";
-                error_log("File upload failed");
-            }
+// Handle password change
+if (isset($_POST['change_password'])) {
+    $current = $_POST['current_password'] ?? '';
+    $new = $_POST['new_password'] ?? '';
+    $confirm = $_POST['confirm_password'] ?? '';
+
+    if ($new !== $confirm) {
+        $error_msg = 'New password and confirm password do not match';
+    } else {
+        $result = changePassword($user_id, $current, $new);
+        if ($result['success']) {
+            $_SESSION['success_msg'] = $result['message'];
+               echo "<script>
+        window.location.href = 'settings.php';
+    </script>";
+            exit;
         } else {
-            $error_message = "Invalid file type. Only JPG, PNG, and GIF allowed.";
+            $error_msg = $result['message'];
         }
     }
 }
 
-// Get user settings with JOIN to users table
-$user_settings = getUserSettings($user_id);
-
-// If no settings exist, create default ones
-if (!$user_settings) {
-    $user_data = getUserById($user_id);
-    if ($user_data) {
-        createUserSettings($user_id, $user_data['username']);
-        $user_settings = getUserSettings($user_id);
+// Handle profile image deletion
+if (isset($_POST['delete_image'])) {
+    $result = deleteProfileImage($user_id);
+    if ($result['success']) {
+        $_SESSION['success_msg'] = $result['message'];
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    } else {
+        $error_msg = $result['message'];
     }
 }
 
-// Prepare current user data from joined query result
-$current_user = [
-    'name' => $user_settings['full_name'] ?? ($_SESSION['username'] ?? 'User'),
-    'email' => $user_settings['username'] ?? ($_SESSION['username'] ?? ''),
-    'phone' => $user_settings['phone'] ?? '',
-    'profile_photo' => $user_settings['profile_image'] ?? '../images/default-avatar.png',
-    'joined_date' => isset($user_settings['user_created_at']) ? date('M d, Y', strtotime($user_settings['user_created_at'])) : 'N/A'
-];
+// Get success message from session
+if (isset($_SESSION['success_msg'])) {
+    $success_msg = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
+
+// Get current user settings
+$settings = getUserSettings($user_id);
 ?>
-<style>
-    /* Page Header - Updated to match notices styling */
-    .page-title-section {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 32px;
-        padding: 24px;
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
 
-    .page-title-section .icon-box {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-    }
+<!DOCTYPE html>
+<html lang="en">
 
-    .page-title-section h1 {
-        margin: 0;
-        color: #1e293b;
-        font-weight: 700;
-        font-size: 28px;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .page-title-section .breadcrumb {
-        background: transparent;
-        padding: 0;
-        margin: 8px 0 0 0;
-        font-size: 14px;
-        border: none;
-    }
-
-    /* Settings Cards */
-    .settings-card {
-        background: #fff;
-        padding: 28px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        margin-bottom: 24px;
-    }
-
-    .section-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #f1f5f9;
-    }
-
-    .section-title i {
-        font-size: 20px;
-        color: #10b981;
-    }
-
-    .section-title h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    /* Profile Photo Section */
-    .profile-photo-section {
-        text-align: center;
-        margin-bottom: 32px;
-        padding: 24px;
-        background: #f8fafc;
-        border-radius: 16px;
-        border: 2px dashed #e2e8f0;
-    }
-
-    .profile-photo-container {
-        position: relative;
-        display: inline-block;
-        margin-bottom: 12px;
-    }
-
-    .profile-photo {
-        width: 220px;
-        height: 220px;
-        border-radius: 10%;
-        object-fit: cover;
-        border: 4px solid #fff;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
-
-    .photo-upload-btn {
-        position: absolute;
-        bottom: 8px;
-        right: 0px;
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        border: 2px solid #fff;
-    }
-
-    .photo-upload-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-    }
-
-    .photo-input {
-        display: none;
-    }
-
-    /* Form Styling */
-    .form-label {
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-        font-size: 14px;
-    }
-
-    .input-group {
-        position: relative;
-    }
-
-    .input-group-text {
-        background: #f8fafc;
-        border: 2px solid #e2e8f0;
-        border-right: none;
-        color: #64748b;
-        font-size: 14px;
-        padding: 14px 16px;
-    }
-
-    .form-control {
-        padding: 14px 16px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 15px;
-        transition: all 0.3s ease;
-        background: #fff;
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: #10b981;
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-    }
-
-    .input-group .form-control {
-        border-left: none;
-        border-radius: 0 12px 12px 0;
-    }
-
-    .input-group .input-group-text+.form-control {
-        border-left: 2px solid #e2e8f0;
-        border-radius: 12px;
-    }
-
-    /* Password Toggle */
-    .password-toggle {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #64748b;
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .password-toggle:hover {
-        background: #f1f5f9;
-        color: #10b981;
-    }
-
-    /* Password Strength */
-    .password-strength {
-        margin-top: 8px;
-    }
-
-    .password-strength-bar {
-        height: 6px;
-        background: #e2e8f0;
-        border-radius: 10px;
-        overflow: hidden;
-        margin-bottom: 4px;
-    }
-
-    .password-strength-bar::before {
-        content: '';
-        display: block;
-        height: 100%;
-        width: 0%;
-        background: #ef4444;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-    }
-
-    .password-strength-bar.weak::before {
-        width: 25%;
-        background: #ef4444;
-    }
-
-    .password-strength-bar.fair::before {
-        width: 50%;
-        background: #f59e0b;
-    }
-
-    .password-strength-bar.good::before {
-        width: 75%;
-        background: #10b981;
-    }
-
-    .password-strength-bar.strong::before {
-        width: 100%;
-        background: #059669;
-    }
-
-    /* Button Styling */
-    .btn-save {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 14px 28px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-save:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-        color: white;
-    }
-
-    .btn-cancel {
-        background: linear-gradient(135deg, #64748b, #475569);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 14px 24px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-cancel:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(100, 116, 139, 0.3);
-        color: white;
-    }
-
-    /* Alert Styling */
-    .alert-modern {
-        border-radius: 16px;
-        border: none;
-        padding: 20px 24px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-        margin-bottom: 24px;
-    }
-
-    .alert-info {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-        border-left: 4px solid #3b82f6;
-    }
-
-    .alert-warning {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #92400e;
-        border-left: 4px solid #f59e0b;
-    }
-
-    .alert-success {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-        border-left: 4px solid #10b981;
-    }
-
-    .alert-danger {
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        color: #991b1b;
-        border-left: 4px solid #ef4444;
-    }
-
-    /* Account Info Badges */
-    .info-badge {
-        background: #f8fafc;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px 16px;
-        color: #475569;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .badge-modern {
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .badge-success {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
+        /* Page Title Section - Match Zakat List */
         .page-title-section {
-            flex-direction: column;
-            align-items: flex-start;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .page-title-content {
+            display: flex;
+            align-items: center;
             gap: 16px;
         }
 
-        .settings-card {
-            padding: 20px;
-        }
-
-        .profile-photo {
-            width: 150px;
-            height: 150px;
-        }
-
-        .btn-save,
-        .btn-cancel {
-            width: 100%;
+        .page-title-section .icon-box {
+            width: 60px;
+            height: 60px;
+            background:linear-gradient(135deg, #10b981, #059669);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
         }
 
-        .d-flex.gap-3 {
-            flex-direction: column;
-            gap: 12px !important;
+        .page-title-section h1 {
+            margin: 0;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 28px;
         }
-    }
 
-    @media (max-width: 576px) {
+        .page-title-section .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: 8px 0 0 0;
+            font-size: 14px;
+            border: none;
+        }
 
-        .btn-save,
-        .btn-cancel {
-            width: 100%;
+        .breadcrumb-item a {
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #8b5cf6;
+        }
+
+        .breadcrumb-item.active {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item+.breadcrumb-item::before {
+            content: "›";
+            color: #94a3b8;
+            padding: 0 8px;
+        }
+
+        /* Messages - Match Zakat List */
+        .message {
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 16px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .message-close:hover {
+            opacity: 1;
+            transform: none;
+            box-shadow: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .success::before {
+            content: '✓';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .error::before {
+            content: '✕';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+        }
+
+        /* Card Styling - Match Zakat List */
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            padding: 20px 28px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            color: #fff;
+            gap: 12px;
+        }
+
+        .card-header i {
+            font-size: 20px;
+            color: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .card-header h2 {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 28px;
+        }
+
+        /* Info Box - Match Zakat List */
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box::before {
+            content: 'ℹ';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
             font-size: 14px;
         }
-    }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
         }
 
-        to {
-            opacity: 1;
+        .warning-box::before {
+            content: '⚠';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        /* Profile Image Section */
+        .profile-image-wrapper {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        img.profile {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #f0f0f0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        img.profile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+        }
+
+        .profile-placeholder {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 48px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-placeholder:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        }
+
+        .profile-change-link {
+            color: #8b5cf6;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 8px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .profile-change-link:hover {
+            color: #7c3aed;
+            text-decoration: underline;
+        }
+
+        /* Form Styling - Match Zakat List */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group label .required {
+            color: #ef4444;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+            font-size: 16px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #1e293b;
+            font-family: inherit;
+        }
+
+        input[type="text"].with-icon,
+        input[type="password"].with-icon {
+            padding-left: 42px;
+        }
+
+        textarea.with-icon {
+            padding-left: 42px;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        input[type="text"]:disabled {
+            background: #f8fafc;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        input[type="file"] {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-note {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        /* Buttons - Match Zakat List */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button.btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        button.btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        button.btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        button.btn-secondary:hover {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        button.btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        button.btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        button:active {
             transform: translateY(0);
         }
-    }
 
-    .settings-card {
-        animation: fadeIn 0.5s ease;
-    }
-</style>
+        /* Info Items - Match Zakat List */
+        .info-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
-<div class="content-wrapper">
-    <div class="row">
-        <div class="col-lg-10 mx-auto">
-            <div class="settings">
-                <!-- Success/Error Messages -->
-                <?php if (!empty($success_message)): ?>
-                    <div class="alert-modern alert-success">
-                        <i class="fa-solid fa-circle-check me-2"></i>
-                        <?php echo htmlspecialchars($success_message); ?>
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item-label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-item-value {
+            font-size: 15px;
+            color: #1e293b;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Password Match Error */
+        .passwords-match {
+            font-size: 12px;
+            color: #ef4444;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .passwords-match::before {
+            content: '⚠';
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .page-title-section h1 {
+                font-size: 22px;
+            }
+
+            .card-body {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-title-section .icon-box {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            img.profile,
+            .profile-placeholder {
+                width: 100px;
+                height: 100px;
+            }
+
+            .profile-placeholder {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content-wrapper">
+        <!-- Page Title -->
+        <div class="page-title-section">
+            <div class="page-title-content">
+                <div class="icon-box">
+                    <i class="fa-solid fa-gear"></i>
+                </div>
+                <div>
+                    <h1>Account Settings</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Settings</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <?php if ($success_msg): ?>
+            <div class="message success">
+                <span><?= htmlspecialchars($success_msg) ?></span>
+                <button type="button" class="message-close" onclick="this.parentElement.remove()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+        <?php endif; ?>
+        <?php if ($error_msg): ?>
+            <div class="message error">
+                <span><?= htmlspecialchars($error_msg) ?></span>
+                <button type="button" class="message-close" onclick="this.parentElement.remove()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+        <?php endif; ?>
+
+        <div class="content-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Profile Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-user-circle"></i>
+                        <h2>Profile Information</h2>
                     </div>
-                <?php endif; ?>
-
-                <?php if (!empty($error_message)): ?>
-                    <div class="alert-modern alert-danger">
-                        <i class="fa-solid fa-circle-exclamation me-2"></i>
-                        <?php echo htmlspecialchars($error_message); ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Page Title -->
-                <div class="page-title-section">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="icon-box">
-                            <i class="fa-solid fa-gear"></i>
+                    <div class="card-body">
+                        <div class="profile-image-wrapper">
+                            <?php if (!empty($settings['profile_image']) && file_exists($settings['profile_image'])): ?>
+                                <img src="<?= $settings['profile_image'] ?>" class="profile" alt="Profile">
+                                <form method="post" style="display: inline;">
+                                    <button type="submit" name="delete_image" class="btn-danger">
+                                        <i class="fa-solid fa-trash"></i> Remove
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <div class="profile-placeholder">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                            <?php endif; ?>
+                            <br>
+                            <a href="#" class="profile-change-link" onclick="document.getElementById('profile_image').click(); return false;">
+                                <i class="fa-solid fa-camera"></i> Click the current icon to change Profile Image
+                            </a>
                         </div>
-                        <div>
-                            <h1>Account Settings</h1>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb mb-0">
-                                    <li class="breadcrumb-item"><a href="dashboard.php" class="text-decoration-none">Dashboard</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Settings</li>
-                                </ol>
-                            </nav>
+
+                        <form method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label>Full Name <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-user"></i>
+                                    <input type="text" name="full_name" class="with-icon" value="<?= htmlspecialchars($settings['full_name'] ?? '') ?>" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email Address <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-envelope"></i>
+                                    <input type="text" name="email" class="with-icon" value="<?= htmlspecialchars($settings['email'] ?? '') ?>" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-phone"></i>
+                                    <input type="text" name="phone" class="with-icon" value="<?= htmlspecialchars($settings['phone'] ?? '') ?>" placeholder="+880 123-456-7890">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Address</label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-map-marker-alt"></i>
+                                    <textarea name="address" class="with-icon" placeholder="Enter your full address"><?= htmlspecialchars($settings['address'] ?? '') ?></textarea>
+                                </div>
+                            </div>
+
+                            <input type="file" name="profile_image" id="profile_image" accept="image/*" style="display: none;">
+
+                            <div class="button-group">
+                                <button type="submit" name="update_profile" class="btn-primary">
+                                    <i class="fa-solid fa-save"></i> Save Changes
+                                </button>
+                                <button type="button" class="btn-secondary" onclick="window.location.reload();">
+                                    <i class="fa-solid fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Change Password -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <i class="fa-solid fa-lock"></i>
+                        <h2>Change Password</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-box">
+                            <div>
+                                <strong>Password Requirements:</strong> Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number, and one special character.
+                            </div>
+                        </div>
+
+                        <form method="post">
+                            <div class="form-group">
+                                <label>Current Password <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-lock"></i>
+                                    <input type="password" name="current_password" class="with-icon" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>New Password <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-key"></i>
+                                    <input type="password" name="new_password" class="with-icon" required>
+                                </div>
+                                <div class="form-note">Password strength: N/A</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Confirm New Password <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="input-icon fa-solid fa-check-circle"></i>
+                                    <input type="password" name="confirm_password" class="with-icon" required>
+                                </div>
+                            </div>
+
+                            <div class="passwords-match" id="password-match-error" style="display: none;">
+                                Passwords do not match
+                            </div>
+
+                            <div class="button-group">
+                                <button type="submit" name="change_password" class="btn-primary">
+                                    <i class="fa-solid fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-info-circle"></i>
+                        <h2>Account Information</h2>
+                    </div>
+                    <div class="card-body ">
+                        <div class="info-item d-none">
+                            <div class="info-item-label">Account Status</div>
+                            <div class="info-item-value">
+                                <span class="badge active">Active</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Member Since</div>
+                            <div class="info-item-value">
+                                <i class="fa-solid fa-calendar"></i> <?= htmlspecialchars($settings['created_at'] ?? 'June 12, 2023') ?>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Role</div>
+                            <div class="info-item-value">
+                                <i class="fa-solid fa-user-shield"></i> <?= htmlspecialchars($settings['role'] ?? 'Administrator') ?>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <!-- Profile Information -->
-                    <div class="col-md-8">
-                  
-                        <div class="settings-card">
-                            <div class="section-title">
-                                <i class="fa-solid fa-user-circle"></i>
-                                <h3>Profile Information</h3>
-                            </div>
-
-                            <!-- Profile Photo -->
-                            <div class="profile-photo-section">
-                                <div class="profile-photo-container">
-                                    <img src="<?php echo htmlspecialchars($current_user['profile_photo']); ?>" alt="Profile Photo" class="profile-photo" id="profilePhotoPreview">
-                                    <label for="profilePhotoInput" class="photo-upload-btn">
-                                        <i class="fa-solid fa-camera"></i>
-                                    </label>
-                                </div>
-                                <p class="text-muted small">Click the camera icon to change <strong>Profile Photo</strong></p>
-                            </div>
-
-                            <form id="profileForm" method="POST" enctype="multipart/form-data">
-                                <input type="file" id="profilePhotoInput" name="profile_image" class="photo-input" accept="image/*">
-
-                                <!-- Full Name -->
-                                <div class="mb-4">
-                                    <label for="fullName" class="form-label">
-                                        Full Name <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fa-solid fa-user"></i>
-                                        </span>
-                                        <input
-                                            type="text"
-                                            class="form-control"
-                                            id="fullName"
-                                            name="full_name"
-                                            value="<?php echo htmlspecialchars($current_user['name']); ?>"
-                                            required
-                                            placeholder="Enter your full name">
-                                    </div>
-                                </div>
-
-                                <!-- Email (Read-only) -->
-                                <div class="mb-4">
-                                    <label for="email" class="form-label">
-                                        Email Address
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fa-solid fa-envelope"></i>
-                                        </span>
-                                        <input
-                                            type="email"
-                                            class="form-control"
-                                            id="email"
-                                            value="<?php echo htmlspecialchars($current_user['email']); ?>"
-                                            readonly>
-                                    </div>
-                                    <small class="text-muted mt-2 d-block">Email cannot be changed. Contact system administrator if needed.</small>
-                                </div>
-
-                                <!-- Phone Number -->
-                                <div class="mb-4">
-                                    <label for="phone" class="form-label">
-                                        Phone Number
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fa-solid fa-phone"></i>
-                                        </span>
-                                        <input
-                                            type="tel"
-                                            class="form-control"
-                                            id="phone"
-                                            name="phone"
-                                            value="<?php echo htmlspecialchars($current_user['phone']); ?>"
-                                            placeholder="+880 1234-567890">
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-3 mt-4">
-                                    <button type="submit" class="btn-save" name="update_profile">
-                                        <i class="fa-solid fa-floppy-disk"></i>Save Changes
-                                    </button>
-                                    <button type="button" class="btn-cancel" onclick="window.location.reload()">
-                                        <i class="fa-solid fa-xmark"></i>Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Change Password -->
-                        <div class="settings-card">
-                            <div class="section-title">
-                                <i class="fa-solid fa-lock"></i>
-                                <h3>Change Password</h3>
-                            </div>
-
-                            <div class="alert-modern alert-info mb-4">
-                                <i class="fa-solid fa-circle-info me-2"></i>
-                                <strong>Password Requirements:</strong> Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number, and one special character.
-                            </div>
-
-                            <form id="passwordForm" method="POST" action="">
-                                <!-- Current Password -->
-                                <div class="mb-4">
-                                    <label for="currentPassword" class="form-label">
-                                        Current Password <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group position-relative">
-                                        <span class="input-group-text">
-                                            <i class="fa-solid fa-key"></i>
-                                        </span>
-                                        <input
-                                            type="password"
-                                            class="form-control"
-                                            id="currentPassword"
-                                            name="current_password"
-                                            required
-                                            placeholder="Enter current password"
-                                            autocomplete="current-password">
-                                        <span class="password-toggle" onclick="togglePassword('currentPassword')">
-                                            <i class="fa-solid fa-eye" id="currentPasswordIcon"></i>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- New Password -->
-                                <div class="mb-4">
-                                    <label for="newPassword" class="form-label">
-                                        New Password <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group position-relative">
-                                        <span class="input-group-text">
-                                            <i class="fa-solid fa-lock"></i>
-                                        </span>
-                                        <input
-                                            type="password"
-                                            class="form-control"
-                                            id="newPassword"
-                                            name="new_password"
-                                            required
-                                            minlength="8"
-                                            placeholder="Enter new password"
-                                            autocomplete="new-password"
-                                            oninput="checkPasswordStrength(this.value)">
-                                        <span class="password-toggle" onclick="togglePassword('newPassword')">
-                                            <i class="fa-solid fa-eye" id="newPasswordIcon"></i>
-                                        </span>
-                                    </div>
-                                    <div class="password-strength mt-3">
-                                        <div class="password-strength-bar" id="strengthBar"></div>
-                                    </div>
-                                    <small class="text-muted mt-2 d-block" id="strengthText">Password strength: None</small>
-                                </div>
-
-                                <!-- Confirm Password -->
-                                <div class="mb-4">
-                                    <label for="confirmPassword" class="form-label">
-                                        Confirm New Password <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group position-relative">
-                                        <span class="input-group-text">
-                                            <i class="fa-solid fa-lock"></i>
-                                        </span>
-                                        <input
-                                            type="password"
-                                            class="form-control"
-                                            id="confirmPassword"
-                                            name="confirm_password"
-                                            required
-                                            placeholder="Confirm new password"
-                                            autocomplete="new-password"
-                                            oninput="checkPasswordMatch()">
-                                        <span class="password-toggle" onclick="togglePassword('confirmPassword')">
-                                            <i class="fa-solid fa-eye" id="confirmPasswordIcon"></i>
-                                        </span>
-                                    </div>
-                                    <small class="text-danger mt-2 d-block" id="passwordMatch" style="display: none;">
-                                        <i class="fa-solid fa-circle-exclamation me-1"></i>Passwords do not match
-                                    </small>
-                                </div>
-
-                                <button type="submit" class="btn-save" name="change_password" value="1">
-                                    <i class="fa-solid fa-shield-halved"></i>Change Password
-                                </button>
-                            </form>
-                        </div>
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <h2>Security Tip</h2>
                     </div>
-
-                    <!-- Account Info Sidebar -->
-                    <div class="col-md-4">
-                        <div class="settings-card">
-                            <div class="section-title">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <h3>Account Information</h3>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Account Status</label>
-                                <div>
-                                    <span class="badge-modern badge-success">Active</span>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Member Since</label>
-                                <div class="info-badge">
-                                    <i class="fa-solid fa-calendar-days"></i>
-                                    <?php echo htmlspecialchars($current_user['joined_date']); ?>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Role</label>
-                                <div class="info-badge">
-                                    <i class="fa-solid fa-user-shield"></i>
-                                    Administrator
-                                </div>
-                            </div>
-
-                            <hr class="my-4">
-
-                            <div class="alert-modern alert-warning">
-                                <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                                <strong>Security Tip:</strong> Never share your password with anyone. Change your password regularly for better security.
-                            </div>
+                    <div class="card-body">
+                        <div class="warning-box">
+                            Never share your password with anyone. Change your password regularly for better security.
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
-<script>
-    // Password toggle functionality
-    function togglePassword(inputId) {
-        const input = document.getElementById(inputId);
-        const icon = document.getElementById(inputId + 'Icon');
 
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            input.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
+    <script>
+        // Password match validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const newPass = document.querySelector('input[name="new_password"]');
+            const confirmPass = document.querySelector('input[name="confirm_password"]');
+            const errorMsg = document.getElementById('password-match-error');
 
-    // Password strength checker
-    function checkPasswordStrength(password) {
-        const strengthBar = document.getElementById('strengthBar');
-        const strengthText = document.getElementById('strengthText');
-
-        let strength = 0;
-        let text = '';
-
-        if (password.length >= 8) strength += 25;
-        if (password.match(/[a-z]/)) strength += 25;
-        if (password.match(/[A-Z]/)) strength += 25;
-        if (password.match(/[0-9]/)) strength += 15;
-        if (password.match(/[^a-zA-Z0-9]/)) strength += 10;
-
-        strengthBar.className = 'password-strength-bar';
-
-        if (strength < 50) {
-            strengthBar.classList.add('weak');
-            text = 'Weak';
-        } else if (strength < 75) {
-            strengthBar.classList.add('fair');
-            text = 'Fair';
-        } else if (strength < 90) {
-            strengthBar.classList.add('good');
-            text = 'Good';
-        } else {
-            strengthBar.classList.add('strong');
-            text = 'Strong';
-        }
-
-        strengthText.textContent = `Password strength: ${text}`;
-    }
-
-    // Password match checker
-    function checkPasswordMatch() {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const matchText = document.getElementById('passwordMatch');
-
-        if (confirmPassword && newPassword !== confirmPassword) {
-            matchText.style.display = 'block';
-        } else {
-            matchText.style.display = 'none';
-        }
-    }
-
-    // Profile photo preview
-    document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('profilePhotoPreview').src = e.target.result;
+            if (confirmPass) {
+                confirmPass.addEventListener('input', function() {
+                    if (newPass.value !== confirmPass.value && confirmPass.value.length > 0) {
+                        errorMsg.style.display = 'block';
+                    } else {
+                        errorMsg.style.display = 'none';
+                    }
+                });
             }
-            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
 
-            // Auto-submit form when photo is selected
-            document.getElementById('profileForm').submit();
-        }
-    });
-</script>
-<?php require './components/footer.php'; ?>
+</html>

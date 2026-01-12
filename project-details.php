@@ -1,15 +1,36 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']); // Get the current page name
-$page_title = 'Project Details'; // Set the page title
+$current_page = basename($_SERVER['PHP_SELF']);
+$page_title = 'Project Details';
+ require './components/header.php'; 
+// Get activity ID from URL
+$activity_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+
+// Fetch activity from database
+$activity = getActivityById($activity_id);
+
+// Check if activity exists
+if (!$activity) {
+    echo "<script>
+    window.location.href='index.php'
+    </script>";
+    exit();
+}
+
+// Decode sections data
+$sections = [];
+if (!empty($activity['sections_data'])) {
+    $sections = json_decode($activity['sections_data'], true);
+}
 ?>
-<?php require './components/header.php'; ?>
+
+
 <style>
     .parallax-window {
         min-height: 308px;
         background: transparent;
     }
 
-    
     /* Program Details */
     .program-details h2 {
         font-size: 2.25rem;
@@ -20,7 +41,7 @@ $page_title = 'Project Details'; // Set the page title
 
     .program-details img {
         margin-top: 0;
-        margin-bottom:20px;
+        margin-bottom: 20px;
         border-radius: 20px;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease;
@@ -95,7 +116,7 @@ $page_title = 'Project Details'; // Set the page title
         margin-top: 4rem !important;
     }
 
-    .scholarship-btn{
+    .scholarship-btn {
         padding: 10px 25px;
         background: #00a854;
         color: white;
@@ -104,9 +125,9 @@ $page_title = 'Project Details'; // Set the page title
         border-radius: 15px;
         text-decoration: none;
     }
-    .scholarship-btn:hover{
 
-color: white;
+    .scholarship-btn:hover {
+        color: white;
     }
 
     /* Responsive */
@@ -120,13 +141,7 @@ color: white;
         }
     }
 </style>
-<!--=======================================================================-->
-<!------------------------ Your Content Start From Here --------------------->
-<!--=======================================================================-->
-
-
-<!-- Home -->
-
+<!-- Home Section -->
 <div class="home">
     <div class="home_background parallax_background parallax-window" data-parallax="scroll" data-image-src="images/about.jpg" data-speed="0.8"></div>
     <div class="home_container">
@@ -134,11 +149,11 @@ color: white;
             <div class="row">
                 <div class="col">
                     <div class="home_content text-center">
-                        <div class="home_title">School Project</div>
+                        <div class="home_title"><?php echo htmlspecialchars($activity['title']); ?></div>
                         <div class="breadcrumbs">
                             <ul>
                                 <li><a href="projects.php">Projects</a></li>
-                                <li>Project</li>
+                                <li><?php echo htmlspecialchars($activity['title']); ?></li>
                             </ul>
                         </div>
                     </div>
@@ -151,12 +166,31 @@ color: white;
 <!-- Project details start -->
 <div class="container">
     <div class="row mt-5">
+        <!-- Left Column: Image, Objectives, and Description -->
         <div class="col-md-12 col-lg-6 program-details">
-            <h2>Project Details</h2>
-            <img src="images/school.png" alt="" class="w-75 rounded-5">
-            <p class="fs-6 fw-bold py-2">Sidratul School Development Project is an institutional Project for self-development and skill enhancement. This affiliate of the Sidratul Foundation, registered with the National Skill Development Authority, was established in 2022. Since its inception, it has been working to bring information technology and technical education to all levels of society, with the goal of eliminating unemployment and creating employment opportunities.</p>
-            <p>The specialty of this institute is that it provides computer, information technology, and various technical training courses in a completely separate environment and with suitable curricula for both men and women. There are also special scholarships for talented and underprivileged students, enabling them to receive training free of charge.</p>
-            <p>By developing skilled human resources, this institute has already started to solidify its position as an effective tool for alleviating the country's unemployment problem and fostering self-employment</p>
+            <h2><?php echo htmlspecialchars($activity['title']); ?> Details</h2>
+
+            <!-- Activity Image -->
+            <?php if (!empty($activity['image'])): ?>
+                <img src="uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>"
+                    alt="<?php echo htmlspecialchars($activity['title']); ?>"
+                    class="w-100 rounded-5">
+            <?php else: ?>
+                <img src="images/school.png" alt="Default Project Image" class="w-100 rounded-5">
+            <?php endif; ?>
+
+            <!-- Objectives -->
+            <div class="mt-4">
+                <p><?php echo nl2br(htmlspecialchars($activity['objectives'])); ?></p>
+            </div>
+
+
+            <!-- Detailed Description -->
+            <div class="mt-4">
+                <p><?php echo nl2br(htmlspecialchars($activity['description'])); ?></p>
+            </div>
+
+            <!-- Static Scholarship Button -->
             <div class="mt-4">
                 <a href="scholarship.php" class="scholarship-btn">
                     Get a Scholarship
@@ -164,97 +198,66 @@ color: white;
             </div>
         </div>
 
-
+        <!-- Right Column: Dynamic Sections -->
         <div data-aos="fade-up" class="col-md-12 col-lg-6 mt-5">
-            <div class="p-4 card-bg">
-                <h4>Project Goals & Objectives</h4>
-                <ul>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Creativity Enhancement
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                       Elevating Skill
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Employment Creation
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Sustainable Poverty Reduction
-                    </li>
-                </ul>
-            </div>
-            <div class="mt-4 p-4 card-bg">
-                <h4>Expenditure Sectors</h4>
-                <ul>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Land purchase for the institute
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Construction of the institute's infrastructure
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Smart Tailoring and Fashion Design
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Procurement of equipment
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Covering accommodation and food costs for trainees through scholarships
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Management expenses
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Driving Training
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Chef and Kitchen Management
-                    </li>
-                </ul>
-            </div>
-            <div class="mt-4 p-4 card-bg">
-                <h4>Expenditure Sectors</h4>
-                <ul>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Land purchase for the institute
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Construction of the institute's infrastructure
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Procurement of equipment
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Covering accommodation and food costs for trainees through scholarship
-                    </li>
-                    <li class="d-flex gap-2 fs-6">
-                        <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                        Management expenses
-                    </li>
-                </ul>
-            </div>
+            <?php if (!empty($sections)): ?>
+                <?php foreach ($sections as $index => $section): ?>
+                    <div class="mt-4 p-4 card-bg">
+                        <h4><?php echo htmlspecialchars($section['title']); ?></h4>
+                        <ul>
+                            <?php foreach ($section['items'] as $item): ?>
+                                <li class="d-flex gap-2 fs-6">
+                                    <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                                    <?php echo htmlspecialchars($item); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Default sections if no dynamic sections exist -->
+                <div class="mt-4 p-4 card-bg">
+                    <h4>Expenditure Sectors</h4>
+                    <ul>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Land purchase for the institute
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Construction of the institute's infrastructure
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Smart Tailoring and Fashion Design
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Procurement of equipment
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Covering accommodation and food costs for trainees through scholarships
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Management expenses
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Driving Training
+                        </li>
+                        <li class="d-flex gap-2 fs-6">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                            Chef and Kitchen Management
+                        </li>
+                    </ul>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 <!-- Program details end -->
-<!--========================================================================-->
-<!---------------------------- Your Content End Here ------------------------->
-<!--========================================================================-->
+
 <?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?>

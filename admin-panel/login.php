@@ -88,7 +88,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
       <!-- Password input -->
       <div class="input_box">
         <label for="password">Password</label>
-        <input name="password" type="password" id="password" placeholder="Enter password" required />
+   <input name="password"
+       type="password"
+       id="password"
+       placeholder="Enter password"
+       required
+       autocomplete="current-password" />
       </div>
 
       <!-- Login button -->

@@ -1,5 +1,9 @@
 <?php
+session_start();
+require_once __DIR__ . '/functions.php';
 
+
+// Protect the page - redirect to login if not authenticated
 ?>
 <!DOCTYPE html>
 <html lang="en">

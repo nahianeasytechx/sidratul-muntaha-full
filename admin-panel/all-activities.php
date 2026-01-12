@@ -539,11 +539,11 @@ $socialCount = getActivityCountByType('Social');
       <div class="w-100 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div class="d-flex align-items-center gap-3">
           <div>
-            <h1><i class="fa-solid fa-calendar-days me-2"></i>All Activities</h1>
+            <h1><i class="fa-solid fa-calendar-days me-2"></i>All Projects</h1>
             <nav aria-label="breadcrumb">
               <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Activities</li>
+                <li class="breadcrumb-item active" aria-current="page">Projects</li>
               </ol>
             </nav>
           </div>
@@ -551,7 +551,7 @@ $socialCount = getActivityCountByType('Social');
 
         <div class="d-flex gap-2">
           <a class="btn btn-add-new" href="add-activity.php">
-            <i class="fa-solid fa-plus me-2"></i>Add New Activity
+            <i class="fa-solid fa-plus me-2"></i>Add New Project
           </a>
         </div>
       </div>
@@ -587,7 +587,7 @@ $socialCount = getActivityCountByType('Social');
       <div class="stat-card-modern total">
         <div class="stat-content-flex">
           <div class="stat-info">
-            <div class="stat-label">Total Activities</div>
+            <div class="stat-label">Total Projects</div>
             <h3><?= $totalActivities ?></h3>
           </div>
           <div class="stat-icon-modern">

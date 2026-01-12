@@ -405,15 +405,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
       <div class="icon-box">
         <i class="mdi mdi-calendar-account-outline"></i>
       </div>
-      <h1>Add New Activity</h1>
+      <h1>Add New Project</h1>
     </div>
 
     <div class="row">
       <div class="col-lg-10 col-xl-9 mx-auto">
         <div class="notice-form-container">
           <div class="form-header">
-            <h1>Create New Activity</h1>
-            <p>Fill in the details below to publish a new activity</p>
+            <h1>Create New Project</h1>
+            <p>Fill in the details below to publish a new project</p>
           </div>
 
 <?php
@@ -553,7 +553,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
           <form action="" method="post" enctype="multipart/form-data" id="activityForm">
             <div class="modern-form-group">
-              <label><i class="fa-solid fa-heading"></i> Activity Title</label>
+              <label><i class="fa-solid fa-heading"></i> Project Title</label>
               <input type="text" name="title" class="modern-input" placeholder="Enter activity title..." required
                 value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>">
             </div>
@@ -581,13 +581,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="modern-form-group">
-              <label><i class="fa-solid fa-image"></i> Activity Image (Optional)</label>
+              <label><i class="fa-solid fa-image"></i> Project Image (Optional)</label>
               <input type="file" name="image" class="modern-input" accept="image/*">
               <small class="text-muted">Upload JPG, PNG, GIF or WEBP image (max 5MB)</small>
             </div>
 
             <div class="modern-form-group">
-              <label><i class="fa-solid fa-bullseye"></i> Objectives (Activity Goals)</label>
+              <label><i class="fa-solid fa-bullseye"></i> Objectives (Project Goals)</label>
               <textarea name="objectives" class="modern-textarea" rows="3" placeholder="Write the activity objectives here..." required><?php echo isset($_POST['objectives']) ? htmlspecialchars($_POST['objectives']) : ''; ?></textarea>
             </div>
 
@@ -619,7 +619,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fa-solid fa-times"></i> Cancel
               </button>
               <button type="submit" class="btn-submit" name="submit_activity">
-                <i class="fa-solid fa-paper-plane"></i> Create Activity
+                <i class="fa-solid fa-paper-plane"></i> Create Project
               </button>
             </div>
           </form>

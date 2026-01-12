@@ -230,7 +230,7 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
     }
 
     .table-header {
-     background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, #10b981, #059669);
     }
 
     .table-header th {
@@ -420,6 +420,9 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
 </style>
 
 <div class="content-wrapper">
+    <div class="feature-alert alert alert-danger fs-1">
+        ⚠️ Feature in Progress
+    </div>
     <div class="donation-list">
 
         <!-- Page Header -->
@@ -496,7 +499,7 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
         <!-- ✅ Filters -->
         <div class="filter-card">
             <div class="filter-title mb-3">
-              Filters & Search
+                Filters & Search
             </div>
             <div class="row g-3">
                 <div class="col-md-3">
@@ -615,12 +618,12 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
             </td>
             </tr>
         <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+        </tbody>
+        </table>
         </div>
-
     </div>
+
+</div>
 </div>
 
 <script>

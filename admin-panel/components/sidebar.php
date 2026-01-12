@@ -41,16 +41,16 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#activities" aria-expanded="false" aria-controls="activities">
-        <span class="menu-title">Activities</span>
+        <span class="menu-title">Projects</span>
         <i class="mdi mdi-format-list-bulleted menu-icon"></i>
       </a>
       <div class="collapse" id="activities">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item">
-            <a class="nav-link" href="add-activity.php">Add Activity</a>
+            <a class="nav-link" href="add-activity.php">Add Project</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="all-activities.php">All Activities </a>
+            <a class="nav-link" href="all-activities.php">All Projects </a>
           </li>
         </ul>
       </div>

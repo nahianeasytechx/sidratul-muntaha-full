@@ -586,10 +586,6 @@ if (isset($_GET['edit_id'])) {
                                     <a href="?edit_id=<?= $slider['id'] ?>" class="btn btn-primary btn-sm">
                                         <i class="fa-solid fa-pen me-1"></i>Edit
                                     </a>
-                                    <a href="toggle-slider.php?id=<?= $slider['id'] ?>" class="btn btn-warning btn-sm">
-                                        <i class="fa-solid fa-toggle-<?= $slider['status'] === 'active' ? 'on' : 'off' ?> me-1"></i>
-                                        <?= $slider['status'] === 'active' ? 'Deactivate' : 'Activate' ?>
-                                    </a>
                                     <a href="slider.php?delete_id=<?= $slider['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this slider?');">
                                         <i class="fa-solid fa-trash me-1"></i>Delete
                                     </a>

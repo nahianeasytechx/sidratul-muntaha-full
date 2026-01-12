@@ -687,12 +687,12 @@ if (!empty($activity['sections_data'])) {
             <div class="w-100 d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <div>
-                        <h1><i class="fa-solid fa-eye me-2"></i>View Activity</h1>
+                        <h1><i class="fa-solid fa-eye me-2"></i>View Project</h1>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
                                 <li class="breadcrumb-item"><a href="all-activities.php" class="text-decoration-none">All Activities</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">View Activity</li>
+                                <li class="breadcrumb-item active" aria-current="page">View Project</li>
                             </ol>
                         </nav>
                     </div>
@@ -764,38 +764,6 @@ if (!empty($activity['sections_data'])) {
                     </div>
                 </div>
                 <?php endif; ?>
-
-                <!-- Additional Information Grid -->
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="icon">
-                            <i class="fa-solid fa-calendar"></i>
-                        </div>
-                        <div class="label">Activity Date</div>
-                        <div class="value"><?= !empty($activity['activity_date']) ? date('F d, Y', strtotime($activity['activity_date'])) : 'Not set' ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="icon">
-                            <i class="fa-solid fa-clock"></i>
-                        </div>
-                        <div class="label">Time</div>
-                        <div class="value"><?= !empty($activity['time']) ? htmlspecialchars($activity['time']) : 'Not set' ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="icon">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
-                        <div class="label">Location</div>
-                        <div class="value"><?= !empty($activity['location']) ? htmlspecialchars($activity['location']) : 'Not set' ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="icon">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                        <div class="label">Participants</div>
-                        <div class="value"><?= !empty($activity['participants']) ? htmlspecialchars($activity['participants']) : 'Not set' ?></div>
-                    </div>
-                </div>
 
 
 
@@ -891,7 +859,7 @@ if (!empty($activity['sections_data'])) {
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
                     <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn btn-primary">
-                        <i class="fa-solid fa-pen-to-square"></i> Edit Activity
+                        <i class="fa-solid fa-pen-to-square"></i> Edit Project
                     </a>
                 </div>
             </div>

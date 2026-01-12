@@ -453,6 +453,9 @@ if (isset($_GET['edit'])) {
 
 <div class="content-wrapper">
     <!-- Page Header -->
+     <div class="feature-alert alert alert-danger fs-1">
+    ⚠️ Feature in Progress
+</div>
     <div class="page-header">
         <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
             <div class="d-flex gap-3">
@@ -543,7 +546,7 @@ if (isset($_GET['edit'])) {
                                     <?php echo $edit_category ? 'Update Category' : 'Add Category'; ?>
                                 </button>
                                 <?php if ($edit_category): ?>
-                                    <a href="donation-categories.php" class="btn btn-secondary">Cancel</a>
+                                    <a href="donation-categories.php" class="btn btn-secondary" style="height: 100%;">Cancel</a>
                                 <?php endif; ?>
                             </div>
                         </form>

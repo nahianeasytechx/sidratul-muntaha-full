@@ -1,7 +1,20 @@
 <?php
 
-require_once "../admin-panel/database/dbConnection.php";
-
+    function getDatabaseConnection() {
+    $host = 'localhost';
+    $username = 'root';
+    $password = '';
+    $database = 'sidratul_muntaha';
+    
+    $conn = new mysqli($host, $username, $password, $database);
+    
+    if ($conn->connect_error) {
+        error_log("Database connection failed: " . $conn->connect_error);
+        return null;
+    }
+    
+    return $conn;
+}
 
 function authenticateUser($username, $password)
 {
@@ -59,72 +72,7 @@ function authenticateUser($username, $password)
 /**
  * Register a new user
  */
-function registerUser($username, $password)
-{
-    $conn = getDatabaseConnection();
 
-    if (!$conn) {
-        return [
-            'success' => false,
-            'message' => 'Database connection error.'
-        ];
-    }
-
-    // Validate inputs
-    if (empty($username) || empty($password)) {
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'All fields are required'
-        ];
-    }
-
-    if (strlen($password) < 6) {
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'Password must be at least 6 characters long'
-        ];
-    }
-
-    // Check if username already exists
-    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-
-    if ($stmt->get_result()->num_rows > 0) {
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'Username already exists'
-        ];
-    }
-    $stmt->close();
-
-    // Hash password
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
-    // Insert new user
-    $stmt = $conn->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
-    $stmt->bind_param("ss", $username, $password_hash);
-
-    if ($stmt->execute()) {
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => true,
-            'message' => 'User registered successfully'
-        ];
-    } else {
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'Registration failed.'
-        ];
-    }
-}
 
 /**
  * Check if user is logged in
@@ -174,72 +122,6 @@ function protectPage()
 /**
  * Change user password
  */
-function changePassword($user_id, $old_password, $new_password)
-{
-    $conn = getDatabaseConnection();
-
-    if (!$conn) {
-        return [
-            'success' => false,
-            'message' => 'Database connection error'
-        ];
-    }
-
-    // Verify old password
-    $stmt = $conn->prepare("SELECT password_hash FROM users WHERE id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows !== 1) {
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'User not found'
-        ];
-    }
-
-    $user = $result->fetch_assoc();
-    $stmt->close();
-
-    if (!password_verify($old_password, $user['password_hash'])) {
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'Current password is incorrect'
-        ];
-    }
-
-    if (strlen($new_password) < 6) {
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'New password must be at least 6 characters long'
-        ];
-    }
-
-    // Update password
-    $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
-    $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-    $stmt->bind_param("si", $new_hash, $user_id);
-
-    if ($stmt->execute()) {
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => true,
-            'message' => 'Password changed successfully'
-        ];
-    }
-
-    $stmt->close();
-    $conn->close();
-    return [
-        'success' => false,
-        'message' => 'Password change failed'
-    ];
-}
 
 
 
@@ -1745,33 +1627,42 @@ function getDonationCategoryCount($status = null)
 /**
  * Get user settings with user data from users table
  */
+
+
+/**
+ * Get user settings with user data - FIXED
+ */
+
+
+/**
+ * Get user settings with linked username
+ */
 function getUserSettings($user_id)
 {
     $conn = getDatabaseConnection();
+    if (!$conn) return null;
 
-    if (!$conn) {
-        return null;
-    }
-
-    // JOIN settings with users table to get complete user data
     $stmt = $conn->prepare("
         SELECT 
-            s.*, 
+            s.id,
+            s.user_id,
+            s.full_name,
+            s.phone,
+            s.email,
+            s.address,
+            s.profile_image,
+            s.updated_at,
             u.username, 
             u.created_at as user_created_at
         FROM settings s
         LEFT JOIN users u ON s.user_id = u.id
         WHERE s.user_id = ?
     ");
-    
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    $settings = null;
-    if ($result->num_rows > 0) {
-        $settings = $result->fetch_assoc();
-    }
+    $settings = $result->fetch_assoc() ?? null;
 
     $stmt->close();
     mysqli_close($conn);
@@ -1779,25 +1670,17 @@ function getUserSettings($user_id)
 }
 
 /**
- * Get user data from users table only
+ * Get user by ID
  */
 function getUserById($user_id)
 {
     $conn = getDatabaseConnection();
-
-    if (!$conn) {
-        return null;
-    }
+    if (!$conn) return null;
 
     $stmt = $conn->prepare("SELECT id, username, created_at FROM users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $result = $stmt->get_result();
-
-    $user = null;
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-    }
+    $user = $stmt->get_result()->fetch_assoc() ?? null;
 
     $stmt->close();
     mysqli_close($conn);
@@ -1805,18 +1688,27 @@ function getUserById($user_id)
 }
 
 /**
- * Create user settings
+ * Ensure settings exist
  */
-function createUserSettings($user_id, $username)
+function createUserSettings($user_id, $full_name)
 {
     $conn = getDatabaseConnection();
+    if (!$conn) return false;
 
-    if (!$conn) {
-        return false;
+    // Already exists?
+    $check = $conn->prepare("SELECT id FROM settings WHERE user_id = ?");
+    $check->bind_param("i", $user_id);
+    $check->execute();
+    $exists = $check->get_result()->num_rows > 0;
+    $check->close();
+
+    if ($exists) {
+        mysqli_close($conn);
+        return true;
     }
 
     $stmt = $conn->prepare("INSERT INTO settings (user_id, full_name) VALUES (?, ?)");
-    $stmt->bind_param("is", $user_id, $username);
+    $stmt->bind_param("is", $user_id, $full_name);
     $success = $stmt->execute();
 
     $stmt->close();
@@ -1826,277 +1718,417 @@ function createUserSettings($user_id, $username)
 
 /**
  * Update user profile
+ * This updates:
+ * - settings.full_name, phone, profile_image
+ * - users.username = settings.full_name
  */
 function updateUserProfile($user_id, $data, $files = null)
 {
     $conn = getDatabaseConnection();
+    if (!$conn) return ['success'=>false, 'message'=>'Database connection error'];
 
-    if (!$conn) {
-        return [
-            'success' => false,
-            'message' => 'Database connection error.'
-        ];
+    // Ensure settings exist
+    $check = $conn->prepare("SELECT id FROM settings WHERE user_id = ?");
+    $check->bind_param("i", $user_id);
+    $check->execute();
+    $exists = $check->get_result()->num_rows > 0;
+    $check->close();
+
+    if (!$exists) {
+        $user = getUserById($user_id);
+        createUserSettings($user_id, $user['username']);
     }
 
-    $full_name = $data['full_name'];
-    $phone = $data['phone'];
+    $full_name = trim($data['full_name'] ?? '');
+    $phone = trim($data['phone'] ?? '');
+    $email = trim($data['email'] ?? '');
+    $address = trim($data['address'] ?? '');
     $profile_image = null;
 
     // Handle profile image upload
     if ($files && isset($files['profile_image']) && $files['profile_image']['error'] === UPLOAD_ERR_OK) {
         $upload_dir = '../uploads/profiles/';
-        
-        // Create directory if it doesn't exist
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
+        if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
-        $file_extension = pathinfo($files['profile_image']['name'], PATHINFO_EXTENSION);
-        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-        if (!in_array(strtolower($file_extension), $allowed_extensions)) {
+        $ext = pathinfo($files['profile_image']['name'], PATHINFO_EXTENSION);
+        $allowed = ['jpg','jpeg','png','gif','webp'];
+        if (!in_array(strtolower($ext), $allowed)) {
             mysqli_close($conn);
-            return [
-                'success' => false,
-                'message' => 'Invalid file type. Only JPG, JPEG, PNG, GIF, and WebP are allowed.'
-            ];
+            return ['success'=>false, 'message'=>'Invalid file type'];
         }
-
-        // Validate file size (5MB max)
-        if ($files['profile_image']['size'] > 5 * 1024 * 1024) {
+        if ($files['profile_image']['size'] > 5*1024*1024) {
             mysqli_close($conn);
-            return [
-                'success' => false,
-                'message' => 'File size too large. Maximum 5MB allowed.'
-            ];
+            return ['success'=>false, 'message'=>'File too large'];
         }
 
-        // Generate unique filename
-        $filename = 'profile_' . $user_id . '_' . time() . '.' . $file_extension;
-        $upload_path = $upload_dir . $filename;
+        $filename = 'profile_'.$user_id.'_'.time().'.'.$ext;
+        $upload_path = $upload_dir.$filename;
 
-        // Delete old profile image if exists
-        $old_settings = getUserSettings($user_id);
-        if ($old_settings && !empty($old_settings['profile_image']) && file_exists($old_settings['profile_image'])) {
-            unlink($old_settings['profile_image']);
+        // Delete old photo
+        $old = getUserSettings($user_id);
+        if ($old && !empty($old['profile_image']) && file_exists($old['profile_image'])) {
+            unlink($old['profile_image']);
         }
 
-        // Upload new image
         if (move_uploaded_file($files['profile_image']['tmp_name'], $upload_path)) {
             $profile_image = $upload_path;
         } else {
             mysqli_close($conn);
-            return [
-                'success' => false,
-                'message' => 'Failed to upload image.'
-            ];
+            return ['success'=>false, 'message'=>'Upload failed'];
         }
     }
 
-    // Update settings
+    // Update settings - now includes email and address
     if ($profile_image) {
-        $stmt = $conn->prepare("UPDATE settings SET full_name = ?, phone = ?, profile_image = ? WHERE user_id = ?");
-        $stmt->bind_param("sssi", $full_name, $phone, $profile_image, $user_id);
+        $stmt = $conn->prepare("UPDATE settings SET full_name=?, phone=?, email=?, address=?, profile_image=? WHERE user_id=?");
+        $stmt->bind_param("sssssi", $full_name, $phone, $email, $address, $profile_image, $user_id);
     } else {
-        $stmt = $conn->prepare("UPDATE settings SET full_name = ?, phone = ? WHERE user_id = ?");
-        $stmt->bind_param("ssi", $full_name, $phone, $user_id);
+        $stmt = $conn->prepare("UPDATE settings SET full_name=?, phone=?, email=?, address=? WHERE user_id=?");
+        $stmt->bind_param("ssssi", $full_name, $phone, $email, $address, $user_id);
     }
 
-    if ($stmt->execute()) {
+    if (!$stmt->execute()) {
+        $error = $stmt->error;
         $stmt->close();
         mysqli_close($conn);
-        return [
-            'success' => true,
-            'message' => 'Profile updated successfully'
-        ];
+        return ['success'=>false, 'message'=>'Settings update failed: '.$error];
+    }
+    $stmt->close();
+
+    // Update username in users table
+    $stmt = $conn->prepare("UPDATE users SET username=? WHERE id=?");
+    $stmt->bind_param("si", $full_name, $user_id);
+    $stmt->execute();
+    $stmt->close();
+
+    mysqli_close($conn);
+    return ['success'=>true, 'message'=>'Profile updated successfully'];
+}
+/**
+ * Change password
+ */
+function changePassword($user_id, $current_password, $new_password)
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) return ['success'=>false, 'message'=>'DB error'];
+
+    $stmt = $conn->prepare("SELECT password_hash FROM users WHERE id=?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$user) {
+        mysqli_close($conn);
+        return ['success'=>false, 'message'=>'User not found'];
     }
 
-    $error = $stmt->error;
+    if (!password_verify($current_password, $user['password_hash'])) {
+        mysqli_close($conn);
+        return ['success'=>false, 'message'=>'Current password incorrect'];
+    }
+
+    $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
+
+    $stmt = $conn->prepare("UPDATE users SET password_hash=? WHERE id=?");
+    $stmt->bind_param("si", $new_hash, $user_id);
+    $stmt->execute();
+    $changed = $stmt->affected_rows === 1;
     $stmt->close();
     mysqli_close($conn);
-    return [
-        'success' => false,
-        'message' => 'Profile update failed: ' . $error
-    ];
+
+    return $changed
+        ? ['success'=>true, 'message'=>'Password changed successfully']
+        : ['success'=>false, 'message'=>'Password not changed'];
 }
 
 /**
- * Update user password - Updates password in USERS table
- */
-/**
- * Update user password - Updates password in USERS table
- */
-function updateUserPassword($user_id, $current_password, $new_password)
-{
-    // Clean inputs
-    $current_password = trim($current_password);
-    $new_password = trim($new_password);
-    
-    // Debug logging
-    error_log("=== Password Change Debug ===");
-    error_log("User ID: $user_id");
-    error_log("Current Password (cleaned): '$current_password'");
-    error_log("New Password (cleaned): '$new_password'");
-    
-    $conn = getDatabaseConnection();
-
-    if (!$conn) {
-        error_log("Database connection failed");
-        return [
-            'success' => false,
-            'message' => 'Database connection error.'
-        ];
-    }
-
-    // Get password hash AND username from USERS table
-    $stmt = $conn->prepare("SELECT id, username, password_hash FROM users WHERE id = ?");
-    if (!$stmt) {
-        error_log("Prepare failed: " . $conn->error);
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'System error: Failed to prepare query'
-        ];
-    }
-    
-    $stmt->bind_param("i", $user_id);
-    
-    if (!$stmt->execute()) {
-        error_log("Execute failed: " . $stmt->error);
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'System error: Failed to execute query'
-        ];
-    }
-    
-    $result = $stmt->get_result();
-
-    if ($result->num_rows !== 1) {
-        error_log("User not found with ID: $user_id");
-        $stmt->close();
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'User not found'
-        ];
-    }
-
-    $user = $result->fetch_assoc();
-    $stmt->close();
-    
-    error_log("Found user: {$user['username']}");
-    error_log("Current hash in DB: " . $user['password_hash']);
-
-    // Verify current password
-    error_log("Verifying password: '$current_password' against hash");
-    $password_verified = password_verify($current_password, $user['password_hash']);
-    error_log("password_verify result: " . ($password_verified ? "TRUE" : "FALSE"));
-    
-    if (!$password_verified) {
-        // Additional check: maybe the hash itself is the password?
-        if ($current_password === $user['password_hash']) {
-            error_log("Password matches hash directly (hash was stored as plain text?)");
-        }
-        
-        // Try trimming whitespace and newlines
-        $clean_current = trim($current_password, " \t\n\r\0\x0B");
-        error_log("Trying with trimmed password: '$clean_current'");
-        if (password_verify($clean_current, $user['password_hash'])) {
-            error_log("password_verify SUCCESS with trimmed password!");
-            $password_verified = true;
-        }
-        
-        if (!$password_verified) {
-            $conn->close();
-            error_log("Password verification FAILED");
-            return [
-                'success' => false,
-                'message' => 'Current password is incorrect'
-            ];
-        }
-    }
-    
-    error_log("Current password verification SUCCESS");
-
-    // Check if new password is same as old (already verified above)
-    if (password_verify($new_password, $user['password_hash'])) {
-        $conn->close();
-        error_log("New password is the same as current password");
-        return [
-            'success' => false,
-            'message' => 'New password cannot be the same as current password'
-        ];
-    }
-
-    // Validate new password strength (simplified for now)
-    if (strlen($new_password) < 6) {
-        $conn->close();
-        error_log("New password too short: " . strlen($new_password) . " characters");
-        return [
-            'success' => false,
-            'message' => 'New password must be at least 6 characters long'
-        ];
-    }
-
-    // Hash new password
-    $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
-    error_log("New hash generated: " . substr($new_hash, 0, 30) . "...");
-    
-    // Update password
-    $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-    if (!$stmt) {
-        error_log("Prepare UPDATE failed: " . $conn->error);
-        $conn->close();
-        return [
-            'success' => false,
-            'message' => 'System error: Failed to prepare update'
-        ];
-    }
-    
-    $stmt->bind_param("si", $new_hash, $user_id);
-
-    if ($stmt->execute()) {
-        $affected_rows = $stmt->affected_rows;
-        $stmt->close();
-        $conn->close();
-        
-        error_log("Update executed. Affected rows: $affected_rows");
-        
-        if ($affected_rows > 0) {
-            error_log("Password update SUCCESS for user: {$user['username']}");
-            return [
-                'success' => true,
-                'message' => 'Password changed successfully'
-            ];
-        } else {
-            error_log("Update executed but NO rows affected");
-            // Still return success if the password hash was identical?
-            return [
-                'success' => false,
-                'message' => 'No changes made. Please try a different password.'
-            ];
-        }
-    }
-
-    $error = $stmt->error;
-    $stmt->close();
-    $conn->close();
-    
-    error_log("Update failed with error: " . $error);
-    
-    return [
-        'success' => false,
-        'message' => 'Password change failed: ' . $error
-    ];
-}
-/**
- * Delete user profile image
+ * Delete profile image
  */
 function deleteProfileImage($user_id)
 {
     $conn = getDatabaseConnection();
+    if (!$conn) return ['success'=>false, 'message'=>'DB error'];
+
+    $settings = getUserSettings($user_id);
+    if (!$settings || empty($settings['profile_image'])) {
+        mysqli_close($conn);
+        return ['success'=>false, 'message'=>'No profile image'];
+    }
+
+    if (file_exists($settings['profile_image'])) unlink($settings['profile_image']);
+
+    $stmt = $conn->prepare("UPDATE settings SET profile_image=NULL WHERE user_id=?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->close();
+    mysqli_close($conn);
+
+    return ['success'=>true, 'message'=>'Profile image deleted'];
+}
+
+/**
+ * Save contact form submission
+ */
+function saveContactSubmission($data)
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error.'];
+    }
+
+    // Validate required fields
+    $required_fields = ['name', 'email', 'subject', 'message'];
+    foreach ($required_fields as $field) {
+        if (!isset($data[$field]) || empty(trim($data[$field]))) {
+            mysqli_close($conn);
+            return ['success' => false, 'message' => ucfirst($field) . ' is required.'];
+        }
+    }
+
+    // Sanitize data
+    $name = mysqli_real_escape_string($conn, trim($data['name']));
+    $email = mysqli_real_escape_string($conn, trim($data['email']));
+    $subject = mysqli_real_escape_string($conn, trim($data['subject']));
+    $message = mysqli_real_escape_string($conn, trim($data['message']));
+    
+    // Get client information
+    $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+    $user_agent = substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown', 0, 500);
+
+    // Validate email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        mysqli_close($conn);
+        return ['success' => false, 'message' => 'Invalid email address.'];
+    }
+
+    // Prepare the SQL statement
+    $sql = "INSERT INTO contact_submissions (name, email, subject, message, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return ['success' => false, 'message' => 'Failed to prepare statement: ' . $conn->error];
+    }
+
+    $stmt->bind_param(
+        "ssssss",
+        $name,
+        $email,
+        $subject,
+        $message,
+        $ip_address,
+        $user_agent
+    );
+
+    // Execute the statement
+    if ($stmt->execute()) {
+        $id = $stmt->insert_id;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Your message has been sent successfully. We will contact you soon.',
+            'id' => $id
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to send message: ' . $error
+        ];
+    }
+    
+}
+
+/**
+ * Get contact information from database (address, phone, email)
+ */
+/**
+ * Get contact information from settings table
+ */
+function getContactInformation()
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) {
+        // Return default values if no connection
+        return [
+            'address' => '1481 Creekside Lane Avila Beach, CA 93424',
+            'phone' => '+53 345 7953 32453',
+            'email' => 'yourmail@gmail.com'
+        ];
+    }
+
+    // Get the first user's contact info from settings table
+    $sql = "SELECT email, phone, address FROM settings WHERE email IS NOT NULL AND email != '' LIMIT 1";
+    
+    $result = mysqli_query($conn, $sql);
+
+    $contact_info = [
+        'address' => '1481 Creekside Lane Avila Beach, CA 93424',
+        'phone' => '+53 345 7953 32453',
+        'email' => 'yourmail@gmail.com'
+    ];
+    
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user_info = mysqli_fetch_assoc($result);
+        
+        // Update with database values if they exist
+        if (!empty($user_info['email'])) {
+            $contact_info['email'] = $user_info['email'];
+        }
+        if (!empty($user_info['phone'])) {
+            $contact_info['phone'] = $user_info['phone'];
+        }
+        if (!empty($user_info['address'])) {
+            $contact_info['address'] = $user_info['address'];
+        }
+        
+        mysqli_free_result($result);
+    }
+
+    mysqli_close($conn);
+    return $contact_info;
+}
+/*
+ * Send email notification to admin when contact form is submitted
+ */
+
+/**
+ * Get all donations with optional filters
+ */
+function getAllDonations($filters = [])
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT dl.*, dc.title as category_name 
+            FROM donation_list dl 
+            LEFT JOIN donation_categories dc ON dl.category_id = dc.id 
+            WHERE 1=1";
+    
+    $params = [];
+    $types = "";
+    
+    // Add filters
+    if (!empty($filters['payment_status'])) {
+        $sql .= " AND dl.payment_status = ?";
+        $params[] = $filters['payment_status'];
+        $types .= "s";
+    }
+    
+    if (!empty($filters['category_id'])) {
+        $sql .= " AND dl.category_id = ?";
+        $params[] = $filters['category_id'];
+        $types .= "i";
+    }
+    
+    if (!empty($filters['start_date'])) {
+        $sql .= " AND DATE(dl.created_at) >= ?";
+        $params[] = $filters['start_date'];
+        $types .= "s";
+    }
+    
+    if (!empty($filters['end_date'])) {
+        $sql .= " AND DATE(dl.created_at) <= ?";
+        $params[] = $filters['end_date'];
+        $types .= "s";
+    }
+    
+    if (!empty($filters['search'])) {
+        $sql .= " AND (dl.name LIKE ? OR dl.email LIKE ? OR dl.contact LIKE ? OR dl.transaction_id LIKE ?)";
+        $searchTerm = "%{$filters['search']}%";
+        $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        $types .= str_repeat("s", 4);
+    }
+    
+    $sql .= " ORDER BY dl.created_at DESC";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $donations = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $donations[] = $row;
+        }
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $donations;
+}
+
+/**
+ * Get donation by ID
+ */
+function getDonationById($id)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT dl.*, dc.title as category_name 
+            FROM donation_list dl 
+            LEFT JOIN donation_categories dc ON dl.category_id = dc.id 
+            WHERE dl.id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $donation = null;
+    if ($result && $result->num_rows > 0) {
+        $donation = $result->fetch_assoc();
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $donation;
+}
+
+/**
+ * Get donation by transaction ID
+ */
+function getDonationByTransactionId($transaction_id)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT * FROM donation_list WHERE transaction_id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $transaction_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $donation = null;
+    if ($result && $result->num_rows > 0) {
+        $donation = $result->fetch_assoc();
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $donation;
+}
+
+/**
+ * Create new donation
+ */
+
+/**
+ * Create new donation - FIXED VERSION
+ */
+function createDonation($data)
+{
+    $conn = getDatabaseConnection();
 
     if (!$conn) {
         return [
@@ -2105,40 +2137,278 @@ function deleteProfileImage($user_id)
         ];
     }
 
-    // Get current image path
-    $settings = getUserSettings($user_id);
+    // Generate transaction ID
+    $transaction_id = 'DON' . date('YmdHis') . rand(100, 999);
 
-    if (!$settings || empty($settings['profile_image'])) {
+    // Validate and sanitize category_id
+    $category_id = null;
+    if (!empty($data['category_id'])) {
+        $cat_id = intval($data['category_id']);
+        
+        // Verify category exists
+        $check_stmt = $conn->prepare("SELECT id FROM donation_categories WHERE id = ?");
+        $check_stmt->bind_param("i", $cat_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        
+        if ($check_result->num_rows > 0) {
+            $category_id = $cat_id;
+        }
+        $check_stmt->close();
+    }
+
+    // Safe variables
+    $amount         = (float) $data['amount'];
+    $name           = $data['name'];
+    $contact        = $data['contact'] ?? null;
+    $email          = $data['email'] ?? null;
+    $address        = $data['address'] ?? null;
+    $behalf_of      = $data['behalf_of'] ?? null;
+    $payment_method = $data['payment_method'];
+    $payment_status = $data['payment_status'] ?? 'pending';
+    $notes          = $data['notes'] ?? null;
+
+    // User info
+    $donor_ip   = $_SERVER['REMOTE_ADDR'] ?? null;
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+
+    $sql = "INSERT INTO donation_list (
+                transaction_id,
+                amount,
+                name,
+                contact,
+                email,
+                address,
+                category_id,
+                behalf_of,
+                payment_method,
+                payment_status,
+                donor_ip,
+                user_agent,
+                notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+
+    if (!$stmt) {
         mysqli_close($conn);
         return [
             'success' => false,
-            'message' => 'No profile image to delete'
+            'message' => 'Prepare failed: ' . $conn->error
         ];
     }
 
-    // Delete image file
-    if (file_exists($settings['profile_image'])) {
-        unlink($settings['profile_image']);
-    }
-
-    // Update database
-    $stmt = $conn->prepare("UPDATE settings SET profile_image = NULL WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
+    $stmt->bind_param(
+        "sdssssissssss",
+        $transaction_id,
+        $amount,
+        $name,
+        $contact,
+        $email,
+        $address,
+        $category_id,
+        $behalf_of,
+        $payment_method,
+        $payment_status,
+        $donor_ip,
+        $user_agent,
+        $notes
+    );
 
     if ($stmt->execute()) {
+        $insert_id = $stmt->insert_id;
         $stmt->close();
         mysqli_close($conn);
+
         return [
             'success' => true,
-            'message' => 'Profile image deleted successfully'
+            'donation_id' => $insert_id,
+            'transaction_id' => $transaction_id
         ];
     }
 
     $error = $stmt->error;
     $stmt->close();
     mysqli_close($conn);
+
     return [
         'success' => false,
-        'message' => 'Failed to delete profile image: ' . $error
+        'message' => $error
     ];
 }
+
+
+
+/**
+ * Update donation status
+ */
+function updateDonationStatus($id, $status, $notes = null)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "UPDATE donation_list SET 
+                payment_status = ?,
+                notes = ?
+            WHERE id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $status, $notes, $id);
+    
+    if ($stmt->execute()) {
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Donation status updated successfully'
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to update donation status: ' . $error
+        ];
+    }
+}
+
+/**
+ * Delete donation
+ */
+function deleteDonation($id)
+{
+    $conn = getDatabaseConnection();
+    
+    // First check if donation exists
+    $check_sql = "SELECT id FROM donation_list WHERE id = ?";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("i", $id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    
+    if ($check_result->num_rows === 0) {
+        $check_stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Donation not found'
+        ];
+    }
+    $check_stmt->close();
+    
+    // Delete donation
+    $sql = "DELETE FROM donation_list WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
+        $affected_rows = $stmt->affected_rows;
+        $stmt->close();
+        mysqli_close($conn);
+        
+        if ($affected_rows > 0) {
+            return [
+                'success' => true,
+                'message' => 'Donation deleted successfully'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Donation not found or already deleted'
+            ];
+        }
+    }
+    
+    $error = $stmt->error;
+    $stmt->close();
+    mysqli_close($conn);
+    
+    return [
+        'success' => false,
+        'message' => 'Database delete failed: ' . $error
+    ];
+}
+
+/**
+ * Get donation statistics
+ */
+function getDonationStatistics($period = 'all')
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT 
+                COUNT(*) as total_donations,
+                SUM(CASE WHEN payment_status = 'completed' THEN amount ELSE 0 END) as total_amount,
+                AVG(CASE WHEN payment_status = 'completed' THEN amount ELSE NULL END) as avg_amount,
+                MIN(CASE WHEN payment_status = 'completed' THEN amount ELSE NULL END) as min_amount,
+                MAX(CASE WHEN payment_status = 'completed' THEN amount ELSE NULL END) as max_amount
+            FROM donation_list";
+    
+    // Add period filter
+    if ($period === 'today') {
+        $sql .= " WHERE DATE(created_at) = CURDATE()";
+    } elseif ($period === 'month') {
+        $sql .= " WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())";
+    } elseif ($period === 'year') {
+        $sql .= " WHERE YEAR(created_at) = YEAR(CURDATE())";
+    } elseif ($period === 'week') {
+        $sql .= " WHERE YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1)";
+    }
+    
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $stats = $result->fetch_assoc();
+    } else {
+        $stats = [
+            'total_donations' => 0,
+            'total_amount' => 0,
+            'avg_amount' => 0,
+            'min_amount' => 0,
+            'max_amount' => 0
+        ];
+    }
+    
+    mysqli_close($conn);
+    return $stats;
+}
+
+/**
+ * Get donations by category
+ */
+function getDonationsByCategory($limit = 10)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT 
+                dc.title as category_name,
+                COUNT(dl.id) as donation_count,
+                SUM(CASE WHEN dl.payment_status = 'completed' THEN dl.amount ELSE 0 END) as total_amount
+            FROM donation_categories dc
+            LEFT JOIN donation_list dl ON dc.id = dl.category_id
+            GROUP BY dc.id
+            ORDER BY total_amount DESC
+            LIMIT ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $categories = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $categories[] = $row;
+        }
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $categories;
+}
+
+?>
+
+
+
+
