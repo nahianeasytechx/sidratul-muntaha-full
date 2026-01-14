@@ -2,6 +2,10 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Dashboard';
 require './components/header.php';
+
+// Get dashboard statistics
+$stats = getDashboardStats();
+$recent_donations = getRecentDonations(5);
 ?>
 <style>
   /* Modern Stats Card Styles */
@@ -105,12 +109,9 @@ require './components/header.php';
   }
 
   @keyframes bounce {
-
-    0%,
-    100% {
+    0%, 100% {
       transform: translateY(0);
     }
-
     50% {
       transform: translateY(-5px);
     }
@@ -190,12 +191,14 @@ require './components/header.php';
     background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
     color: #334155;
   }
-.card{
-  box-shadow: var(--shadow-sm);
-  border: none;
-  outline: none;
-  margin-bottom: 30px;
-}
+
+  .card {
+    box-shadow: var(--shadow-sm);
+    border: none;
+    outline: none;
+    margin-bottom: 30px;
+  }
+
   /* Responsive */
   @media (max-width: 1199px) {
     .stats-value {
@@ -259,7 +262,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Total Applications</h6>
-            <h2 class="stats-value">156</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['total_applications']); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">↗</span>
@@ -275,7 +278,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Scholarship Categories</h6>
-            <h2 class="stats-value">5</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['scholarship_categories']); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">→</span>
@@ -291,7 +294,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Total Awarded</h6>
-            <h2 class="stats-value">89</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['total_awarded']); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">↗</span>
@@ -307,7 +310,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Total Students</h6>
-            <h2 class="stats-value">342</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['total_students']); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">↗</span>
@@ -323,7 +326,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Total Donations</h6>
-            <h2 class="stats-value">245</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['total_donations']); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">↗</span>
@@ -339,7 +342,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Donation Amount</h6>
-            <h2 class="stats-value">৳ 5,830</h2>
+            <h2 class="stats-value">৳ <?php echo number_format($stats['donation_amount'], 2); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">↗</span>
@@ -355,7 +358,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Pending Applications</h6>
-            <h2 class="stats-value">23</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['pending_applications']); ?></h2>
           </div>
           <div class="stats-badge badge-warning">Action Required</div>
         </div>
@@ -369,7 +372,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Processed Applications</h6>
-            <h2 class="stats-value">98</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['processed_applications']); ?></h2>
           </div>
           <div class="stats-badge badge-info">In Progress</div>
         </div>
@@ -383,7 +386,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Approved Scholarships</h6>
-            <h2 class="stats-value">67</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['approved_scholarships']); ?></h2>
           </div>
           <div class="stats-badge badge-success">Completed</div>
         </div>
@@ -397,7 +400,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Rejected Applications</h6>
-            <h2 class="stats-value">12</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['rejected_applications']); ?></h2>
           </div>
           <div class="stats-badge badge-dark">Cancelled</div>
         </div>
@@ -411,9 +414,9 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Active Notices</h6>
-            <h2 class="stats-value">8</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['active_notices']); ?></h2>
           </div>
-          <div class="stats-badge badge-purple">Shipping</div>
+          <div class="stats-badge badge-purple">Active</div>
         </div>
       </div>
 
@@ -425,7 +428,7 @@ require './components/header.php';
           </div>
           <div class="stats-content">
             <h6 class="stats-label">Upcoming Activities</h6>
-            <h2 class="stats-value">15</h2>
+            <h2 class="stats-value"><?php echo number_format($stats['upcoming_activities']); ?></h2>
           </div>
           <div class="stats-trend">
             <span class="trend-icon">↗</span>
@@ -473,107 +476,78 @@ require './components/header.php';
 
     </div>
 
-
-    <!-- <div class="row grid-margin stretch-card">
-        <div class="table-responsive w-100">
-          <table class="table table-bordered">
-            <thead>
-              <tr class="text-dark">
-                <th><b>SL</b></th>
-                <th><b>Name</b></th>
-                <th><b>Phone No.</b></th>
-                <th><b>Category</b></th>
-                <th><b>Colletion Ammount</b></th>
-                <th><b>Transaction Id</b></th>
-                <th><b>Date</b></th>
-
-              </tr>
-            </thead>
-
-            <tbody id="donationTableBody">
-              <tr>
-                <td>15</td>
-                <td>INV-68DQXNMYZ</td>
-                <td>2,290.00 Tk.</td>
-                <td>Cash On Delivery</td>
-                <td>2025-09-23 16:08:14</td>
-
-                <td>
-                  <a href="order_details.php?invoice_no=INV-68DQXNMYZ">
-                    <button class="btn btn-info">View Details <span class="mdi mdi-details"></span></button>
-                  </a>
-                </td>
-
-              </tr>
-
-              <tr>
-                <td>14</td>
-                <td>INV-68DQXNMYZ</td>
-                <td>1,250.00 Tk.</td>
-                <td>Cash On Delivery</td>
-                <td>2025-09-23 16:08:14</td>
-
-                <td>
-                  <a href="order_details.php?invoice_no=INV-68DQXNMYZ">
-                    <button class="btn btn-info">View Details <span class="mdi mdi-details"></span></button>
-                  </a>
-                </td>
-
-              </tr>
-
-              <tr>
-                <td>16</td>
-                <td>INV-68DQXNMYZ</td>
-                <td>2,290.00 Tk.</td>
-                <td>Cash On Delivery</td>
-                <td>2025-09-23 16:08:14</td>
-
-                <td>
-                  <a href="order_details.php?invoice_no=INV-68DQXNMYZ">
-                    <button class="btn btn-info">View Details <span class="mdi mdi-details"></span></button>
-                  </a>
-                </td>
-
-              </tr>
-
-            </tbody>
-            <tfoot>
-              <tr>
-                <td></td>
-
-
-                <td></td>
-                <td></td>
-                <td><b>Total Collections</b></td>
-                <td><b>5,830.00 Tk.</b></td>
-                <td></td>
-
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div> -->
-
+    <!-- Recent Donations Table -->
     <div class="card p-3">
       <div class="card-body">
-        <h1 class="chart-title mb-1">Recent donations</h1>
+        <h1 class="chart-title mb-1">Recent Donations</h1>
         <p>List of latest recent donations</p><br>
         <div class="table-responsive">
           <table class="table table-bordered">
-            <tbody>
+            <thead>
               <tr>
                 <th>SL</th>
                 <th>Name</th>
-                <th>Customer Phone</th>
-                <th>Invoice No</th>
-                <th>Ammount</th>
+                <th>Phone</th>
+                <th>Category</th>
+                <th>Amount</th>
                 <th>Date</th>
-                <th>Tansaction ID</th>
-                <th colspan="2">Action</th>
+                <th>Transaction ID</th>
+                <th>Status</th>
               </tr>
+            </thead>
+            <tbody>
+              <?php if (empty($recent_donations)): ?>
+                <tr>
+                  <td colspan="8" class="text-center py-4">No donations found</td>
+                </tr>
+              <?php else: ?>
+                <?php foreach ($recent_donations as $index => $donation): ?>
+                  <tr>
+                    <td><?php echo $index + 1; ?></td>
+                    <td><?php echo htmlspecialchars($donation['name']); ?></td>
+                    <td><?php echo htmlspecialchars($donation['contact'] ?? 'N/A'); ?></td>
+                    <td><?php echo htmlspecialchars($donation['category_name'] ?? 'General'); ?></td>
+                    <td>৳ <?php echo number_format($donation['amount'], 2); ?></td>
+                    <td><?php echo date('M d, Y', strtotime($donation['created_at'])); ?></td>
+                    <td><?php echo htmlspecialchars($donation['transaction_id']); ?></td>
+                    <td>
+                      <?php
+                      $status_class = '';
+                      $status_text = ucfirst($donation['payment_status']);
+                      
+                      switch ($donation['payment_status']) {
+                        case 'completed':
+                          $status_class = 'badge bg-success';
+                          break;
+                        case 'pending':
+                          $status_class = 'badge bg-warning';
+                          break;
+                        case 'failed':
+                          $status_class = 'badge bg-danger';
+                          break;
+                        default:
+                          $status_class = 'badge bg-secondary';
+                      }
+                      ?>
+                      <span class="<?php echo $status_class; ?>"><?php echo $status_text; ?></span>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
-            <tbody id="donationTableBody">
-            </tbody>
+            <?php if (!empty($recent_donations)): ?>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="text-end"><strong>Total (Recent 5):</strong></td>
+                  <td colspan="4">
+                    <strong>৳ <?php 
+                      $recent_total = array_sum(array_column($recent_donations, 'amount'));
+                      echo number_format($recent_total, 2); 
+                    ?></strong>
+                  </td>
+                </tr>
+              </tfoot>
+            <?php endif; ?>
           </table>
         </div>
       </div>
@@ -587,9 +561,5 @@ require './components/header.php';
 <!--------------------------->
 <!-- END MAIN AREA -->
 <!--------------------------->
-<!-- Add these scripts before footer -->
-<script src="js/donationData.js"></script>
-<script src="js/dashboardDonations.js"></script>
-
 
 <?php require './components/footer.php'; ?>

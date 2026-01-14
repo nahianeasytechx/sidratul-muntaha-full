@@ -1,21 +1,18 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'All Activities';
+$page_title = 'Contact Submissions';
 require './components/header.php';
 protectPage();
 
-// Get all activities from database
-$activities = getAllActivities();
+// Get all contact submissions from database
+$result = getAllContactSubmissions();
+$submissions = $result['success'] ? $result['data'] : [];
 
 // Calculate statistics from actual database data
-$totalActivities = count($activities);
-$activeCount = getActivityCount('Active');
-$expiredCount = getActivityCount('Expired');
-
-// Count by type
-$regularCount = getActivityCountByType('Regular');
-$financialCount = getActivityCountByType('Financial');
-$socialCount = getActivityCountByType('Social');
+$totalSubmissions = count($submissions);
+$unreadCount = count(array_filter($submissions, fn($s) => ($s['status'] ?? 'unread') === 'unread'));
+$readCount = count(array_filter($submissions, fn($s) => ($s['status'] ?? 'unread') === 'read'));
+$todayCount = count(array_filter($submissions, fn($s) => date('Y-m-d', strtotime($s['created_at'])) === date('Y-m-d')));
 ?>
 
 <!-- Add SweetAlert CSS -->
@@ -63,9 +60,9 @@ $socialCount = getActivityCountByType('Social');
   }
 
   .stat-card-modern.total { --gradient-start: #8b5cf6; --gradient-end: #7c3aed; }
-  .stat-card-modern.active { --gradient-start: #10b981; --gradient-end: #059669; }
-  .stat-card-modern.expired { --gradient-start: #ef4444; --gradient-end: #dc2626; }
-  .stat-card-modern.regular { --gradient-start: #3b82f6; --gradient-end: #2563eb; }
+  .stat-card-modern.unread { --gradient-start: #f59e0b; --gradient-end: #d97706; }
+  .stat-card-modern.read { --gradient-start: #10b981; --gradient-end: #059669; }
+  .stat-card-modern.today { --gradient-start: #3b82f6; --gradient-end: #2563eb; }
 
   .stat-content-flex {
     display: flex;
@@ -115,11 +112,11 @@ $socialCount = getActivityCountByType('Social');
 
   /* Page Header */
   .page-header {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
     padding: 2rem;
     border-radius: 20px;
     margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
   }
 
   .page-header h1 {
@@ -150,23 +147,6 @@ $socialCount = getActivityCountByType('Social');
 
   .page-header .breadcrumb-item+.breadcrumb-item::before {
     color: rgba(255, 255, 255, 0.6);
-  }
-
-  .btn-add-new {
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .btn-add-new:hover {
-    background: #fff;
-    color: #000;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   }
 
   /* Filter Card */
@@ -252,8 +232,8 @@ $socialCount = getActivityCountByType('Social');
     box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
   }
 
-  /* Activity Cards */
-  .activity-card {
+  /* Submission Cards */
+  .submission-card {
     background: #fff;
     border-radius: 16px;
     padding: 24px;
@@ -265,7 +245,7 @@ $socialCount = getActivityCountByType('Social');
     overflow: hidden;
   }
 
-  .activity-card::before {
+  .submission-card::before {
     content: '';
     position: absolute;
     left: 0;
@@ -275,15 +255,15 @@ $socialCount = getActivityCountByType('Social');
     background: linear-gradient(180deg, var(--accent-color), var(--accent-color-dark));
   }
 
-  .activity-card:hover {
+  .submission-card:hover {
     transform: translateX(4px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
   }
 
-  .activity-card.status-Active { --accent-color: #10b981; --accent-color-dark: #059669; }
-  .activity-card.status-Expired { --accent-color: #ef4444; --accent-color-dark: #dc2626; }
+  .submission-card.status-unread { --accent-color: #f59e0b; --accent-color-dark: #d97706; }
+  .submission-card.status-read { --accent-color: #10b981; --accent-color-dark: #059669; }
 
-  .activity-header {
+  .submission-header {
     display: flex;
     justify-content: space-between;
     align-items: start;
@@ -291,7 +271,7 @@ $socialCount = getActivityCountByType('Social');
     gap: 16px;
   }
 
-  .activity-title {
+  .submission-title {
     font-size: 20px;
     font-weight: 700;
     color: #1e293b;
@@ -299,7 +279,7 @@ $socialCount = getActivityCountByType('Social');
     line-height: 1.3;
   }
 
-  .activity-meta {
+  .submission-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
@@ -319,14 +299,18 @@ $socialCount = getActivityCountByType('Social');
     font-size: 14px;
   }
 
-  .activity-description {
+  .submission-message {
     color: #475569;
     font-size: 15px;
     line-height: 1.6;
     margin-bottom: 16px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border-left: 3px solid #8b5cf6;
   }
 
-  .activity-footer {
+  .submission-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -334,7 +318,7 @@ $socialCount = getActivityCountByType('Social');
     border-top: 1px solid #f1f5f9;
   }
 
-  .activity-badges {
+  .submission-badges {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -349,24 +333,17 @@ $socialCount = getActivityCountByType('Social');
     letter-spacing: 0.5px;
   }
 
-  .badge-active {
+  .badge-unread {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+  }
+
+  .badge-read {
     background: linear-gradient(135deg, #d1fae5, #a7f3d0);
     color: #065f46;
   }
 
-  .badge-expired {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    color: #991b1b;
-  }
-
-  .badge-type {
-    background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
-    color: #6b21a8;
-    padding: 5px 10px;
-    border-radius: 50px;
-  }
-
-  .activity-actions {
+  .submission-actions {
     display: flex;
     gap: 8px;
   }
@@ -388,11 +365,6 @@ $socialCount = getActivityCountByType('Social');
   .btn-view {
     background: linear-gradient(135deg, #dbeafe, #bfdbfe);
     color: #1e40af;
-  }
-
-  .btn-edit {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #92400e;
   }
 
   .btn-delete {
@@ -500,11 +472,11 @@ $socialCount = getActivityCountByType('Social');
       font-size: 22px;
     }
 
-    .activity-header {
+    .submission-header {
       flex-direction: column;
     }
 
-    .activity-footer {
+    .submission-footer {
       flex-direction: column;
       gap: 12px;
       align-items: flex-start;
@@ -523,7 +495,7 @@ $socialCount = getActivityCountByType('Social');
     }
   }
 
-  .activity-card {
+  .submission-card {
     animation: fadeInCard 0.5s ease;
   }
 </style>
@@ -539,20 +511,14 @@ $socialCount = getActivityCountByType('Social');
       <div class="w-100 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div class="d-flex align-items-center gap-3">
           <div>
-            <h1><i class="fa-solid fa-calendar-days me-2"></i>All Projects</h1>
+            <h1><i class="fa-solid fa-envelope me-2"></i>Contact Submissions</h1>
             <nav aria-label="breadcrumb">
               <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Projects</li>
+                <li class="breadcrumb-item active" aria-current="page">Contact Submissions</li>
               </ol>
             </nav>
           </div>
-        </div>
-
-        <div class="d-flex gap-2">
-          <a class="btn btn-add-new" href="add-activity.php">
-            <i class="fa-solid fa-plus me-2"></i>Add New Project
-          </a>
         </div>
       </div>
     </div>
@@ -562,7 +528,7 @@ $socialCount = getActivityCountByType('Social');
     if (isset($_GET['success']) && $_GET['success'] == '1') {
         echo '<div class="message-box success">
                 <i class="fa-solid fa-circle-check"></i>
-                Activity operation completed successfully!
+                Submission operation completed successfully!
               </div>';
     }
     
@@ -573,11 +539,11 @@ $socialCount = getActivityCountByType('Social');
               </div>';
     }
     
-    // Show info if no activities
-    if ($totalActivities === 0) {
+    // Show info if no submissions
+    if ($totalSubmissions === 0) {
         echo '<div class="message-box info">
                 <i class="fa-solid fa-circle-info"></i>
-                No activities found. <a href="add-activity.php">Create your first activity</a>.
+                No contact submissions yet.
               </div>';
     }
     ?>
@@ -587,20 +553,32 @@ $socialCount = getActivityCountByType('Social');
       <div class="stat-card-modern total">
         <div class="stat-content-flex">
           <div class="stat-info">
-            <div class="stat-label">Total Projects</div>
-            <h3><?= $totalActivities ?></h3>
+            <div class="stat-label">Total Submissions</div>
+            <h3><?= $totalSubmissions ?></h3>
           </div>
           <div class="stat-icon-modern">
-            <i class="fa-solid fa-calendar-days"></i>
+            <i class="fa-solid fa-envelope"></i>
           </div>
         </div>
       </div>
 
-      <div class="stat-card-modern active">
+      <div class="stat-card-modern unread">
         <div class="stat-content-flex">
           <div class="stat-info">
-            <div class="stat-label">Active</div>
-            <h3><?= $activeCount ?></h3>
+            <div class="stat-label">Unread</div>
+            <h3><?= $unreadCount ?></h3>
+          </div>
+          <div class="stat-icon-modern">
+            <i class="fa-solid fa-envelope-open"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card-modern read">
+        <div class="stat-content-flex">
+          <div class="stat-info">
+            <div class="stat-label">Read</div>
+            <h3><?= $readCount ?></h3>
           </div>
           <div class="stat-icon-modern">
             <i class="fa-solid fa-circle-check"></i>
@@ -608,26 +586,14 @@ $socialCount = getActivityCountByType('Social');
         </div>
       </div>
 
-      <div class="stat-card-modern expired">
+      <div class="stat-card-modern today">
         <div class="stat-content-flex">
           <div class="stat-info">
-            <div class="stat-label">Expired</div>
-            <h3><?= $expiredCount ?></h3>
+            <div class="stat-label">Today</div>
+            <h3><?= $todayCount ?></h3>
           </div>
           <div class="stat-icon-modern">
-            <i class="fa-solid fa-circle-xmark"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card-modern regular">
-        <div class="stat-content-flex">
-          <div class="stat-info">
-            <div class="stat-label">Regular</div>
-            <h3><?= $regularCount ?></h3>
-          </div>
-          <div class="stat-icon-modern">
-            <i class="fa-solid fa-tag"></i>
+            <i class="fa-solid fa-calendar-day"></i>
           </div>
         </div>
       </div>
@@ -640,28 +606,20 @@ $socialCount = getActivityCountByType('Social');
         <h5>Filters & Search</h5>
       </div>
       <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-5">
           <div class="search-input-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search activities..." id="searchInput">
+            <input type="text" placeholder="Search by name, email, or subject..." id="searchInput">
           </div>
         </div>
         <div class="col-md-3">
           <select class="filter-select" id="statusFilter">
             <option value="all">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Expired">Expired</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
           </select>
         </div>
-        <div class="col-md-3">
-          <select class="filter-select" id="typeFilter">
-            <option value="all">All Types</option>
-            <option value="Regular">Regular</option>
-            <option value="Financial">Financial</option>
-            <option value="Social">Social</option>
-          </select>
-        </div>
-        <div class="col-md-2">
+        <div class="col-md-4">
           <select class="filter-select" id="sortFilter">
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -670,64 +628,56 @@ $socialCount = getActivityCountByType('Social');
       </div>
     </div>
 
-    <!-- Activities List -->
-    <div id="activitiesList">
-      <?php if ($totalActivities > 0): ?>
-        <?php foreach ($activities as $activity): 
+    <!-- Submissions List -->
+    <div id="submissionsList">
+      <?php if ($totalSubmissions > 0): ?>
+        <?php foreach ($submissions as $submission): 
           // Determine badge colors based on status
-          $statusClass = '';
-          $statusBadgeClass = '';
-          
-          if ($activity['status'] === 'Active') {
-              $statusClass = 'status-Active';
-              $statusBadgeClass = 'badge-active';
-          } elseif ($activity['status'] === 'Expired') {
-              $statusClass = 'status-Expired';
-              $statusBadgeClass = 'badge-expired';
-          }
+          $status = $submission['status'] ?? 'unread';
+          $statusClass = 'status-' . $status;
+          $statusBadgeClass = 'badge-' . $status;
         ?>
-        <div class="activity-card <?= $statusClass ?>" 
-             data-title="<?= strtolower($activity['title']) ?>"
-             data-status="<?= $activity['status'] ?>"
-             data-type="<?= $activity['type'] ?>"
-             data-created="<?= $activity['created_at'] ?>">
-          <div class="activity-header">
+        <div class="submission-card <?= $statusClass ?>" 
+             data-search="<?= strtolower($submission['name'] . ' ' . $submission['email'] . ' ' . $submission['subject']) ?>"
+             data-status="<?= $status ?>"
+             data-created="<?= $submission['created_at'] ?>">
+          <div class="submission-header">
             <div>
-              <h4 class="activity-title"><?= htmlspecialchars($activity['title']) ?></h4>
-              <div class="activity-meta">
+              <h4 class="submission-title"><?= htmlspecialchars($submission['subject']) ?></h4>
+              <div class="submission-meta">
                 <div class="meta-item">
-                  <i class="fa-solid fa-calendar"></i>
-                  <span>Created: <?= date('M d, Y', strtotime($activity['created_at'])) ?></span>
+                  <i class="fa-solid fa-user"></i>
+                  <span><?= htmlspecialchars($submission['name']) ?></span>
                 </div>
                 <div class="meta-item">
-                  <i class="fa-solid fa-tag"></i>
-                  <span><?= htmlspecialchars($activity['type']) ?></span>
+                  <i class="fa-solid fa-envelope"></i>
+                  <span><?= htmlspecialchars($submission['email']) ?></span>
+                </div>
+                <div class="meta-item">
+                  <i class="fa-solid fa-calendar"></i>
+                  <span><?= date('M d, Y g:i A', strtotime($submission['created_at'])) ?></span>
                 </div>
               </div>
             </div>
           </div>
-          <p class="activity-description">
-            <?= htmlspecialchars($activity['short_description']) ?>
-          </p>
-          <div class="activity-footer">
-            <div class="activity-badges">
+          <div class="submission-message">
+            <?= nl2br(htmlspecialchars($submission['message'])) ?>
+          </div>
+          <div class="submission-footer">
+            <div class="submission-badges">
               <span class="badge-modern <?= $statusBadgeClass ?>">
-                <i class="fa-solid fa-<?= $activity['status'] === 'Active' ? 'circle-check' : 'circle-xmark' ?> me-1"></i>
-                <?= htmlspecialchars($activity['status']) ?>
+                <i class="fa-solid fa-<?= $status === 'read' ? 'circle-check' : 'envelope' ?> me-1"></i>
+                <?= ucfirst($status) ?>
               </span>
-              <span class="badge-modern badge-type"><?= htmlspecialchars($activity['type']) ?></span>
             </div>
-            <div class="activity-actions">
-              <a href="view-activity.php?id=<?= $activity['id'] ?>" class="btn-action btn-view" title="View">
+            <div class="submission-actions">
+              <a href="view-submission.php?id=<?= $submission['id'] ?>" class="btn-action btn-view" title="View Details">
                 <i class="fa-solid fa-eye"></i>
               </a>
-              <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn-action btn-edit" title="Edit">
-                <i class="fa-solid fa-pen"></i>
-              </a>
-              <button class="btn-action btn-delete btn-delete-activity" 
+              <button class="btn-action btn-delete btn-delete-submission" 
                       title="Delete"
-                      data-id="<?= $activity['id'] ?>"
-                      data-title="<?= htmlspecialchars($activity['title']) ?>">
+                      data-id="<?= $submission['id'] ?>"
+                      data-name="<?= htmlspecialchars($submission['name']) ?>">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -739,11 +689,8 @@ $socialCount = getActivityCountByType('Social');
           <div class="empty-state-icon">
             <i class="fa-solid fa-inbox"></i>
           </div>
-          <h3>No activities found</h3>
-          <p>Start by adding your first activity</p>
-          <a href="add-activity.php" class="btn btn-add-new mt-3">
-            <i class="fa-solid fa-plus me-2"></i>Add Activity
-          </a>
+          <h3>No submissions found</h3>
+          <p>Contact submissions will appear here</p>
         </div>
       <?php endif; ?>
     </div>
@@ -761,24 +708,20 @@ $socialCount = getActivityCountByType('Social');
 document.addEventListener('DOMContentLoaded', function() {
     // Filtering functionality
     const searchInput = document.getElementById("searchInput");
-    const typeFilter = document.getElementById("typeFilter");
     const statusFilter = document.getElementById("statusFilter");
     const sortFilter = document.getElementById("sortFilter");
-    const cards = document.querySelectorAll(".activity-card");
+    const cards = document.querySelectorAll(".submission-card");
 
     function filterCards() {
         const search = searchInput.value.toLowerCase();
-        const type = typeFilter.value;
         const status = statusFilter.value;
 
         cards.forEach(card => {
-            const title = card.dataset.title;
-            const cardType = card.dataset.type;
+            const searchText = card.dataset.search;
             const cardStatus = card.dataset.status;
             let visible = true;
 
-            if (search && !title.includes(search)) visible = false;
-            if (type !== "all" && cardType !== type) visible = false;
+            if (search && !searchText.includes(search)) visible = false;
             if (status !== "all" && cardStatus !== status) visible = false;
 
             card.style.display = visible ? "" : "none";
@@ -787,7 +730,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function sortCards() {
         const sortValue = sortFilter.value;
-        const container = document.getElementById("activitiesList");
+        const container = document.getElementById("submissionsList");
         const cardsArr = Array.from(cards);
 
         cardsArr.sort((a, b) => {
@@ -806,7 +749,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // SweetAlert Delete Confirmation
-    const deleteButtons = document.querySelectorAll('.btn-delete-activity');
+    const deleteButtons = document.querySelectorAll('.btn-delete-submission');
     
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -814,15 +757,15 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             
             const id = this.dataset.id;
-            const title = this.dataset.title;
-            const deleteUrl = `delete-activity.php?id=${id}`;
+            const name = this.dataset.name;
+            const deleteUrl = `delete-submission.php?id=${id}`;
             
             Swal.fire({
                 title: 'Are you sure?',
                 html: `<div style="text-align: center;">
                           <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
-                          <p>You are about to delete the activity:</p>
-                          <p><strong>"${title}"</strong></p>
+                          <p>You are about to delete the submission from:</p>
+                          <p><strong>"${name}"</strong></p>
                           <p class="text-danger">This action cannot be undone!</p>
                        </div>`,
                 icon: 'warning',
@@ -847,7 +790,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Event listeners for filters
-    [searchInput, typeFilter, statusFilter].forEach(el => el.addEventListener("input", filterCards));
+    [searchInput, statusFilter].forEach(el => el.addEventListener("input", filterCards));
     sortFilter.addEventListener("change", sortCards);
 });
 </script>

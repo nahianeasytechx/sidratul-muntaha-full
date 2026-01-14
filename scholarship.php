@@ -1,8 +1,54 @@
 <?php
+
+
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Donate';
+require './components/header.php';
+
+// Initialize variables to avoid undefined warnings
+$success_message = '';
+$error_message = '';
+if (!isset($_SESSION['form_submitted'])) {
+    $_SESSION['form_submitted'] = false;
+}
+
+// Read messages from session (if any)
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']); // clear after showing
+}
+
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']); // clear after showing
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // 🚫 Stop duplicate execution
+    if ($_SESSION['form_submitted'] === true) {
+        echo "<script>window.location='scholarship.php'</script>";
+        exit;
+    }
+
+    $result = saveScholarshipApplication($_POST);
+
+    if ($result['success']) {
+        $_SESSION['form_submitted'] = true; // 🔒 LOCK it
+        $_SESSION['success_message'] = $result['message'];
+    } else {
+        $_SESSION['error_message'] = $result['message'];
+    }
+
+    // JS redirect is fine now
+    echo "<script>window.location='scholarship.php'</script>";
+    exit;
+}
+
 ?>
-<?php require './components/header.php'; ?>
+
+
 <style>
     .form-check img {
         width: 70px;
@@ -12,12 +58,13 @@ $page_title = 'Donate';
         border: 1px solid #ccc;
 
     }
-.donate-page .card-header-custom {
-    background: linear-gradient(135deg, #02BD61 0%, #11844b 100%);
-    color: #ffffff;
-    padding: 2.5rem 2rem;
-    border: none;
-}
+
+    .donate-page .card-header-custom {
+        background: linear-gradient(135deg, #02BD61 0%, #11844b 100%);
+        color: #ffffff;
+        padding: 2.5rem 2rem;
+        border: none;
+    }
 </style>
 
 <!--=======================================================================-->
@@ -60,6 +107,21 @@ $page_title = 'Donate';
                     <!-- Body -->
                     <div class="card-body p-4">
                         <form id="donationForm" method="POST" action="">
+                            <?php if ($success_message): ?>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <?php echo htmlspecialchars($success_message); ?>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($error_message): ?>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <?php echo htmlspecialchars($error_message); ?>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            <?php endif; ?>
+
+                            <!-- Rest of your form fields -->
 
                             <!-- Your Name -->
                             <div class="mb-3">
@@ -81,7 +143,7 @@ $page_title = 'Donate';
                             <div class="mb-3">
                                 <label for="institution-type" class="form-label">Institution Type</label>
                                 <br>
-                                <select class="w-100 px-4 py-3 rounded-2  category_options" id="category" name="category">
+                                <select class="w-100 px-4 py-3 rounded-2  category_options" id="category" name="institution_type">
                                     <option value="">-- Select a category --</option>
                                     <option value="hifz">Hifz Program</option>
                                     <option value="school">School</option>

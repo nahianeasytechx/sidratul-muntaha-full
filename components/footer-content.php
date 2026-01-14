@@ -34,7 +34,6 @@
                             <li><a href="index.php"><i class="fa fa-angle-right me-2 mr-3"></i> Home</a></li>
                             <li><a href="about.php"><i class="fa fa-angle-right me-2 mr-3"></i> About Us</a></li>
                             <li><a href="activities.php"><i class="fa fa-angle-right me-2 mr-3"></i> Activities</a></li>
-                            <li><a href="donation-fund.php"><i class="fa fa-angle-right me-2 mr-3"></i> Donate Categories</a></li>
                             <li><a href="scholarship.php"><i class="fa fa-angle-right me-2 mr-3"></i> Scholarship</a></li>
                             <li><a href="volunteer.php"><i class="fa fa-angle-right me-2 mr-3"></i> Join as Volunteer</a></li>
                         </ul>

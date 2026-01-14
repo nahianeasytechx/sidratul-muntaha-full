@@ -47,10 +47,10 @@
       <div class="collapse" id="activities">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item">
-            <a class="nav-link" href="add-activity.php">Add Project</a>
+            <a class="nav-link" href="add-project.php">Add Project</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="all-activities.php">All Projects </a>
+            <a class="nav-link" href="all-projects.php">All Projects </a>
           </li>
         </ul>
       </div>
@@ -60,6 +60,12 @@
       <a class="nav-link" href="slider.php">
         <span class="menu-title">Slider</span>
         <i class="mdi mdi-tune-variant menu-icon"></i>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="client-messages.php">
+        <span class="menu-title">Client Messages</span>
+        <i class="mdi mdi-message-badge-outline menu-icon"></i>
       </a>
     </li>
     <!-- <li class="nav-item">

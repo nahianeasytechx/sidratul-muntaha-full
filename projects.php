@@ -5,12 +5,15 @@ $page_title = 'Projects';
 require './components/header.php';
 
 $projects = getAllActivities(); // fetch all
+
+
 $projects = array_filter($projects, fn($p) => $p['status'] === 'Active');
 
 // Get unique project types
 $projectTypes = array_unique(array_column($projects, 'type'));
-?>
 
+
+?>
 <style>
     /* Filter Buttons */
     .filter-buttons {
@@ -180,6 +183,7 @@ $projectTypes = array_unique(array_column($projects, 'type'));
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -228,27 +232,8 @@ $projectTypes = array_unique(array_column($projects, 'type'));
         }
     }
 </style>
+<link rel="stylesheet" href="./assets/css/projects.css">
 
-<!-- <div class="home">
-    <div class="home_background parallax_background parallax-window" data-parallax="scroll" data-image-src="images/courses.jpg" data-speed="0.8"></div>
-    <div class="home_container">
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <div class="home_content text-center">
-                        <div data-aos="fade-up" class="home_title">Our Projects</div>
-                        <div class="breadcrumbs">
-                            <ul>
-                                <li><a href="index.php">Home</a></li>
-                                <li>Projects</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
 
 <div class="courses pb-0 mb-0 mt-3">
     <div class="container">
@@ -268,20 +253,36 @@ $projectTypes = array_unique(array_column($projects, 'type'));
 
         <div class="row">
             <?php if (!empty($projects)): ?>
-                <?php foreach($projects as $project): ?>
+                <?php foreach ($projects as $project): ?>
                     <div class="col-lg-4 col-md-6 project-item" data-type="<?php echo htmlspecialchars($project['type']); ?>">
                         <div class="project-card">
                             <div class="project-img">
-                                <img src="<?php echo !empty($project['image']) ? 'uploads/activities/' . htmlspecialchars($project['image']) : 'images/school.png'; ?>" alt="<?php echo htmlspecialchars($project['title']); ?>">
+<?php
+    // Clean project image path
+    $projectImage = 'images/'; // default placeholder
+    if (!empty($project['image'])) {
+        $projectImage = preg_replace('/^\.\.\//', '', $project['image']);
+    }
+?>
+<img src="<?php echo htmlspecialchars($projectImage); ?>" 
+     alt="<?php echo htmlspecialchars($project['title']); ?>">
+
+
                             </div>
                             <div class="project-body">
                                 <span class="project-tag"><?php echo htmlspecialchars($project['type']); ?> Projects</span>
                                 <h3 class="project-title"><?php echo htmlspecialchars($project['title']); ?></h3>
                                 <p class="project-text"><?php echo htmlspecialchars($project['short_description']); ?></p>
-                                <a href="project-details.php?id=<?php echo $project['id']; ?>" class="project-btn">
-                                    See Details 
-                                    <i class="fa fa-arrow-right"></i>
-                                </a>
+                                <?php if (!empty($project['slug'])): ?>
+                                    <a href="project-details.php?slug=<?php echo urlencode($project['slug']); ?>" class="project-btn">
+                                        See Details
+                                        <i class="fa fa-arrow-right"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="text-muted">Details not available</span>
+                                <?php endif; ?>
+
+
                             </div>
                         </div>
                     </div>
@@ -296,37 +297,39 @@ $projectTypes = array_unique(array_column($projects, 'type'));
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const projectItems = document.querySelectorAll('.project-item');
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const projectItems = document.querySelectorAll('.project-item');
 
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const filter = this.getAttribute('data-filter').toLowerCase();
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const filter = this.getAttribute('data-filter').toLowerCase();
 
-            // Update active button
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
 
-            // Filter projects
-            projectItems.forEach(item => {
-                const type = item.getAttribute('data-type').toLowerCase();
-                
-                if (filter === 'all' || type === filter) {
-                    item.style.display = 'block';
-                    // Trigger animation
-                    item.style.animation = 'none';
-                    setTimeout(() => {
-                        item.style.animation = 'fadeIn 0.5s ease';
-                    }, 10);
-                } else {
-                    item.style.display = 'none';
-                }
+                // Filter projects
+                projectItems.forEach(item => {
+                    const type = item.getAttribute('data-type').toLowerCase();
+
+                    if (filter === 'all' || type === filter) {
+                        item.style.display = 'block';
+                        // Trigger animation
+                        item.style.animation = 'none';
+                        setTimeout(() => {
+                            item.style.animation = 'fadeIn 0.5s ease';
+                        }, 10);
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
             });
         });
     });
-});
 </script>
 
 <?php require './components/join-platform-text.php'; ?>
 <?php require './components/footer.php'; ?>
+
+

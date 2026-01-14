@@ -1,24 +1,22 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'View Notice: ' ;
+$page_title = 'View Notice: ';
 require './components/header.php';
 protectPage();
 
-// Check if notice ID is provided
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: all-notices.php?error=Notice ID is required');
+// Check if notice slug is provided
+if (!isset($_GET['slug']) || empty($_GET['slug'])) {
+    echo "<script>window.location.href='all-notices.php?error=Notice identifier is required'</script>";
     exit();
 }
 
-$notice_id = intval($_GET['id']);
-$notice = getNoticeById($notice_id);
+$notice_slug = trim($_GET['slug']);
+$notice = getNoticeBySlug($notice_slug);
 
 if (!$notice) {
-    header('Location: all-notices.php?error=Notice not found');
+    echo "<script>window.location.href='all-notices.php?error=Notice not found'</script>";
     exit();
 }
-
-
 
 // Calculate expiry date
 $publish_date = new DateTime($notice['publish_date']);
@@ -55,22 +53,42 @@ if ($is_auto_expired) {
 // Determine type badge color
 $type_color = '';
 switch ($notice['type']) {
-    case 'Urgent': $type_color = 'danger'; break;
-    case 'General': $type_color = 'primary'; break;
-    case 'Info': $type_color = 'info'; break;
-    case 'Announcement': $type_color = 'purple'; break;
-    default: $type_color = 'secondary';
+    case 'Urgent':
+        $type_color = 'danger';
+        break;
+    case 'General':
+        $type_color = 'primary';
+        break;
+    case 'Info':
+        $type_color = 'info';
+        break;
+    case 'Announcement':
+        $type_color = 'purple';
+        break;
+    default:
+        $type_color = 'secondary';
 }
 
 // Determine category badge color
 $category_color = '';
 switch ($notice['category']) {
-    case 'Education': $category_color = 'success'; break;
-    case 'Scholarship': $category_color = 'info'; break;
-    case 'Health': $category_color = 'danger'; break;
-    case 'Events': $category_color = 'purple'; break;
-    case 'General': $category_color = 'secondary'; break;
-    default: $category_color = 'secondary';
+    case 'Education':
+        $category_color = 'success';
+        break;
+    case 'Scholarship':
+        $category_color = 'info';
+        break;
+    case 'Health':
+        $category_color = 'danger';
+        break;
+    case 'Events':
+        $category_color = 'purple';
+        break;
+    case 'General':
+        $category_color = 'secondary';
+        break;
+    default:
+        $category_color = 'secondary';
 }
 
 // Get current user info (if needed for "Posted by")
@@ -452,7 +470,7 @@ $current_user = getCurrentUser();
             flex-direction: column;
         }
 
-        .action-buttons-footer > * {
+        .action-buttons-footer>* {
             width: 100%;
         }
     }
@@ -463,6 +481,7 @@ $current_user = getCurrentUser();
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -518,7 +537,6 @@ $current_user = getCurrentUser();
         font-size: 18px;
     }
 </style>
-
 <div class="content-wrapper">
     <div class="view-notice">
         <!-- Page Header -->
@@ -538,10 +556,10 @@ $current_user = getCurrentUser();
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button class="btn btn-back" onclick="window.location.href='all-notice.php'">
+                    <button class="btn btn-back" onclick="window.location.href='all-notices.php'">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to List
                     </button>
-                    <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-header">
+                    <a href="edit-notice.php?slug=<?= urlencode($notice['slug']) ?>" class="btn btn-edit-header">
                         <i class="fa-solid fa-pen-to-square me-1"></i> Edit Notice
                     </a>
                 </div>
@@ -556,7 +574,7 @@ $current_user = getCurrentUser();
                     Notice updated successfully!
                   </div>';
         }
-        
+
         if (isset($_GET['error'])) {
             echo '<div class="message-box error">
                     <i class="fa-solid fa-circle-exclamation"></i>
@@ -662,7 +680,7 @@ $current_user = getCurrentUser();
                                 <?php if ($is_auto_expired): ?>
                                     <br><small class="text-danger">(Expired <?= $current_date->diff($expiry_date)->days ?> days ago)</small>
                                 <?php else: ?>
-                                    <?php 
+                                    <?php
                                     $days_remaining = $current_date->diff($expiry_date)->days;
                                     if ($days_remaining > 0 && $days_remaining <= 30): ?>
                                         <br><small class="text-warning">(<?= $days_remaining ?> days remaining)</small>
@@ -746,82 +764,80 @@ $current_user = getCurrentUser();
         </div>
 
         <!-- Action Buttons -->
-<div class="action-buttons-footer">
-    <button class="btn btn-print" onclick="window.print()">
-        <i class="fa-solid fa-print me-2"></i> Print Notice
-    </button>
-    <div class="d-flex gap-2">
-        <button class="btn btn-delete-main" id="deleteBtn" data-id="<?= $notice['id'] ?>" data-title="<?= htmlspecialchars($notice['title']) ?>">
-            <i class="fa-solid fa-trash me-2"></i> Delete
-        </button>
-        <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-edit-main">
-            <i class="fa-solid fa-pen-to-square me-2"></i> Edit Notice
-        </a>
-    </div>
-</div>
+        <div class="action-buttons-footer">
+            <button class="btn btn-print" onclick="window.print()">
+                <i class="fa-solid fa-print me-2"></i> Print Notice
+            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-delete-main" id="deleteBtn" data-slug="<?= urlencode($notice['slug']) ?>" data-title="<?= htmlspecialchars($notice['title']) ?>">
+                    <i class="fa-solid fa-trash me-2"></i> Delete
+                </button>
+                <a href="edit-notice.php?slug=<?= urlencode($notice['slug']) ?>" class="btn btn-edit-main">
+                    <i class="fa-solid fa-pen-to-square me-2"></i> Edit Notice
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+    document.getElementById('deleteBtn').addEventListener('click', function() {
+        const slug = this.dataset.slug;
+        const title = this.dataset.title;
 
-document.getElementById('deleteBtn').addEventListener('click', function() {
-    const id = this.dataset.id;
-    const title = this.dataset.title;
-    
-    Swal.fire({
-        title: 'Are you sure?',
-        html: `<div style="text-align: center;">
+        Swal.fire({
+            title: 'Are you sure?',
+            html: `<div style="text-align: center;">
                   <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
                   <p>You are about to delete the notice:</p>
                   <p><strong>"${title}"</strong></p>
                   <p class="text-danger">This action cannot be undone!</p>
                </div>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true,
-        backdrop: true,
-        allowOutsideClick: false,
-        allowEscapeKey: true,
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            return new Promise((resolve) => {
-                // Redirect to delete page after confirmation
-                window.location.href = `delete-notice.php?id=${id}&from=view`;
-                resolve();
-            });
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // The redirection happens in preConfirm
-        }
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            backdrop: true,
+            allowOutsideClick: false,
+            allowEscapeKey: true,
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return new Promise((resolve) => {
+                    // Redirect to delete page after confirmation
+                    window.location.href = `delete-notice.php?slug=${slug}&from=view`;
+                    resolve();
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // The redirection happens in preConfirm
+            }
+        });
     });
-});
-
 
     // Add print styles
     const style = document.createElement('style');
     style.textContent = `
-        @media print {
-            .page-header, .action-buttons-footer, .btn-back, .btn-edit-header {
-                display: none !important;
-            }
-            .notice-detail-card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-            body {
-                background: white !important;
-            }
-            .content-text {
-                font-size: 14px !important;
-                line-height: 1.6 !important;
-            }
+    @media print {
+        .page-header, .action-buttons-footer, .btn-back, .btn-edit-header {
+            display: none !important;
         }
-    `;
+        .notice-detail-card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        body {
+            background: white !important;
+        }
+        .content-text {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+        }
+    }
+`;
     document.head.appendChild(style);
 </script>
 

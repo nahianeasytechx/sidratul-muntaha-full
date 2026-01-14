@@ -23,6 +23,6 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
 }
 
 // Redirect back to slider management page
-header("Location: slider.php");
+  echo"<script>window.location.href='slider.php'</script>";
 exit();
 ?>

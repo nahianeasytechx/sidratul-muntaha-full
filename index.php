@@ -704,26 +704,32 @@ $socialActivities = array_slice($socialActivities, 0, 3);
 		padding-top: 60px;
 		padding-bottom: 50px;
 	}
- .text-turncate{
-  width: 300px; 
-  height: 42px; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
-  white-space: wrap;
-  -webkit-line-clamp: 2; /* Number of lines to show */
-  line-clamp: 2; /* Official property */
-  -webkit-box-orient: vertical;
-}
-.text-elipsis {
-  width: 300px; 
-  height: 42px; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
-  white-space: wrap;
-  -webkit-line-clamp: 2; /* Number of lines to show */
-  line-clamp: 2; /* Official property */
-  -webkit-box-orient: vertical;
-}
+
+	.text-turncate {
+		width: 300px;
+		height: 42px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: wrap;
+		-webkit-line-clamp: 2;
+		/* Number of lines to show */
+		line-clamp: 2;
+		/* Official property */
+		-webkit-box-orient: vertical;
+	}
+
+	.text-elipsis {
+		width: 300px;
+		height: 42px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: wrap;
+		-webkit-line-clamp: 2;
+		/* Number of lines to show */
+		line-clamp: 2;
+		/* Official property */
+		-webkit-box-orient: vertical;
+	}
 
 	/* ========================================================================== RESPONSIVE MEDIA QUERIES - Bootstrap Breakpoint Order ========================================================================== */
 	/* * Bootstrap Breakpoints Reference: * xs: <576px (Extra small devices - phones) * sm: ≥576px (Small devices - landscape phones) * md: ≥768px (Medium devices - tablets) * lg: ≥992px (Large devices - desktops) * xl: ≥1200px (Extra large devices - large desktops) * xxl: ≥1400px (Extra extra large devices) */
@@ -1049,23 +1055,29 @@ $socialActivities = array_slice($socialActivities, 0, 3);
 		</div>
 		<div class="courses_slider_container" data-aos="fade-up" data-aos-delay="200">
 			<div class="owl-carousel owl-theme courses_slider">
-				<?php 
+				<?php
 				// Fetch ALL active activities (all types)
-				$allActiveActivities = array_filter(getAllActivities(), function($activity) {
+				$allActiveActivities = array_filter(getAllActivities(), function ($activity) {
 					return $activity['status'] === 'Active';
 				});
-				
+
 				// Limit to 6 items for display
 				$allActiveActivities = array_slice($allActiveActivities, 0, 6);
-				
-				if (!empty($allActiveActivities)): 
+
+				if (!empty($allActiveActivities)):
 					foreach ($allActiveActivities as $activity): ?>
 						<div class="owl-item">
 							<div class="course">
 								<div class="course_image">
 									<a href="project-details.php?id=<?php echo $activity['id']; ?>">
 										<?php if (!empty($activity['image'])): ?>
-											<img src="uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
+											<?php
+											$imageSrc = !empty($activity['image']) ? preg_replace('/^\.\.\//', '', $activity['image']) : 'images/school.png';
+											?>
+											<img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
+
+
+											<img src="<?php echo htmlspecialchars($activity['image']); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
 										<?php else: ?>
 											<img src="images/school.png" alt="<?php echo htmlspecialchars($activity['title']); ?>">
 										<?php endif; ?>
@@ -1086,7 +1098,7 @@ $socialActivities = array_slice($socialActivities, 0, 3);
 								</div>
 							</div>
 						</div>
-					<?php endforeach; 
+					<?php endforeach;
 				else: ?>
 					<!-- Fallback if no activities -->
 					<div class="owl-item">
@@ -1146,7 +1158,11 @@ $socialActivities = array_slice($socialActivities, 0, 3);
 						<div class="project-card">
 							<div class="project-img">
 								<?php if (!empty($activity['image'])): ?>
-									<img src="uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
+									<?php
+									$imageSrc = !empty($activity['image']) ? preg_replace('/^\.\.\//', '', $activity['image']) : 'images/school.png';
+									?>
+									<img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
+
 								<?php else: ?>
 									<img src="images/Hospital Project.jpg" alt="<?php echo htmlspecialchars($activity['title']); ?>">
 								<?php endif; ?>
@@ -1237,7 +1253,11 @@ $socialActivities = array_slice($socialActivities, 0, 3);
 								<div class="course_image">
 									<a href="project-details.php?id=<?php echo $activity['id']; ?>">
 										<?php if (!empty($activity['image'])): ?>
-											<img src="uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
+											<?php
+											$imageSrc = !empty($activity['image']) ? preg_replace('/^\.\.\//', '', $activity['image']) : 'images/school.png';
+											?>
+											<img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
+
 										<?php else: ?>
 											<img src="images/SocialWork10.jpg" alt="<?php echo htmlspecialchars($activity['title']); ?>">
 										<?php endif; ?>

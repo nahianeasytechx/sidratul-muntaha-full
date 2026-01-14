@@ -1,83 +1,400 @@
 <?php 
 $current_page = basename($_SERVER['PHP_SELF']); 
-$page_title = 'Donation Categories'; 
+$page_title = 'Edit Donation Category';
 
-// Dummy data
-$categories = [
-    [
-        'id' => 1,
-        'title' => 'Education Support',
-        'image' => 'https://via.placeholder.com/400x300/4CAF50/ffffff?text=Education',
-        'description' => 'Help provide quality education to underprivileged children. Your donation will help buy books, stationery, and educational materials.',
-        'created_at' => '2024-01-15'
-    ],
-    [
-        'id' => 2,
-        'title' => 'Medical Emergency',
-        'image' => 'https://via.placeholder.com/400x300/FF5722/ffffff?text=Medical',
-        'description' => 'Support medical treatments for those who cannot afford healthcare. Every contribution saves lives and brings hope.',
-        'created_at' => '2024-02-20'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Food Distribution',
-        'image' => 'https://via.placeholder.com/400x300/FF9800/ffffff?text=Food',
-        'description' => 'Fight hunger by providing nutritious meals to families in need. Join us in making sure no one goes to bed hungry.',
-        'created_at' => '2024-03-10'
-    ],
-    [
-        'id' => 4,
-        'title' => 'Clean Water Projects',
-        'image' => 'https://via.placeholder.com/400x300/2196F3/ffffff?text=Water',
-        'description' => 'Bring clean drinking water to communities lacking access. Help us build wells and water purification systems.',
-        'created_at' => '2024-03-25'
-    ],
-    [
-        'id' => 5,
-        'title' => 'Orphan Care',
-        'image' => 'https://via.placeholder.com/400x300/9C27B0/ffffff?text=Orphan+Care',
-        'description' => 'Provide shelter, education, and care for orphaned children. Give them a chance at a brighter future.',
-        'created_at' => '2024-04-05'
-    ],
-    [
-        'id' => 6,
-        'title' => 'Disaster Relief',
-        'image' => 'https://via.placeholder.com/400x300/F44336/ffffff?text=Disaster+Relief',
-        'description' => 'Support communities affected by natural disasters. Help provide emergency supplies, shelter, and rebuilding efforts.',
-        'created_at' => '2024-04-18'
-    ]
-];
+require_once './components/header.php';
+
+protectPage();
+
+
+// Get slug from URL
+$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+
+if (empty($slug)) {
+  echo"<script>window.location.href='donation-categories.php'</script>";
+    exit;
+}
+
+// Get category by slug
+$category = getDonationCategoryBySlug($slug);
+
+if (!$category) {
+    $_SESSION['error_message'] = 'Category not found!';
+  echo"<script>window.location.href='donation-categories.php'</script>";
+    exit;
+}
 
 $message = '';
 $message_type = '';
-$edit_category = null;
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['add_category'])) {
-        $message = 'Category added successfully! (Demo Mode)';
-        $message_type = 'success';
-    } elseif (isset($_POST['update_category'])) {
-        $message = 'Category updated successfully! (Demo Mode)';
-        $message_type = 'success';
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_category'])) {
+    $data = [
+        'title' => trim($_POST['title']),
+        'description' => trim($_POST['description'])
+    ];
+    
+    // Handle file upload
+    $file = isset($_FILES['image']) ? $_FILES : null;
+    
+    // Update category with slug handling
+    $result = updateDonationCategoryWithSlug($category['id'], $data, $file);
+    
+    if ($result['success']) {
+        $_SESSION['success_message'] = $result['message'];
+        // Redirect to new slug if it changed
+echo "<script>
+        window.location.href = 'donation-category-edit.php?slug=" . $result['slug'] . "';
+      </script>";
+exit;
+
+    } else {
+        $message = $result['message'];
+        $message_type = 'danger';
     }
 }
 
-if (isset($_GET['edit'])) {
-    $edit_id = intval($_GET['edit']);
-    foreach ($categories as $cat) {
-        if ($cat['id'] == $edit_id) {
-            $edit_category = $cat;
-            break;
-        }
+// Handle delete
+if (isset($_GET['action']) && $_GET['action'] === 'delete') {
+    $result = deleteDonationCategory($category['id']);
+    
+    if ($result['success']) {
+        $_SESSION['success_message'] = $result['message'];
+  echo"<script>window.location.href='donation-categories.php'</script>";
+        exit;
+    } else {
+        $message = $result['message'];
+        $message_type = 'danger';
     }
-}
-
-if (isset($_GET['delete'])) {
-    $message = 'Category deleted successfully! (Demo Mode)';
-    $message_type = 'success';
 }
 ?>
 <?php require './components/header.php'; ?>
+
+<link rel="stylesheet" href="./assets/css/donation-category-edit.css">
+
+<div class="content-wrapper">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
+            <div class="d-flex gap-3">
+                <div>
+                    <h1><i class="fa-solid fa-pen-to-square me-2"></i>Edit Donation Category</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="donation-categories.php">Categories</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="donation-categories.php" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        
+        <!-- Session Messages -->
+        <?php if (isset($_SESSION['success_message'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>
+            <?php 
+                echo $_SESSION['success_message']; 
+                unset($_SESSION['success_message']);
+            ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>
+            <?php 
+                echo $_SESSION['error_message']; 
+                unset($_SESSION['error_message']);
+            ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+
+        <!-- Current Page Alert -->
+        <?php if ($message): ?>
+        <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-circle-<?php echo $message_type === 'success' ? 'check' : 'exclamation'; ?> me-2"></i>
+            <?php echo $message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+
+        <div class="row">
+            
+            <!-- Category Information Card -->
+            <div class="col-lg-4 mb-4">
+                <div class="card info-card">
+                    <div class="card-body">
+                        <h3><i class="fa-solid fa-info-circle me-2"></i>Category Information</h3>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Category ID</div>
+                            <div class="info-value">#<?php echo str_pad($category['id'], 4, '0', STR_PAD_LEFT); ?></div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Slug</div>
+                            <div class="info-value slug-display">
+                                <code><?php echo htmlspecialchars($category['slug']); ?></code>
+                                <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copySlug('<?php echo htmlspecialchars($category['slug']); ?>')">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span class="badge bg-<?php echo $category['status'] === 'active' ? 'success' : 'secondary'; ?>">
+                                    <?php echo ucfirst($category['status']); ?>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Display Order</div>
+                            <div class="info-value">#<?php echo $category['display_order']; ?></div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Created Date</div>
+                            <div class="info-value">
+                                <?php echo date('M d, Y', strtotime($category['created_at'])); ?>
+                            </div>
+                        </div>
+
+                        <div class="info-item mb-0">
+                            <div class="info-label">Last Updated</div>
+                            <div class="info-value">
+                                <?php echo date('M d, Y h:i A', strtotime($category['updated_at'])); ?>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex gap-2">
+                            <a href="donation-category-view.php?slug=<?php echo urlencode($category['slug']); ?>" 
+                               class="btn btn-info btn-sm flex-grow-1">
+                                <i class="fa-solid fa-eye me-2"></i>View Details
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Image Card -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h3><i class="fa-solid fa-image me-2"></i>Current Image</h3>
+                        <?php if (!empty($category['image'])): ?>
+                        <div class="current-image-preview">
+                            <img src="<?php echo htmlspecialchars($category['image']); ?>" 
+                                 alt="<?php echo htmlspecialchars($category['title']); ?>"
+                                 class="img-fluid rounded">
+                        </div>
+                        <?php else: ?>
+                        <div class="no-image text-center py-4">
+                            <i class="fa-solid fa-image-slash fa-3x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No image available</p>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h3><i class="fa-solid fa-edit me-2"></i>Edit Category Details</h3>
+
+                        <form action="" method="post" enctype="multipart/form-data" id="editCategoryForm">
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="title" class="form-label">
+                                        Category Title <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           name="title" 
+                                           id="title" 
+                                           class="form-control"
+                                           placeholder="Enter category title"
+                                           value="<?php echo htmlspecialchars($category['title']); ?>" 
+                                           required>
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-info-circle me-1"></i>
+                                        Slug will be auto-generated from title if changed
+                                    </small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="image" class="form-label">
+                                        Category Image
+                                    </label>
+                                    <input type="file" 
+                                           name="image" 
+                                           id="image" 
+                                           class="form-control" 
+                                           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                           onchange="previewImage(event)">
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-info-circle me-1"></i>
+                                        Accepted formats: JPG, PNG, GIF, WEBP (Max: 5MB). Leave empty to keep current image.
+                                    </small>
+                                    
+                                    <!-- Image Preview -->
+                                    <div id="imagePreview" class="mt-3" style="display: none;">
+                                        <label class="form-label">New Image Preview:</label>
+                                        <img id="preview" src="" class="img-thumbnail" style="max-width: 300px;">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="description" class="form-label">
+                                        Description <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea name="description" 
+                                              id="description" 
+                                              rows="6" 
+                                              class="form-control"
+                                              placeholder="Write a detailed description about this donation category..."
+                                              required><?php echo htmlspecialchars($category['description']); ?></textarea>
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-info-circle me-1"></i>
+                                        Provide clear information about what this category supports
+                                    </small>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="donation-categories.php" class="btn btn-secondary">
+                                    <i class="fa-solid fa-times me-2"></i>Cancel
+                                </a>
+                                <button type="reset" class="btn btn-warning">
+                                    <i class="fa-solid fa-rotate-left me-2"></i>Reset
+                                </button>
+                                <button type="submit" name="update_category" class="btn btn-success">
+                                    <i class="fa-solid fa-save me-2"></i>Update Category
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-3">
+                    <i class="fa-solid fa-trash-can fa-4x text-danger mb-3"></i>
+                    <h5>Are you sure you want to delete this category?</h5>
+                    <p class="text-muted mb-0">
+                        Category: <strong><?php echo htmlspecialchars($category['title']); ?></strong>
+                    </p>
+                    <p class="text-danger mt-2">
+                        <i class="fa-solid fa-warning me-1"></i>
+                        This action cannot be undone!
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-times me-2"></i>Cancel
+                </button>
+                <a href="?slug=<?php echo urlencode($category['slug']); ?>&action=delete" 
+                   class="btn btn-danger">
+                    <i class="fa-solid fa-trash me-2"></i>Yes, Delete It
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php require './components/footer.php'; ?>
+
+<script>
+// Copy slug to clipboard
+function copySlug(slug) {
+    navigator.clipboard.writeText(slug).then(function() {
+        // Show temporary success message
+        const btn = event.target.closest('.copy-btn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+// Preview image before upload
+function previewImage(event) {
+    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('imagePreview');
+    const file = event.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Form validation
+document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    
+    if (title === '' || description === '') {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+        return false;
+    }
+    
+    return true;
+});
+</script>
 
 <style>
     /* Page Header Styling - Matching donation-list.php */
@@ -443,168 +760,3 @@ if (isset($_GET['delete'])) {
         animation: fadeIn 0.5s ease-out;
     }
 </style>
-
-<div class="content-wrapper">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
-            <div class="d-flex gap-3">
-                <div>
-                    <h1><i class="fa-solid fa-layer-group me-2"></i>Donation Categories</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Categories</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container-fluid">
-        
-        <!-- Alerts -->
-        <?php if ($message): ?>
-        <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
-            <i class="fa-solid fa-circle-check me-2"></i>
-            <?php echo $message; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php endif; ?>
-
-        <div class="row">
-            
-            <!-- Add/Edit Form -->
-            <div class="col-lg-5 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h3>
-                            <?php echo $edit_category ? 'Edit Category' : 'Add New Category'; ?>
-                        </h3>
-
-                        <form action="" method="post" enctype="multipart/form-data">
-                            <?php if ($edit_category): ?>
-                                <input type="hidden" name="category_id" value="<?php echo $edit_category['id']; ?>">
-                            <?php endif; ?>
-
-                            <div class="mb-3">
-                                <label for="title" class="form-label">Category Title</label>
-                                <input type="text" name="title" id="title" class="form-control"
-                                       placeholder="Enter category title"
-                                       value="<?php echo $edit_category ? htmlspecialchars($edit_category['title']) : ''; ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="image" class="form-label">Category Image</label>
-                                <input type="file" name="image" id="image" class="form-control" accept="image/*"
-                                       <?php echo $edit_category ? '' : 'required'; ?>>
-                                <small class="text-muted">JPG, PNG, WEBP (max 2MB)</small>
-                                <?php if ($edit_category && $edit_category['image']): ?>
-                                <div class="mt-3">
-                                    <img src="<?php echo $edit_category['image']; ?>" class="img-thumbnail" style="max-width: 140px;">
-                                </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea name="description" id="description" rows="4" class="form-control"
-                                          placeholder="Write a short description..." required><?php echo $edit_category ? htmlspecialchars($edit_category['description']) : ''; ?></textarea>
-                            </div>
-
-                            <div class="d-flex gap-2 mt-4">
-                                <button type="submit" name="<?php echo $edit_category ? 'update_category' : 'add_category'; ?>" 
-                                        class="btn btn-success flex-grow-1">
-                                    <?php echo $edit_category ? 'Update Category' : 'Add Category'; ?>
-                                </button>
-                                <?php if ($edit_category): ?>
-                                <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-secondary">Cancel</a>
-                                <?php endif; ?>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Category List -->
-            <div class="col-lg-7">
-                <div class="table-container">
-                    <div class="card-body">
-                        <h3 class="mb-4">All Categories</h3>
-
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Image</th>
-                                        <th>Title</th>
-                                        <th>Created</th>
-                                        <th colspan="3" class="text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($categories as $index => $category): ?>
-                                    <tr>
-                                        <td><strong>#<?php echo str_pad($index + 1, 2, '0', STR_PAD_LEFT); ?></strong></td>
-                                        <td>
-                                            <img src="<?php echo $category['image']; ?>" alt="" class="rounded" width="55" height="55" style="object-fit:cover;">
-                                        </td>
-                                        <td class="fw-semibold"><?php echo htmlspecialchars($category['title']); ?></td>
-                                        <td><small class="text-muted"><?php echo date('M d, Y', strtotime($category['created_at'])); ?></small></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary " data-bs-toggle="modal" data-bs-target="#descModal<?php echo $category['id']; ?>" title="View Details">
-                                                <i class="fa-solid fa-eye"></i>
-                                            </button>
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="?edit=<?php echo $category['id']; ?>" class="btn btn-sm btn-outline-info " title="Edit">
-                                                <i class="fa-solid fa-pen-to-square"></i>
-                                            </a>
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="?delete=<?php echo $category['id']; ?>" class="btn btn-sm btn-outline-danger " title="Delete"
-                                               onclick="return confirm('Are you sure you want to delete this category?')">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Description Modal -->
-                                    <div class="modal fade" id="descModal<?php echo $category['id']; ?>" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        <?php echo htmlspecialchars($category['title']); ?>
-                                                    </h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <img src="<?php echo $category['image']; ?>" class="img-fluid rounded mb-3" alt="">
-                                                    <p><?php echo htmlspecialchars($category['description']); ?></p>
-                                                    <div class="text-muted mt-3">
-                                                        <small>
-                                                            <i class="fa-solid fa-calendar me-2"></i>
-                                                            Created: <?php echo date('F d, Y', strtotime($category['created_at'])); ?>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<?php require './components/footer.php'; ?>

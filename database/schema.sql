@@ -90,3 +90,14 @@ CREATE TABLE donation_list (
 CREATE INDEX idx_donation_date ON donation_list(created_at);
 CREATE INDEX idx_donation_status ON donation_list(payment_status);
 CREATE INDEX idx_donation_category ON donation_list(category_id);
+
+CREATE TABLE scholarship_list(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    address VARCHAR(255),
+    institution_type VARCHAR(255) NOT NULL,
+    institute_name VARCHAR(255),
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

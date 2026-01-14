@@ -3,6 +3,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Donate';
 require './components/header.php';
 
+// Get all donation categories from database
+$donationCategories = getAllDonationCategories();
+
 // Handle form submission
 $message = '';
 $message_type = '';
@@ -18,7 +21,6 @@ $form_values = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
     $amount = isset($_POST['amount']) ? floatval($_POST['amount']) : 0;
     $name = isset($_POST['name']) ? trim($_POST['name']) : '';
     $contact = isset($_POST['contact']) ? trim($_POST['contact']) : '';
@@ -28,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $behalf_of = isset($_POST['behalf_of']) ? trim($_POST['behalf_of']) : '';
     $payment_method = isset($_POST['payment_method']) ? trim($_POST['payment_method']) : 'sslcommerz';
 
-    // Store form values for repopulation
     $form_values = [
         'amount' => $amount,
         'name' => $name,
@@ -40,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'payment_method' => $payment_method
     ];
 
-    // Validate required fields
     if ($amount <= 0) {
         $message = 'Please enter a valid donation amount.';
         $message_type = 'error';
@@ -51,26 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Please select a payment method.';
         $message_type = 'error';
     } else {
-        // Map category string to category_id
         $category_id = null;
         if (!empty($category)) {
-            $category_map = [
-                'mosque-fund' => 1,
-                'madrasha-fund' => 2,
-                'school' => 3,
-                'hospital' => 4,
-                'zakat' => 5,
-                'disaster-relief' => 6,
-                'education-support' => 7,
-                'orphan-homeless' => 8,
-                'tree-plantation' => 9,
-                'other' => 10
-            ];
-
-            $category_id = isset($category_map[$category]) ? $category_map[$category] : null;
+            $selectedCategory = getDonationCategoryBySlug($category);
+            if ($selectedCategory) {
+                $category_id = $selectedCategory['id'];
+            }
         }
 
-        // Prepare data for donation function
         $donation_data = [
             'amount' => $amount,
             'name' => $name,
@@ -83,49 +71,246 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'payment_status' => 'pending'
         ];
 
-        // Create donation record - assuming createDonation() function exists
         if (function_exists('createDonation')) {
             $result = createDonation($donation_data);
-
             if ($result['success']) {
-                $message = 'Thank you for your donation! Your donation has been recorded successfully. Transaction ID: ' . $result['transaction_id'];
+                $message = 'Thank you for your donation! Transaction ID: ' . $result['transaction_id'];
                 $message_type = 'success';
-
-                // Clear form values on success
-                $form_values = [
-                    'amount' => '',
-                    'name' => '',
-                    'contact' => '',
-                    'email' => '',
-                    'youraddress' => '',
-                    'category' => '',
-                    'behalf_of' => '',
-                    'payment_method' => 'sslcommerz'
-                ];
+                $form_values = array_fill_keys(array_keys($form_values), '');
+                $form_values['payment_method'] = 'sslcommerz';
             } else {
                 $message = 'Error: ' . $result['message'];
                 $message_type = 'error';
             }
         } else {
-            // If function doesn't exist, show a success message anyway
-            $message = 'Thank you for your donation of ৳' . number_format($amount, 2) . '! Payment method: ' . strtoupper($payment_method);
+            $message = 'Thank you for your donation of ৳' . number_format($amount, 2);
             $message_type = 'success';
-
-            // Clear form values
-            $form_values = [
-                'amount' => '',
-                'name' => '',
-                'contact' => '',
-                'email' => '',
-                'youraddress' => '',
-                'category' => '',
-                'behalf_of' => '',
-                'payment_method' => 'sslcommerz'
-            ];
+            $form_values = array_fill_keys(array_keys($form_values), '');
+            $form_values['payment_method'] = 'sslcommerz';
         }
     }
 }
 ?>
+
+<div class="donate-home">
+    <div class="home">
+        <div class="home_background parallax_background parallax-window" data-parallax="scroll" data-image-src="images/about.jpg" data-speed="0.8"></div>
+        <div class="home_container">
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <div class="home_content text-center">
+                            <div data-aos="fade-up" class="home_title">Donate Now</div>
+                            <div class="breadcrumbs">
+                                <ul>
+                                    <li><a href="index.php">Home</a></li>
+                                    <li>Donate</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="donate-page">
+    <div class="container">
+        <?php if ($message): ?>
+            <div class="alert-message alert-<?php echo $message_type; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="row">
+            <div data-aos="fade-up" class="col-lg-6 col-md-12 mb-4 mb-lg-0">
+                <div id="categoryInfoSection">
+                    <div id="defaultContent">
+                        <h3 class="section-title">Make a Difference Today</h3>
+                        <p class="section-description">
+                            Your donation is endless possibilities. Educate a child with Sidratul Muntaha Foundation.
+                            <br><br>
+                            Together, we can uplift lives, nurture faith, and build a brighter future.
+                        </p>
+                        <img src="images/Financial Support For Madrasha Students.jpeg" alt="Financial Support" class="w-100 rounded mb-3">
+
+                    </div>
+
+                    <div id="dynamicContent" style="display: none;">
+                        <h3 class="section-title" id="dynamicTitle"></h3>
+                        <p class="section-description" id="dynamicDescription"></p>
+                        <img id="dynamicImage" src="" alt="" class="w-100 rounded mb-3" style="max-height: 400px; object-fit: cover;">
+                    </div>
+                    <p>In Islam, giving in charity, known as Sadaqah or Zakat, is considered a fundamental act of worship and compassion. It is a way to purify one’s wealth, help those in need, and earn Allah’s blessings. The Quran emphasizes helping the poor, supporting orphans, and assisting the vulnerable in society.
+
+                        Zakat is obligatory for eligible Muslims, calculated as a fixed percentage of wealth, while Sadaqah is voluntary and can be given at any time. Donations are not only a form of financial support but also a means to promote social justice, reduce inequality, and foster a caring community.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-12">
+                <div class="donation-card">
+                    <div class="card-header-custom">
+                        <h4>Make Your Donation </h4>
+                        <p>Join us in creating a stronger, healthier, and more compassionate society, where every effort contributes to the well-being and progress of our communities.</p>
+
+                    </div>
+
+                    <div class="card-body p-4">
+                        <form method="POST" action="">
+                            <div class="mb-3">
+                                <label for="donationAmount" class="form-label">
+                                    Donation Amount <span class="required">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">৳</span>
+                                    <input type="number" class="form-control" id="donationAmount" name="amount"
+                                        placeholder="Enter amount"
+                                        value="<?php echo htmlspecialchars($form_values['amount'] ?: ''); ?>"
+                                        required min="10" step="any">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="yourName" class="form-label">Your Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="yourName" name="name"
+                                    placeholder="Enter your full name"
+                                    value="<?php echo htmlspecialchars($form_values['name']); ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="contact" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="contact" name="contact"
+                                    placeholder="Enter phone number"
+                                    value="<?php echo htmlspecialchars($form_values['contact']); ?>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="yourmail" class="form-label">Your Email</label>
+                                <input type="email" class="form-control" id="yourmail" name="email"
+                                    placeholder="Enter your email"
+                                    value="<?php echo htmlspecialchars($form_values['email']); ?>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Your Address</label>
+                                <textarea class="form-control" id="youraddress" name="youraddress"
+                                    placeholder="Enter your address"><?php echo htmlspecialchars($form_values['youraddress']); ?></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="w-100 px-4 py-3 rounded-2 category_options" id="category" name="category">
+                                    <option value="">-- Select a category --</option>
+                                    <?php foreach ($donationCategories as $cat): ?>
+                                        <?php
+                                        $image = '';
+                                        if (!empty($cat['image'])) {
+                                            // Remove ../ if present
+                                            $image = preg_replace('/^\.\.\//', '', $cat['image']);
+                                        }
+                                        ?>
+                                        <option value="<?php echo htmlspecialchars($cat['slug']); ?>"
+                                            data-title="<?php echo htmlspecialchars($cat['title']); ?>"
+                                            data-description="<?php echo htmlspecialchars($cat['description']); ?>"
+                                            data-image="<?php echo htmlspecialchars($image); ?>"
+                                            <?php echo ($form_values['category'] == $cat['slug']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($cat['title']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="onBehalfOf" class="form-label">Donate on behalf of</label>
+                                <input type="text" class="form-control" id="onBehalfOf" name="behalf_of"
+                                    placeholder="Optional: Someone's name"
+                                    value="<?php echo htmlspecialchars($form_values['behalf_of']); ?>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Payment Method <span class="required">*</span></label>
+                                <div class="payment-method">
+                                    <div class="form-check d-flex">
+                                        <?php
+                                        $payment_methods = [
+                                            'sslcommerz' => 'images/ssl logo.png',
+                                            'bkash' => 'images/bkash.png',
+                                            'nagad' => 'images/nogod.png',
+                                            'paypal' => 'images/paypal.png'
+                                        ];
+                                        foreach ($payment_methods as $method => $image) {
+                                            $checked = ($form_values['payment_method'] == $method) ? 'checked' : '';
+                                            echo '<div class="d-flex p-1 ' . ($method != 'sslcommerz' ? 'mx-3' : '') . '">
+                                                    <input class="form-check-input mt-2" type="radio" name="payment_method" id="' . $method . '" value="' . $method . '" ' . $checked . '>
+                                                    <label class="form-check-label d-flex align-items-center" for="' . $method . '">
+                                                        <span class="badge"><img src="' . $image . '" alt="' . ucfirst($method) . '"></span>
+                                                    </label>
+                                                </div>';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="info-box">
+                                <p><i class="bi bi-gift-fill me-2"></i><strong>Tax Relief Available!</strong> You will receive tax relief when you donate. <a href="#">Learn more</a></p>
+                            </div>
+
+                            <button type="submit" class="my-3 btn btn-success btn-donate w-100">
+                                <i class="bi bi-heart-fill me-2"></i><span>Donate Now</span>
+                            </button>
+
+                            <div class="terms-text">
+                                By donating you agree to our <a href="#">Terms and Conditions</a> and <a href="#">Privacy Policy</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php require './components/join-platform-text.php'; ?>
+<?php require './components/footer.php'; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('category');
+        const defaultContent = document.getElementById('defaultContent');
+        const dynamicContent = document.getElementById('dynamicContent');
+        const dynamicTitle = document.getElementById('dynamicTitle');
+        const dynamicImage = document.getElementById('dynamicImage');
+        const dynamicDescription = document.getElementById('dynamicDescription');
+
+        categorySelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+
+            if (this.value === '') {
+                // Show default content
+                defaultContent.style.display = 'block';
+                dynamicContent.style.display = 'none';
+            } else {
+                // Get data from selected option
+                const title = selectedOption.getAttribute('data-title');
+                const description = selectedOption.getAttribute('data-description');
+                const image = selectedOption.getAttribute('data-image');
+
+                // Update dynamic content
+                dynamicTitle.textContent = title;
+                dynamicDescription.textContent = description;
+                dynamicImage.src = image;
+                dynamicImage.alt = title;
+
+                // Show dynamic content
+                defaultContent.style.display = 'none';
+                dynamicContent.style.display = 'block';
+            }
+        });
+    });
+</script>
+
 <style>
     /* ========================================= */
     /* DONATION FORM STYLES */
@@ -177,6 +362,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         background-color: #d1ecf1;
         color: #0c5460;
         border: 1px solid #bee5eb;
+    }
+
+    .text-elipsis {
+        width: 300px;
+        height: 50px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: wrap;
+        -webkit-line-clamp: 2;
+        /* Number of lines to show */
+        line-clamp: 2;
+        /* Official property */
+        -webkit-box-orient: vertical;
     }
 
     /* ========================================= */
@@ -580,653 +778,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 </style>
-<!--=======================================================================-->
-<!------------------------ CONTENT START ------------------------------------->
-<!--=======================================================================-->
-
-<!-- Hero Section -->
-<div class="donate-home">
-    <div class="home">
-        <div class="home_background parallax_background parallax-window" data-parallax="scroll" data-image-src="images/about.jpg" data-speed="0.8"></div>
-        <div class="home_container">
-            <div class="container">
-                <div class="row">
-                    <div class="col">
-                        <div class="home_content text-center">
-                            <div data-aos="fade-up" class="home_title">Donate Now</div>
-                            <div class="breadcrumbs">
-                                <ul>
-                                    <li><a href="index.php">Home</a></li>
-                                    <li>Donate</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Donation Form Section -->
-<div class="donate-page">
-    <div class="container">
-        <!-- Display Messages -->
-        <?php if ($message): ?>
-            <div class="alert-message alert-<?php echo $message_type; ?>">
-                <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="row">
-            <!-- Left Column: Information -->
-            <div data-aos="fade-up" class="col-lg-6 col-md-12 mb-4 mb-lg-0">
-                <div>
-                    <h3 class="section-title">Make a Difference Today</h3>
-                    <p class="section-description">
-                        Your donation is endless possibilities. Educate a child with Sidratul Muntaha Foundation.”
-                        <br><br>
-                        Together, we can uplift lives, nurture faith, and build a brighter future — support Sidratul
-                        Muntaha Foundation today.
-                        <br><br>
-                        Together, we can uplift lives, nurture faith, and build a brighter future — support Sidratul
-                        Muntaha Foundation today.
-                        <br><br>
-                        Supporting a madrasha is planting the seeds of knowledge that will shade generations
-                        to come.
-                        <br><br>
-                        Your donation to Sidratul Muntaha Foundation helps provide education, books, and a
-                        brighter future for underprivileged children.
-                        <br><br>
-                    </p>
-                </div>
-                <img src="images/Financial Support For Madrasha Students.jpeg" alt="Financial Support" class="w-100">
-                <p class="section-description mt-2">
-                    Whoever teaches knowledge will have the reward of those who act upon it.” — Prophet
-                    Muhammad ﷺ
-                    <br><br>
-                    Through Sidratul Muntaha Foundation, your donation supports Islamic and academic
-                    education for children in need.
-                    <br><br>
-                 Every book, every pen, every lesson — becomes sadaqah jariyah that lives beyond
-                    your lifetime.
-                </p>
-            </div>
-
-            <!-- Right Column: Donation Form -->
-            <div class="col-lg-6 col-md-12">
-                <div class="donation-card">
-                    <div class="card-header-custom">
-                        <h4>হাত বাড়ান দুর্গতের প্রতি</h4>
-                        <p>বন্যা, ঘূর্ণিঝড়, অগ্নিকাণ্ড—প্রতিটি দুর্যোগে অসহায় মানুষের পাশে আছে সিদরাতুল মুনতাহা ফাউন্ডেশন। এই মানবিক অভিযাত্রায় আপনিও আমাদের সঙ্গী হতে পারেন।</p>
-                    </div>
-
-                    <div class="card-body p-4">
-                        <form method="POST" action="">
-                            <!-- Quick Amount Selection -->
-                            <!-- <div class="amount-grid">
-                                <?php
-                                // $quick_amounts = [100, 500, 1000, 5000, 10000];
-                                // $current_amount = $form_values['amount'];
-                                // ?>
-                                // <?php foreach ($quick_amounts as $amount): ?>
-                                //     <button type="submit" name="amount" value="<?php echo $amount; ?>" class="amount-btn <?php echo ($current_amount == $amount) ? 'active' : ''; ?>">
-                                //         ৳ <?php echo number_format($amount); ?>
-                                //     </button>
-                                 <!-- <?php endforeach; ?> -->
-                            <!-- </div>  -->
-
-                            <!-- Donation Amount -->
-                            <div class="mb-3">
-                                <label for="donationAmount" class="form-label">
-                                    Donation Amount <span class="required">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">৳</span>
-                                    <input type="number" class="form-control" id="donationAmount" name="amount"
-                                        placeholder="Enter amount"
-                                        value="<?php echo htmlspecialchars($form_values['amount'] ?: ''); ?>"
-                                        required min="10" step="any">
-                                </div>
-                            </div>
-
-                            <!-- Your Name -->
-                            <div class="mb-3">
-                                <label for="yourName" class="form-label">Your Name <span class="required">*</span></label>
-                                <input type="text" class="form-control" id="yourName" name="name"
-                                    placeholder="Enter your full name"
-                                    value="<?php echo htmlspecialchars($form_values['name']); ?>"
-                                    required>
-                            </div>
-
-                            <!-- Phone -->
-                            <div class="mb-3">
-                                <label for="contact" class="form-label">
-                                    Phone
-                                    <i class="bi bi-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="We'll send the receipt to this contact"></i>
-                                </label>
-                                <input type="tel" class="form-control" id="contact" name="contact"
-                                    placeholder="Enter phone number"
-                                    value="<?php echo htmlspecialchars($form_values['contact']); ?>">
-                            </div>
-
-                            <!-- Your Mail -->
-                            <div class="mb-3">
-                                <label for="yourmail" class="form-label">Your Email</label>
-                                <input type="email" class="form-control" id="yourmail" name="email"
-                                    placeholder="Enter your email"
-                                    value="<?php echo htmlspecialchars($form_values['email']); ?>">
-                            </div>
-
-                            <!-- Address -->
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Your Address</label>
-                                <textarea class="form-control" id="youraddress" name="youraddress"
-                                    placeholder="Enter your address"><?php echo htmlspecialchars($form_values['youraddress']); ?></textarea>
-                            </div>
-
-                            <!-- Category -->
-                            <div class="mb-3">
-                                <label for="category" class="form-label">Category</label>
-                                <br>
-                                <select class="w-100 px-4 py-3 rounded-2 category_options" id="category" name="category">
-                                    <option value="">-- Select a category --</option>
-                                    <?php
-                                    $categories = [
-                                        'mosque-fund' => 'Mosque Project',
-                                        'madrasha-fund' => 'Madrasha Project',
-                                        'school' => 'School Project',
-                                        'hospital' => 'Hospital Project',
-                                        'zakat' => 'Zakatul Sadaka',
-                                        'disaster-relief' => 'Disaster Relief',
-                                        'education-support' => 'Education Support',
-                                        'orphan-homeless' => 'Food & Financial Aid Support For Orphan & Homeless',
-                                        'tree-plantation' => 'Plant A Tree',
-                                        'other' => 'Other'
-                                    ];
-
-                                    foreach ($categories as $value => $label) {
-                                        $selected = ($form_values['category'] == $value) ? 'selected' : '';
-                                        echo '<option value="' . $value . '" ' . $selected . '>' . $label . '</option>';
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-
-                            <!-- Donate on behalf of -->
-                            <div class="mb-3">
-                                <label for="onBehalfOf" class="form-label">Donate on behalf of</label>
-                                <input type="text" class="form-control" id="onBehalfOf" name="behalf_of"
-                                    placeholder="Optional: Someone's name"
-                                    value="<?php echo htmlspecialchars($form_values['behalf_of']); ?>">
-                            </div>
-
-                            <!-- Payment Method -->
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    Payment Method <span class="required">*</span>
-                                </label>
-                                <div class="payment-method">
-                                    <div class="form-check d-flex">
-                                        <?php
-                                        $payment_methods = [
-                                            'sslcommerz' => 'images/ssl logo.png',
-                                            'bkash' => 'images/bkash.png',
-                                            'nagad' => 'images/nogod.png',
-                                            'paypal' => 'images/paypal.png'
-                                        ];
-
-                                        foreach ($payment_methods as $method => $image) {
-                                            $checked = ($form_values['payment_method'] == $method) ? 'checked' : '';
-                                            echo '<div class="d-flex p-1 ' . ($method != 'sslcommerz' ? 'mx-3' : '') . '">
-                                                    <input class="form-check-input mt-2" type="radio" name="payment_method" id="' . $method . '" value="' . $method . '" ' . $checked . '>
-                                                    <label class="form-check-label d-flex align-items-center" for="' . $method . '">
-                                                        <span class="badge"><img src="' . $image . '" alt="' . ucfirst($method) . '"></span>
-                                                    </label>
-                                                </div>';
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tax Relief Info -->
-                            <div class="info-box">
-                                <p>
-                                    <i class="bi bi-gift-fill me-2"></i>
-                                    <strong>Tax Relief Available!</strong> You will receive tax relief when you donate to Sidratul Muntaha Foundation.
-                                    <a href="#">Learn more</a>
-                                </p>
-                            </div>
-
-                            <!-- Donate Button -->
-                            <button type="submit" class="my-3 btn btn-success btn-donate w-100">
-                                <i class="bi bi-heart-fill me-2"></i>
-                                <span>Donate Now</span>
-                            </button>
-
-                            <!-- Terms -->
-                            <div class="terms-text">
-                                By donating you agree to our
-                                <a href="#">Terms and Conditions</a> and
-                                <a href="#">Privacy Policy</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Major Projects Section (Grid Layout) -->
-<div class="projects-section">
-    <div class="container">
-        <div class="section-header" data-aos="fade-up">
-            <span class="section-badge">MAJOR INITIATIVES</span>
-            <h2 class="section-title">Our Major Projects</h2>
-            <p class="section-subtitle">Building infrastructure for long-term community development</p>
-        </div>
-        <div class="row" data-aos="fade-up" data-aos-delay="200">
-            <!-- Project Card 1 -->
-            <div class="col-lg-4 col-md-6">
-                <div class="project-card">
-                    <div class="project-img">
-                        <img src="images/Hospital Project.jpg" alt="Hospital">
-                    </div>
-                    <div class="project-body">
-                        <h3 class="project-title">Hospital Project</h3>
-                        <p class="project-text">Providing quality healthcare services to underserved communities with compassion and excellence.</p>
-                        <a href="donate.php" class="project-btn mt-3">
-                            Donate Now
-                            <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project Card 2 -->
-            <div class="col-lg-4 col-md-6">
-                <div class="project-card">
-                    <div class="project-img">
-                        <img src="images/school.png" alt="School">
-                    </div>
-                    <div class="project-body">
-                        <h3 class="project-title">School Project</h3>
-                        <p class="project-text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</p>
-                        <a href="donate.php" class="project-btn mt-3">
-                            Donate Now
-                            <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project Card 3 -->
-            <div class="col-lg-4 col-md-6">
-                <div class="project-card">
-                    <div class="project-img">
-                        <img src="images/mosque.png" alt="Mosque">
-                    </div>
-                    <div class="project-body">
-                        <h3 class="project-title">Mosque Project</h3>
-                        <p class="project-text">Creating spiritual centers for worship, learning, and community gathering for all Muslims.</p>
-                        <a href="donate.php" class="project-btn mt-3">
-                            Donate Now
-                            <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- View All Button -->
-        <div class="text-center mt-5" data-aos="fade-up">
-            <a href="projects.php" class="see-all-btn">
-                View All Projects
-                <i class="fa fa-arrow-right"></i>
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Social Projects Section (Static Grid) -->
-<div class="activities-section">
-    <div class="container">
-        <div class="section-header" data-aos="fade-up">
-            <span class="section-badge">WHAT WE DO</span>
-            <h2 class="section-title">Our Social Works</h2>
-            <p class="section-subtitle">Making a difference through meaningful actions and sustainable projects</p>
-        </div>
-
-        <div class="row" data-aos="fade-up" data-aos-delay="200">
-            <!-- Project 1: Plant a Tree -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="course">
-                    <div class="course_image">
-                        <a href="project-details.php">
-                            <img src="images/tree-plantation.jpg" alt="Tree Plantation">
-                        </a>
-                    </div>
-                    <div class="course_body">
-                        <div class="course_header">
-                            <span class="course_tag">Social Projects</span>
-                        </div>
-                        <div class="course_title">
-                            <h3><a href="project-details.php">Plant A Tree</a></h3>
-                        </div>
-                        <div class="course_text">Building educational institutions that nurture both Islamic values and modern knowledge for future generations.</div>
-                        <a href="project-details.php" class="project-btn mt-3">
-                            See Details
-                            <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project 2: Disaster Relief Project -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="course">
-                    <div class="course_image">
-                        <a href="project-details.php">
-                            <img src="images/SocialWork10.jpg" alt="Hospital Project">
-                        </a>
-                    </div>
-                    <div class="course_body">
-                        <div class="course_header">
-                            <span class="course_tag">Social</span>
-                        </div>
-                        <div class="course_title">
-                            <h3><a href="project-details.php">Disaster Relief</a></h3>
-                        </div>
-                        <div class="course_text">Providing quality relief to people in need</div>
-                        <a href="project-details.php" class="project-btn mt-3">
-                            See Details
-                            <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project 3: Financial Support Program -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="course">
-                    <div class="course_image">
-                        <a href="project-details.php">
-                            <img src="images/Scholarship1.jpg" alt="scholarshop1.jpg">
-                        </a>
-                    </div>
-                    <div class="course_body">
-                        <div class="course_header">
-                            <span class="course_tag">Social</span>
-                        </div>
-                        <div class="course_title">
-                            <h3><a href="project-details.php">Financial Support Program</a></h3>
-                        </div>
-                        <div class="course_text">Giving Financial Aid to poor and meritorious students</div>
-                        <a href="project-details.php" class="project-btn mt-3">
-                            See Details
-                            <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!--=======================================================================-->
-<!------------------------ CONTENT END --------------------------------------->
-<!--=======================================================================-->
-
-<?php require './components/join-platform-text.php'; ?>
-<?php require './components/footer.php'; ?>
-
-    <!-- <script>
-    // ================================================================
-    // INFINITE LOOP SLIDER JAVASCRIPT - FIXED VERSION
-    // ================================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        const sliderWrapper = document.querySelector('.custom-slider-wrapper');
-        const sliderTrack = document.querySelector('.custom-slider-track');
-        const slides = document.querySelectorAll('.custom-slide');
-        const prevBtn = document.querySelector('.custom-slider-prev');
-        const nextBtn = document.querySelector('.custom-slider-next');
-        const dotsContainer = document.querySelector('.custom-slider-dots');
-
-        if (!sliderTrack || slides.length === 0) return;
-
-        let currentIndex = 0;
-        let slidesPerView = 3;
-        let autoPlayInterval;
-        let isTransitioning = false;
-        let slideWidth = 0;
-        let gap = 30;
-
-        // Clone slides for infinite loop
-        function cloneSlides() {
-            // Remove any existing clones
-            const existingClones = sliderTrack.querySelectorAll('.clone');
-            existingClones.forEach(clone => clone.remove());
-
-            // Clone first set of slides and append to end
-            slides.forEach(slide => {
-                const cloneEnd = slide.cloneNode(true);
-                cloneEnd.classList.add('clone');
-                sliderTrack.appendChild(cloneEnd);
-            });
-
-            // Clone last set of slides and prepend to start
-            for (let i = slides.length - 1; i >= 0; i--) {
-                const cloneStart = slides[i].cloneNode(true);
-                cloneStart.classList.add('clone');
-                sliderTrack.insertBefore(cloneStart, sliderTrack.firstChild);
-            }
-        }
-
-        // Calculate slides per view based on window width
-        function updateSlidesPerView() {
-            const width = window.innerWidth;
-            if (width < 768) {
-                slidesPerView = 1;
-                gap = 0;
-            } else if (width < 992) {
-                slidesPerView = 2;
-                gap = 30;
-            } else {
-                slidesPerView = 3;
-                gap = 30;
-            }
-        }
-
-        // Calculate dimensions
-        function calculateDimensions() {
-            const containerWidth = sliderWrapper.offsetWidth;
-            slideWidth = (containerWidth - (gap * (slidesPerView - 1))) / slidesPerView;
-
-            // Update all slides width
-            const allSlides = sliderTrack.querySelectorAll('.custom-slide');
-            allSlides.forEach(slide => {
-                slide.style.width = `${slideWidth}px`;
-                slide.style.marginRight = gap > 0 ? `${gap}px` : '0';
-            });
-        }
-
-        // Get total number of original slides
-        function getTotalSlides() {
-            return slides.length;
-        }
-
-        // Calculate transform value
-        function calculateTransform(index) {
-            // Offset by the number of cloned slides at the start
-            const offset = slides.length;
-            const actualIndex = offset + index;
-            return actualIndex * (slideWidth + gap);
-        }
-
-        // Go to specific slide
-        function goToSlide(index, instant = false) {
-            if (isTransitioning && !instant) return;
-
-            const totalSlides = getTotalSlides();
-
-            if (instant) {
-                sliderTrack.style.transition = 'none';
-                currentIndex = index;
-            } else {
-                sliderTrack.style.transition = 'transform 0.5s ease-in-out';
-                currentIndex = index;
-                isTransitioning = true;
-            }
-
-            const transformValue = calculateTransform(currentIndex);
-            sliderTrack.style.transform = `translateX(-${transformValue}px)`;
-
-            updateDots();
-
-            if (!instant) {
-                setTimeout(() => {
-                    isTransitioning = false;
-
-                    // Handle infinite loop
-                    if (currentIndex >= totalSlides) {
-                        // We've gone past the end, jump to start
-                        currentIndex = 0;
-                        goToSlide(0, true);
-                    } else if (currentIndex < 0) {
-                        // We've gone before the start, jump to end
-                        currentIndex = totalSlides - 1;
-                        goToSlide(totalSlides - 1, true);
-                    }
-                }, 500);
-            }
-        }
-
-        // Next slide
-        function nextSlide() {
-            goToSlide(currentIndex + 1);
-        }
-
-        // Previous slide
-        function prevSlide() {
-            goToSlide(currentIndex - 1);
-        }
-
-        // Create dots (only for original slides)
-        function createDots() {
-            dotsContainer.innerHTML = '';
-            const totalSlides = getTotalSlides();
-
-            for (let i = 0; i < totalSlides; i++) {
-                const dot = document.createElement('button');
-                dot.classList.add('slider-dot');
-                dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-                if (i === currentIndex) {
-                    dot.classList.add('active');
-                }
-                dot.addEventListener('click', () => goToSlide(i));
-                dotsContainer.appendChild(dot);
-            }
-        }
-
-        // Update dots
-        function updateDots() {
-            const dots = document.querySelectorAll('.slider-dot');
-            const totalSlides = getTotalSlides();
-
-            // Handle wrapping for dot display
-            let displayIndex = currentIndex % totalSlides;
-            if (displayIndex < 0) displayIndex = totalSlides + displayIndex;
-
-            dots.forEach((dot, idx) => {
-                dot.classList.toggle('active', idx === displayIndex);
-            });
-        }
-
-        // Auto play
-        function startAutoPlay() {
-            stopAutoPlay();
-            autoPlayInterval = setInterval(nextSlide, 4000);
-        }
-
-        function stopAutoPlay() {
-            if (autoPlayInterval) {
-                clearInterval(autoPlayInterval);
-            }
-        }
-
-        // Event listeners
-        prevBtn.addEventListener('click', () => {
-            prevSlide();
-            stopAutoPlay();
-            startAutoPlay();
-        });
-
-        nextBtn.addEventListener('click', () => {
-            nextSlide();
-            stopAutoPlay();
-            startAutoPlay();
-        });
-
-        // Pause on hover
-        sliderWrapper.addEventListener('mouseenter', stopAutoPlay);
-        sliderWrapper.addEventListener('mouseleave', startAutoPlay);
-
-        // Handle window resize
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                updateSlidesPerView();
-                calculateDimensions();
-                goToSlide(currentIndex, true);
-            }, 250);
-        });
-
-        // Touch/swipe support
-        let touchStartX = 0;
-        let touchEndX = 0;
-        let touchStartY = 0;
-        let touchEndY = 0;
-
-        sliderWrapper.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-            stopAutoPlay();
-        }, {
-            passive: true
-        });
-
-        sliderWrapper.addEventListener('touchmove', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            touchEndY = e.changedTouches[0].screenY;
-        }, {
-            passive: true
-        });
-
-        sliderWrapper.addEventListener('touchend', () => {
-            const diffX = touchStartX - touchEndX;
-            const diffY = touchStartY - touchEndY;
-
-            // Only trigger if horizontal swipe is dominant
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                if (diffX > 0) {
-                    nextSlide(); // Swipe left
-                } else {
-                    prevSlide(); // Swipe right
-                }
-            }
-
-            startAutoPlay();
-        });
-
-        // Initialize slider
-        updateSlidesPerView();
-        cloneSlides();
-        calculateDimensions();
-        createDots();
-        goToSlide(0, true);
-        startAutoPlay();
-    });
-</script> -->

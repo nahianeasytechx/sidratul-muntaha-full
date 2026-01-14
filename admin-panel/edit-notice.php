@@ -6,7 +6,9 @@ protectPage();
 
 // Check if notice ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: all-notices.php?error=Notice ID is required');
+    
+  echo"<script>window.location.href='all-notices.php?error=Notice ID is required'</script>";
+
     exit();
 }
 
@@ -14,10 +16,9 @@ $notice_id = intval($_GET['id']);
 $notice = getNoticeById($notice_id);
 
 if (!$notice) {
-    header('Location: all-notices.php?error=Notice not found');
+      echo"<script>window.location.href='all-notices.php?error=Notice not found'</script>";
     exit();
 }
-
 
 
 // Handle form submission

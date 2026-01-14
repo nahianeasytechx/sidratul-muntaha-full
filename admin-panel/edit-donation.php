@@ -7,6 +7,7 @@ require './components/header.php';
 
 // Get donation ID from URL
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    
     header('Location: donation-list.php?error=invalid_id');
     exit();
 }

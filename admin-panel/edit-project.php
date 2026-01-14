@@ -1,22 +1,24 @@
 <?php
-$page_title = 'Edit Activity';
+$page_title = 'Edit Project';
 require './components/header.php';
 protectPage();
 
-// Get activity ID from URL
-$activity_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// Get activity by slug only - NO ID FALLBACK
+$activity = null;
 
-if ($activity_id <= 0) {
-  header('Location: all-activities.php');
-  exit();
-}
-
-// Fetch activity data
-$activity = getActivityById($activity_id);
-
-if (!$activity) {
-  header('Location: all-activities.php');
-  exit();
+if (isset($_GET['slug']) && !empty($_GET['slug'])) {
+    // Get activity by slug
+    $slug = $_GET['slug'];
+    $activity = getActivityBySlug($slug);
+    
+    if (!$activity) {
+        echo "<script>window.location.href='all-projects.php?error=" . urlencode('Project not found') . "'</script>";
+        exit();
+    }
+} else {
+    // No slug provided - redirect with error
+    echo "<script>window.location.href='all-projects.php?error=" . urlencode('Project slug is required') . "'</script>";
+    exit();
 }
 
 // Decode sections data
@@ -67,10 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_FILES['image']['size'] <= 5242880) {
           if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
             // Delete old image if exists
-            if (!empty($activity['image']) && file_exists($uploadDir . $activity['image'])) {
-              unlink($uploadDir . $activity['image']);
+            $oldImagePath = (strpos($activity['image'], '../uploads/') === 0) 
+                ? $activity['image'] 
+                : $uploadDir . $activity['image'];
+            
+            if (!empty($activity['image']) && file_exists($oldImagePath)) {
+              unlink($oldImagePath);
             }
-            $image = $fileName;
+            $image = $targetFile; // Store full path
           }
         }
       }
@@ -124,20 +130,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'sections_data' => $sections_data
     ];
 
-    $result = updateActivity($activity_id, $activityData);
+    // Use slug-aware update function
+    $result = updateActivityWithSlug($activity['id'], $activityData);
 
     if ($result['success']) {
+      // Redirect using new slug
+      $redirectSlug = !empty($result['slug']) ? $result['slug'] : $activity['slug'];
+      $redirectUrl = "view-project.php?slug=" . urlencode($redirectSlug);
+      
       echo '<script>
               Swal.fire({
                 icon: "success",
                 title: "Success!",
-                text: "Activity updated successfully!",
+                html: "Project updated successfully!<br>' . 
+                      '<small class=\"text-muted\">Slug: ' . htmlspecialchars($redirectSlug) . '</small>",
                 confirmButtonColor: "#10b981",
                 confirmButtonText: "OK",
                 timer: 2000,
                 timerProgressBar: true,
                 willClose: () => {
-                  window.location.href = "all-activities.php";
+                  window.location.href = "' . $redirectUrl . '";
                 }
               });
             </script>';
@@ -155,7 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 ?>
-
 <style>
   .notice-form-container {
     background: #fff;
@@ -401,29 +412,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     border: 2px solid #e2e8f0;
   }
 </style>
-
 <div class="content-wrapper">
   <div class="dashboard">
     <div class="page-title-section">
       <div class="icon-box" style="background-color: #059669 !important;">
         <i class="fa-solid fa-pen-to-square text"></i>
       </div>
-      <h1>Edit Activity</h1>
+      <h1>Edit Project</h1>
     </div>
 
     <div class="row">
       <div class="col-lg-10 col-xl-9 mx-auto">
         <div class="notice-form-container">
           <div class="form-header">
-            <h1>Edit Activity</h1>
-            <p>Update activity details below</p>
+            <h1>Edit Project</h1>
+            <p>Update project details below</p>
+            <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">
+              <i class="fa-solid fa-link me-1"></i> 
+              Current slug: <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px;"><?= htmlspecialchars($activity['slug']) ?></code>
+            </p>
           </div>
 
           <form action="" method="post" enctype="multipart/form-data" id="activityForm">
             <div class="modern-form-group">
-              <label><i class="fa-solid fa-heading"></i> Activity Title</label>
+              <label><i class="fa-solid fa-heading"></i> Project Title</label>
               <input type="text" name="title" class="modern-input" required
                 value="<?php echo htmlspecialchars($activity['title']); ?>">
+              <small class="text-muted">Changing the title will update the URL slug</small>
             </div>
 
             <div class="form-row">
@@ -449,10 +464,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="modern-form-group">
-              <label><i class="fa-solid fa-image"></i> Activity Image</label>
+              <label><i class="fa-solid fa-image"></i> Project Image</label>
               <?php if (!empty($activity['image'])): ?>
                 <div class="mb-3">
-                  <img src="../uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>" 
+                  <?php 
+                  // Handle both old format (just filename) and new format (full path)
+                  $imagePath = (strpos($activity['image'], '../uploads/') === 0) 
+                      ? $activity['image'] 
+                      : '../uploads/activities/' . $activity['image'];
+                  ?>
+                  <img src="<?php echo htmlspecialchars($imagePath); ?>" 
                        alt="Current Image" class="current-image">
                   <p class="text-muted mt-2">Current image (upload new to replace)</p>
                 </div>
@@ -530,11 +551,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="form-actions">
-              <button type="button" class="btn-cancel" onclick="window.location.href='all-activities.php'">
+              <button type="button" class="btn-cancel" onclick="window.location.href='all-projects.php'">
                 <i class="fa-solid fa-times"></i> Cancel
               </button>
               <button type="submit" class="btn-submit">
-                <i class="fa-solid fa-floppy-disk"></i> Update Activity
+                <i class="fa-solid fa-floppy-disk"></i> Update Project
               </button>
             </div>
           </form>
@@ -688,8 +709,8 @@ document.getElementById('activityForm').addEventListener('submit', function(e) {
   e.preventDefault();
   
   Swal.fire({
-    title: 'Update Activity?',
-    text: 'Are you sure you want to update this activity?',
+    title: 'Update Project?',
+    text: 'Are you sure you want to update this project?',
     icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#10b981',
@@ -709,3 +730,5 @@ document.getElementById('activityForm').addEventListener('submit', function(e) {
 </script>
 
 <?php require './components/footer.php'; ?>
+
+

@@ -1,11 +1,10 @@
 <?php
-$page_title = 'Add Activity';
+$page_title = 'Add Project';
 require './components/header.php';
 protectPage();
 
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
-
 <style>
   .notice-form-container {
     background: #fff;
@@ -398,7 +397,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     background-color: #059669 !important;
   }
 </style>
-
 <div class="content-wrapper">
   <div class="dashboard">
     <div class="page-title-section">
@@ -452,7 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check file size (5MB max)
         if ($_FILES['image']['size'] <= 5242880) {
           if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-            $image = $fileName;
+            $image = $targetFile; // Store full path
           } else {
             echo '<div class="message-box error">
                     <i class="fa-solid fa-circle-exclamation"></i>
@@ -528,18 +526,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $activityData['sections_data'] = $sections_data;
     }
 
-    // Create activity in database
-    $result = createActivity($activityData);
+    // Create activity with slug in database
+    $result = createActivityWithSlug($activityData);
 
     if ($result['success']) {
       echo '<div class="message-box success">
               <i class="fa-solid fa-circle-check"></i>
-              Activity created successfully!
+              Project created successfully! Slug: ' . htmlspecialchars($result['slug']) . '
             </div>';
 
       echo '<script>
               setTimeout(function() {
-                window.location.href = "all-activities.php";
+                window.location.href = "all-projects.php";
               }, 1500);
             </script>';
     } else {
@@ -556,6 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <label><i class="fa-solid fa-heading"></i> Project Title</label>
               <input type="text" name="title" class="modern-input" placeholder="Enter activity title..." required
                 value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>">
+              <small class="text-muted">A unique URL slug will be automatically generated from the title</small>
             </div>
 
             <div class="form-row">
@@ -651,7 +650,6 @@ const ActivitySections = (function() {
       '</div>';
 
     itemsList.appendChild(newItem);
-
   }
 
   function removeItem(button) {
@@ -677,7 +675,6 @@ const ActivitySections = (function() {
     }
     
     const newIndex = container.querySelectorAll('.dynamic-section').length;
-    console.log('Adding section index:', newIndex);
 
     const newSection = document.createElement('div');
     newSection.className = 'card shadow-sm dynamic-section';
@@ -714,7 +711,6 @@ const ActivitySections = (function() {
       '</div>';
 
     container.appendChild(newSection);
-
   }
 
   function removeSection(button) {
@@ -755,7 +751,7 @@ const ActivitySections = (function() {
   };
 })();
 
-// Fix for page scrolling down on load - THIS IS THE FIX
+// Fix for page scrolling down on load
 document.addEventListener('DOMContentLoaded', function() {
   // Scroll to top when page loads
   window.scrollTo(0, 0);
@@ -813,3 +809,6 @@ window.addEventListener('beforeunload', function() {
 </script>
 
 <?php require './components/footer.php'; ?>
+
+
+

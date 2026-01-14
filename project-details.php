@@ -1,18 +1,27 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Project Details';
- require './components/header.php'; 
-// Get activity ID from URL
-$activity_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+require './components/header.php';
 
+// Get activity slug from URL (slug-based routing)
+$activity_slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 
-// Fetch activity from database
-$activity = getActivityById($activity_id);
+// If no slug provided, redirect to projects page
+if (empty($activity_slug)) {
+    echo "<script>
+    window.location.href='projects.php'
+    </script>";
+    exit();
+}
+
+// Fetch activity by slug from database
+$activity = getActivityBySlug($activity_slug);
 
 // Check if activity exists
 if (!$activity) {
     echo "<script>
-    window.location.href='index.php'
+    alert('Project not found!');
+    window.location.href='projects.php'
     </script>";
     exit();
 }
@@ -23,6 +32,95 @@ if (!empty($activity['sections_data'])) {
     $sections = json_decode($activity['sections_data'], true);
 }
 ?>
+
+<link rel="stylesheet" href="./assets/css/project-details.css">
+
+<!-- Home Section -->
+<div class="home">
+    <div class="home_background parallax_background parallax-window" data-parallax="scroll" data-image-src="images/about.jpg" data-speed="0.8"></div>
+    <div class="home_container">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div class="home_content text-center">
+                        <div class="home_title"><?php echo htmlspecialchars($activity['title']); ?></div>
+                        <div class="breadcrumbs">
+                            <ul>
+                                <li><a href="projects.php">Projects</a></li>
+                                <li><?php echo htmlspecialchars($activity['title']); ?></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project details start -->
+<div class="container">
+    <div class="row mt-5">
+        <!-- Left Column: Image, Objectives, and Description -->
+        <div class="col-md-12 <?php echo !empty($sections) ? 'col-lg-6' : 'col-lg-12'; ?> program-details">
+            <h2><?php echo htmlspecialchars($activity['title']); ?> Details</h2>
+
+            <!-- Activity Image -->
+            <?php if (!empty($activity['image'])): ?>
+                <?php
+                $projectImage = 'images/school.png'; // default placeholder
+                if (!empty($activity['image'])) {
+                    $projectImage = preg_replace('/^\.\.\//', '', $activity['image']);
+                }
+                ?>
+                <img src="<?php echo htmlspecialchars($projectImage); ?>"
+                    alt="<?php echo htmlspecialchars($activity['title']); ?>"
+                    class="w-100 rounded-5">
+            <?php else: ?>
+                <img src="images/school.png" alt="Default Project Image" class="w-100 rounded-5">
+            <?php endif; ?>
+
+            <!-- Objectives -->
+            <div class="mt-4">
+                <p><?php echo nl2br(htmlspecialchars($activity['objectives'])); ?></p>
+            </div>
+
+            <!-- Detailed Description -->
+            <div class="mt-4">
+                <p><?php echo nl2br(htmlspecialchars($activity['description'])); ?></p>
+            </div>
+
+            <!-- Static Scholarship Button -->
+            <div class="mt-4">
+                <a href="scholarship.php" class="scholarship-btn">
+                    Get a Scholarship
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Column: Dynamic Sections (Only show if sections exist) -->
+        <?php if (!empty($sections)): ?>
+            <div data-aos="fade-up" class="col-md-12 col-lg-6 mt-5">
+                <?php foreach ($sections as $index => $section): ?>
+                    <div class="mt-4 p-4 card-bg">
+                        <h4><?php echo htmlspecialchars($section['title']); ?></h4>
+                        <ul>
+                            <?php foreach ($section['items'] as $item): ?>
+                                <li class="d-flex gap-2 fs-6">
+                                    <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                                    <?php echo htmlspecialchars($item); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+<!-- Program details end -->
+
+<?php require './components/join-platform-text.php'; ?>
+<?php require './components/footer.php'; ?>
 
 
 <style>
@@ -141,123 +239,3 @@ if (!empty($activity['sections_data'])) {
         }
     }
 </style>
-<!-- Home Section -->
-<div class="home">
-    <div class="home_background parallax_background parallax-window" data-parallax="scroll" data-image-src="images/about.jpg" data-speed="0.8"></div>
-    <div class="home_container">
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <div class="home_content text-center">
-                        <div class="home_title"><?php echo htmlspecialchars($activity['title']); ?></div>
-                        <div class="breadcrumbs">
-                            <ul>
-                                <li><a href="projects.php">Projects</a></li>
-                                <li><?php echo htmlspecialchars($activity['title']); ?></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Project details start -->
-<div class="container">
-    <div class="row mt-5">
-        <!-- Left Column: Image, Objectives, and Description -->
-        <div class="col-md-12 col-lg-6 program-details">
-            <h2><?php echo htmlspecialchars($activity['title']); ?> Details</h2>
-
-            <!-- Activity Image -->
-            <?php if (!empty($activity['image'])): ?>
-                <img src="uploads/activities/<?php echo htmlspecialchars($activity['image']); ?>"
-                    alt="<?php echo htmlspecialchars($activity['title']); ?>"
-                    class="w-100 rounded-5">
-            <?php else: ?>
-                <img src="images/school.png" alt="Default Project Image" class="w-100 rounded-5">
-            <?php endif; ?>
-
-            <!-- Objectives -->
-            <div class="mt-4">
-                <p><?php echo nl2br(htmlspecialchars($activity['objectives'])); ?></p>
-            </div>
-
-
-            <!-- Detailed Description -->
-            <div class="mt-4">
-                <p><?php echo nl2br(htmlspecialchars($activity['description'])); ?></p>
-            </div>
-
-            <!-- Static Scholarship Button -->
-            <div class="mt-4">
-                <a href="scholarship.php" class="scholarship-btn">
-                    Get a Scholarship
-                </a>
-            </div>
-        </div>
-
-        <!-- Right Column: Dynamic Sections -->
-        <div data-aos="fade-up" class="col-md-12 col-lg-6 mt-5">
-            <?php if (!empty($sections)): ?>
-                <?php foreach ($sections as $index => $section): ?>
-                    <div class="mt-4 p-4 card-bg">
-                        <h4><?php echo htmlspecialchars($section['title']); ?></h4>
-                        <ul>
-                            <?php foreach ($section['items'] as $item): ?>
-                                <li class="d-flex gap-2 fs-6">
-                                    <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                                    <?php echo htmlspecialchars($item); ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <!-- Default sections if no dynamic sections exist -->
-                <div class="mt-4 p-4 card-bg">
-                    <h4>Expenditure Sectors</h4>
-                    <ul>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Land purchase for the institute
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Construction of the institute's infrastructure
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Smart Tailoring and Fashion Design
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Procurement of equipment
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Covering accommodation and food costs for trainees through scholarships
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Management expenses
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Driving Training
-                        </li>
-                        <li class="d-flex gap-2 fs-6">
-                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
-                            Chef and Kitchen Management
-                        </li>
-                    </ul>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-<!-- Program details end -->
-
-<?php require './components/join-platform-text.php'; ?>
-<?php require './components/footer.php'; ?>

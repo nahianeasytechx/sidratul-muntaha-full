@@ -6,30 +6,12 @@ require './components/header.php';
 // Protect page
 protectPage();
 
-// Handle DELETE request FIRST (before any output)
-if (isset($_GET['delete_id'])) {
-    $delete_id = intval($_GET['delete_id']);
-    $result = deleteDonationCategory($delete_id);
-
-    if ($result['success']) {
-        $_SESSION['success_message'] = $result['message'];
-    } else {
-        $_SESSION['error_message'] = $result['message'];
-    }
-
-    // Redirect to remove delete_id from URL
-    echo "<script>
-        window.location.href = 'donation-categories.php';
-    </script>";
-    exit;
-}
-
 // Handle form submissions with POST-Redirect-GET pattern
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_category'])) {
-        $result = createDonationCategory($_POST, $_FILES);
+        $result = createDonationCategoryWithSlug($_POST, $_FILES);
         if ($result['success']) {
-            $_SESSION['success_message'] = $result['message'];
+            $_SESSION['success_message'] = $result['message'] . '  ';
         } else {
             $_SESSION['error_message'] = $result['message'];
         }
@@ -41,13 +23,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['update_category'])) {
-        $id = intval($_POST['category_id']);
-        $result = updateDonationCategory($id, $_POST, $_FILES);
-        if ($result['success']) {
-            $_SESSION['success_message'] = $result['message'];
+        $slug = trim($_POST['category_slug']);
+            // Use the edit parameter from the URL instead of POST
+    if (isset($_GET['edit'])) {
+        $slug = trim($_GET['edit']);
+        
+        // Get category by slug to find its ID
+        $category = getDonationCategoryBySlug($slug);
+        
+        if ($category) {
+            $result = updateDonationCategoryWithSlug($category['id'], $_POST, $_FILES);
+            // ... rest of your code
         } else {
-            $_SESSION['error_message'] = $result['message'];
+            $_SESSION['error_message'] = 'Category not found.';
         }
+    } else {
+        $_SESSION['error_message'] = 'No category specified for editing.';
+    }
+
+        // Get category by slug to find its ID
+        $category = getDonationCategoryBySlug($slug);
+
+        if ($category) {
+            $result = updateDonationCategoryWithSlug($category['id'], $_POST, $_FILES);
+            if ($result['success']) {
+                $_SESSION['success_message'] = $result['message'];
+            } else {
+                $_SESSION['error_message'] = $result['message'];
+            }
+        } else {
+            $_SESSION['error_message'] = 'Category not found.';
+        }
+
         // Redirect to prevent form resubmission
         echo "<script>
             window.location.href = 'donation-categories.php';
@@ -70,14 +77,19 @@ if (isset($_SESSION['error_message'])) {
     unset($_SESSION['error_message']);
 }
 
+// Check for deleted parameter
+if (isset($_GET['deleted']) && $_GET['deleted'] == 1) {
+    $success_message = 'Category deleted successfully!';
+}
+
 // Get all categories
 $categories = getAllDonationCategories();
 
 // Get category for editing
 $edit_category = null;
 if (isset($_GET['edit'])) {
-    $edit_id = intval($_GET['edit']);
-    $edit_category = getDonationCategoryById($edit_id);
+    $edit_slug = trim($_GET['edit']);
+    $edit_category = getDonationCategoryBySlug($edit_slug);
 }
 
 ?>
@@ -453,9 +465,6 @@ if (isset($_GET['edit'])) {
 
 <div class="content-wrapper">
     <!-- Page Header -->
-     <div class="feature-alert alert alert-danger fs-1">
-    ⚠️ Feature in Progress
-</div>
     <div class="page-header">
         <div class="w-100 d-flex flex-wrap align-items-start justify-content-between gap-3">
             <div class="d-flex gap-3">
@@ -478,7 +487,7 @@ if (isset($_GET['edit'])) {
         <?php if (!empty($success_message)): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fa-solid fa-circle-check me-2"></i>
-                <?php echo htmlspecialchars($success_message); ?>
+                <?php echo htmlspecialchars($success_message); ?> 
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -502,15 +511,14 @@ if (isset($_GET['edit'])) {
                         </h3>
 
                         <form action="" method="post" enctype="multipart/form-data" id="categoryForm">
-                            <?php if ($edit_category): ?>
-                                <input type="hidden" name="category_id" value="<?php echo $edit_category['id']; ?>">
-                            <?php endif; ?>
+
 
                             <div class="mb-3">
                                 <label for="title" class="form-label">Category Title <span class="text-danger">*</span></label>
                                 <input type="text" name="title" id="title" class="form-control"
                                     placeholder="Enter category title"
                                     value="<?php echo $edit_category ? htmlspecialchars($edit_category['title']) : ''; ?>" required maxlength="255">
+                               
                             </div>
 
                             <div class="mb-3">
@@ -537,7 +545,7 @@ if (isset($_GET['edit'])) {
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
                                 <textarea name="description" id="description" rows="4" class="form-control"
-                                    placeholder="Write a short description..." required><?php echo $edit_category ? htmlspecialchars($edit_category['description']) : ''; ?></textarea>
+                                    placeholder="Write a short description..." ><?php echo $edit_category ? htmlspecialchars($edit_category['description']) : ''; ?></textarea>
                             </div>
 
                             <div class="d-flex gap-2 mt-4">
@@ -573,6 +581,7 @@ if (isset($_GET['edit'])) {
                                             <th>#</th>
                                             <th>Image</th>
                                             <th>Title</th>
+                                            <th>Slug</th>
                                             <th>Created</th>
                                             <th colspan="3" class="text-center">Actions</th>
                                         </tr>
@@ -596,6 +605,7 @@ if (isset($_GET['edit'])) {
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="fw-semibold"><?php echo htmlspecialchars($category['title']); ?></td>
+                                                <td><small class="text-muted"><?php echo htmlspecialchars($category['slug']); ?></small></td>
                                                 <td><small class="text-muted"><?php echo date('M d, Y', strtotime($category['created_at'])); ?></small></td>
                                                 <td class="text-center">
                                                     <button class="p-2 btn-outline-primary" data-bs-toggle="modal" data-bs-target="#descModal<?php echo $category['id']; ?>" title="View Details">
@@ -603,16 +613,18 @@ if (isset($_GET['edit'])) {
                                                     </button>
                                                 </td>
                                                 <td class="text-center">
-                                                    <a href="?edit=<?php echo $category['id']; ?>" class="p-2 btn-outline-info" title="Edit">
+                                                    <a href="?edit=<?php echo urlencode($category['slug']); ?>" class="p-2 btn-outline-info" title="Edit">
                                                         <i class="fa-solid fa-pen-to-square"></i>
                                                     </a>
                                                 </td>
                                                 <td class="text-center">
-                                                    <a href="donation-categories.php?delete_id=<?php echo $category['id']; ?>"
-                                                        class="p-2 btn-outline-danger delete-btn"
-                                                        title="Delete">
+                                                    <button
+                                                        class="p-2 btn-outline-danger"
+                                                        title="Delete"
+                                                        onclick="window.location.href='delete-donation-category.php?slug=<?= urlencode($category['slug']) ?>'">
                                                         <i class="fa-solid fa-trash"></i>
-                                                    </a>
+                                                    </button>
+
                                                 </td>
                                             </tr>
 
@@ -638,6 +650,11 @@ if (isset($_GET['edit'])) {
                                                             <?php endif; ?>
                                                             <p><?php echo htmlspecialchars($category['description']); ?></p>
                                                             <div class="text-muted mt-3">
+                                                                <small>
+                                                                    <i class="fa-solid fa-link me-2"></i>
+                                                                    Slug: <code><?php echo htmlspecialchars($category['slug']); ?></code>
+                                                                </small>
+                                                                <br>
                                                                 <small>
                                                                     <i class="fa-solid fa-calendar me-2"></i>
                                                                     Created: <?php echo date('F d, Y', strtotime($category['created_at'])); ?>
@@ -715,7 +732,7 @@ if (isset($_GET['edit'])) {
     /* ===============================
        SweetAlert Delete Confirmation
     ================================ */
-    function confirmDelete(id) {
+    function confirmDelete(slug) {
         Swal.fire({
             title: 'Are you sure?',
             text: 'This category will be permanently deleted.',
@@ -727,7 +744,8 @@ if (isset($_GET['edit'])) {
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = 'donation-categories.php?delete_id=' + id;
+                // Use the separate delete page instead of inline deletion
+                window.location.href = 'delete-donation-category.php?slug=' + encodeURIComponent(slug);
             }
         });
     }

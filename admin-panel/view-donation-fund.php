@@ -7,7 +7,7 @@ require './components/header.php';
 
 // Get donation ID from URL
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header('Location: donation-list.php');
+          echo"<script>window.location.href='donation-list.php'</script>";
     exit();
 }
 
@@ -15,7 +15,7 @@ $donation_id = $_GET['id'];
 $donation = getDonationById($donation_id);
 
 if (!$donation) {
-    header('Location: donation-list.php?error=donation_not_found');
+          echo"<script>window.location.href='donation-list.php?error=donation_not_found'</script>";
     exit();
 }
 

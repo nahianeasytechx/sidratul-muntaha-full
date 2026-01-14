@@ -5,7 +5,7 @@ require './components/header.php';
 
 // Protect page - check admin or user login
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+  echo"<script>window.location.href='login.php'</script>";
     exit;
 }
 
@@ -54,7 +54,7 @@ if (isset($_POST['delete_image'])) {
     $result = deleteProfileImage($user_id);
     if ($result['success']) {
         $_SESSION['success_msg'] = $result['message'];
-        header("Location: " . $_SERVER['PHP_SELF']);
+     echo"<script>window.location.href='settings.php'</script>";
         exit;
     } else {
         $error_msg = $result['message'];
@@ -250,7 +250,7 @@ $settings = getUserSettings($user_id);
         /* Content Grid */
         .content-grid {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 1fr 1fr;
             gap: 24px;
         }
 
@@ -714,10 +714,10 @@ $settings = getUserSettings($user_id);
                 <div class="card">
                     <div class="card-header">
                         <i class="fa-solid fa-user-circle"></i>
-                        <h2>Profile Information</h2>
+                        <h2>Profile & Credentials Information</h2>
                     </div>
                     <div class="card-body">
-                        <div class="profile-image-wrapper">
+                        <!-- <div class="profile-image-wrapper">
                             <?php if (!empty($settings['profile_image']) && file_exists($settings['profile_image'])): ?>
                                 <img src="<?= $settings['profile_image'] ?>" class="profile" alt="Profile">
                                 <form method="post" style="display: inline;">
@@ -734,11 +734,11 @@ $settings = getUserSettings($user_id);
                             <a href="#" class="profile-change-link" onclick="document.getElementById('profile_image').click(); return false;">
                                 <i class="fa-solid fa-camera"></i> Click the current icon to change Profile Image
                             </a>
-                        </div>
+                        </div> -->
 
                         <form method="post" enctype="multipart/form-data">
                             <div class="form-group">
-                                <label>Full Name <span class="required">*</span></label>
+                                <label>Username <span class="required">*</span></label>
                                 <div class="input-wrapper">
                                     <i class="input-icon fa-solid fa-user"></i>
                                     <input type="text" name="full_name" class="with-icon" value="<?= htmlspecialchars($settings['full_name'] ?? '') ?>" required>
@@ -783,7 +783,53 @@ $settings = getUserSettings($user_id);
                     </div>
                 </div>
 
-                <!-- Change Password -->
+
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-info-circle"></i>
+                        <h2>Account Information</h2>
+                    </div>
+                    <div class="card-body ">
+                        <div class="info-item d-none">
+                            <div class="info-item-label">Account Status</div>
+                            <div class="info-item-value">
+                                <span class="badge active">Active</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Member Since</div>
+                            <div class="info-item-value">
+                                <i class="fa-solid fa-calendar"></i> <?= htmlspecialchars($settings['created_at'] ?? 'June 12, 2023') ?>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Role</div>
+                            <div class="info-item-value">
+                                <i class="fa-solid fa-user-shield"></i> <?= htmlspecialchars($settings['role'] ?? 'Administrator') ?>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <h2>Security Tip</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="warning-box">
+                            Never share your password with anyone. Change your password regularly for better security.
+                        </div>
+                    </div>
+                </div> -->
+           
+                           <!-- Change Password -->
                 <div class="card" style="margin-top: 24px;">
                     <div class="card-header">
                         <i class="fa-solid fa-lock"></i>
@@ -832,50 +878,6 @@ $settings = getUserSettings($user_id);
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column -->
-            <div>
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fa-solid fa-info-circle"></i>
-                        <h2>Account Information</h2>
-                    </div>
-                    <div class="card-body ">
-                        <div class="info-item d-none">
-                            <div class="info-item-label">Account Status</div>
-                            <div class="info-item-value">
-                                <span class="badge active">Active</span>
-                            </div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-item-label">Member Since</div>
-                            <div class="info-item-value">
-                                <i class="fa-solid fa-calendar"></i> <?= htmlspecialchars($settings['created_at'] ?? 'June 12, 2023') ?>
-                            </div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-item-label">Role</div>
-                            <div class="info-item-value">
-                                <i class="fa-solid fa-user-shield"></i> <?= htmlspecialchars($settings['role'] ?? 'Administrator') ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 24px;">
-                    <div class="card-header">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        <h2>Security Tip</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="warning-box">
-                            Never share your password with anyone. Change your password regularly for better security.
-                        </div>
                     </div>
                 </div>
             </div>

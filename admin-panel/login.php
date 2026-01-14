@@ -3,7 +3,7 @@ session_start(); // Start session at the very beginning
 
 // If user is already logged in, redirect to dashboard
 if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
-    header("Location: index.php");
+  echo"<script>window.location.href='index.php'</script>";
     exit();
 }
 
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $_SESSION['username'] = $result['user']['username'];
 
             // Redirect to dashboard
-            header("Location: index.php");
+            echo"<script>window.location.href='index.php'</script>";
             exit();
         } else {
             $error_message = $result['message'];

@@ -1,11 +1,16 @@
 
 <?php
 
-   $servername="localhost";
+    $host = 'localhost';
+    $username = 'sidratul';
+    $password = 'L5e567zQnJx.A:';
+    $database = 'sidratul_muntaha';
 
-   $username="root";
-   $database_name="sidratul_muntaha";
-    $password="";
+//    $servername="localhost";
+
+//    $username="root";
+//    $database_name="sidratul_muntaha";
+//     $password="";
 
     $conn=mysqli_connect($servername,$username,$password,$database_name);
     $conn->set_charset("utf8mb4");

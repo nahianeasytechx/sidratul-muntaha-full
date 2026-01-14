@@ -85,12 +85,7 @@ $contact_info = getContactInformation();
                                         <div class="contact_info_title">Email:</div>
                                         <div class="contact_info_line"><?php echo htmlspecialchars($contact_info['email']); ?></div>
                                     </div>
-                                    <div class="contact-socials d-flex align-items-center ">
-                                        <i class="fa fa-facebook" aria-hidden="true"></i>
-                                        <i class="fa fa-youtube-play" aria-hidden="true"></i>
-                                        <i class="fa fa-instagram" aria-hidden="true"></i>
-                                        <i class="fa fa-twitter-square" aria-hidden="true"></i>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -128,7 +123,7 @@ $contact_info = getContactInformation();
                     <!-- Google Map -->
                     <div id="google_map" class="google_map">
                         <div class="map_container">
-                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3675.0480549166914!2d90.3667632!3d23.7731584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755bf6de2c3b19b%3A0xeeef7eec6d1d012a!2sEasy%20Tech%20Solutions!5e1!3m2!1sen!2sbd!4v1759752382793!5m2!1sen!2sbd" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="h-100"></iframe>
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58790.02152727385!2d90.2768431486328!3d23.796921200000018!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c1d40efc5951%3A0x2f0cda725c721b32!2sMirpur%20Tower!5e1!3m2!1sen!2sbd!4v1768297251481!5m2!1sen!2sbd" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="h-100"></iframe>
                         </div>
                     </div>
                 </div>

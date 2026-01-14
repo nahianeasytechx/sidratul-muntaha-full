@@ -5,6 +5,10 @@
     $username = 'root';
     $password = '';
     $database = 'sidratul_muntaha';
+    // $host = 'localhost';
+    // $username = 'sidratul';
+    // $password = 'L5e567zQnJx.A:';
+    // $database = 'sidratul_muntaha';
     
     $conn = new mysqli($host, $username, $password, $database);
     
@@ -14,6 +18,16 @@
     }
     
     return $conn;
+}
+
+
+// convert to slug 
+function slug($text)
+{
+    $text = trim($text);
+    $text = mb_strtolower($text, 'UTF-8');
+    $text = preg_replace('/[^\p{L}\p{N}]+/u', '-', $text);
+    return trim($text, '-');
 }
 
 function authenticateUser($username, $password)
@@ -89,7 +103,7 @@ function logoutUser()
 {
     session_unset();
     session_destroy();
-    header("Location: login.php");
+   echo"<script>window.location.href='login.php'</script>";
     exit();
 }
 
@@ -114,7 +128,7 @@ function getCurrentUser()
 function protectPage()
 {
     if (!isLoggedIn()) {
-        header("Location: login.php");
+         echo"<script>window.location.href='login.php'</script>";
         exit();
     }
 }
@@ -1944,7 +1958,103 @@ function saveContactSubmission($data)
     }
     
 }
+function getAllContactSubmissions($filters = [])
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error.'];
+    }
 
+    // Base query
+    $sql = "SELECT id, name, email, subject, message, ip_address, user_agent, created_at, status 
+            FROM contact_submissions";
+    
+    $conditions = [];
+    $params = [];
+    $types = "";
+
+    // Optional filters
+    if (isset($filters['status']) && !empty($filters['status'])) {
+        $conditions[] = "status = ?";
+        $params[] = $filters['status'];
+        $types .= "s";
+    }
+
+    if (isset($filters['email']) && !empty($filters['email'])) {
+        $conditions[] = "email = ?";
+        $params[] = $filters['email'];
+        $types .= "s";
+    }
+
+    if (isset($filters['date_from']) && !empty($filters['date_from'])) {
+        $conditions[] = "created_at >= ?";
+        $params[] = $filters['date_from'];
+        $types .= "s";
+    }
+
+    if (isset($filters['date_to']) && !empty($filters['date_to'])) {
+        $conditions[] = "created_at <= ?";
+        $params[] = $filters['date_to'];
+        $types .= "s";
+    }
+
+    // Add WHERE clause if filters exist
+    if (!empty($conditions)) {
+        $sql .= " WHERE " . implode(" AND ", $conditions);
+    }
+
+    // Order by most recent first
+    $sql .= " ORDER BY created_at DESC";
+
+    // Optional pagination
+    if (isset($filters['limit']) && is_numeric($filters['limit'])) {
+        $sql .= " LIMIT ?";
+        $params[] = (int)$filters['limit'];
+        $types .= "i";
+        
+        if (isset($filters['offset']) && is_numeric($filters['offset'])) {
+            $sql .= " OFFSET ?";
+            $params[] = (int)$filters['offset'];
+            $types .= "i";
+        }
+    }
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return ['success' => false, 'message' => 'Failed to prepare statement: ' . $conn->error];
+    }
+
+    // Bind parameters if any exist
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    // Execute the statement
+    if (!$stmt->execute()) {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return ['success' => false, 'message' => 'Failed to fetch submissions: ' . $error];
+    }
+
+    $result = $stmt->get_result();
+    $submissions = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $submissions[] = $row;
+    }
+
+    $stmt->close();
+    mysqli_close($conn);
+
+    return [
+        'success' => true,
+        'data' => $submissions,
+        'count' => count($submissions)
+    ];
+}
 /**
  * Get contact information from database (address, phone, email)
  */
@@ -2405,6 +2515,1591 @@ function getDonationsByCategory($limit = 10)
     $stmt->close();
     mysqli_close($conn);
     return $categories;
+}
+function getAllScholarshipApplications($filters = [], $sortBy = 'newest') {
+    $conn = getDatabaseConnection();
+    
+    // Base query - adjusted to match your actual table structure
+    $sql = "SELECT id, name, phone, email, address, institute_name as institution, 
+            institution_type as type, created_at as applied_date 
+            FROM scholarship_list WHERE 1=1";
+    
+    $params = [];
+    $types = "";
+    
+    // Apply filters
+    if (!empty($filters['type']) && $filters['type'] !== 'all') {
+        $sql .= " AND institution_type = ?";
+        $params[] = $filters['type'];
+        $types .= "s";
+    }
+    
+    if (!empty($filters['search'])) {
+        $sql .= " AND (name LIKE ? OR phone LIKE ? OR email LIKE ?)";
+        $searchParam = '%' . $filters['search'] . '%';
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+        $types .= "sss";
+    }
+    
+    if (!empty($filters['institution'])) {
+        $sql .= " AND institute_name LIKE ?";
+        $params[] = '%' . $filters['institution'] . '%';
+        $types .= "s";
+    }
+    
+    // Apply sorting
+    switch ($sortBy) {
+        case 'oldest':
+            $sql .= " ORDER BY created_at ASC";
+            break;
+        case 'name-asc':
+            $sql .= " ORDER BY name ASC";
+            break;
+        case 'name-desc':
+            $sql .= " ORDER BY name DESC";
+            break;
+        case 'newest':
+        default:
+            $sql .= " ORDER BY created_at DESC";
+            break;
+    }
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        $conn->close();
+        return [];
+    }
+    
+    // Bind parameters if any
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $applications = [];
+    while ($row = $result->fetch_assoc()) {
+        // Add a default status of 'pending' since the table doesn't have a status column
+        $row['status'] = 'pending';
+        $applications[] = $row;
+    }
+    
+    $stmt->close();
+    $conn->close();
+    
+    return $applications;
+}
+
+/**
+ * Get scholarship application by ID
+ * @param int $id Application ID
+ * @return array|null Application data or null if not found
+ */
+function getScholarshipApplicationById($id) {
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT id, name, phone, email, address, institute_name, 
+            institution_type, created_at 
+            FROM scholarship_list WHERE id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        $conn->close();
+        return null;
+    }
+    
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $application = $result->fetch_assoc();
+    
+    // Add default status
+    if ($application) {
+        $application['status'] = 'pending';
+    }
+    
+    $stmt->close();
+    $conn->close();
+    
+    return $application;
+}
+
+/**
+ * Get scholarship statistics
+ * @return array Statistics data
+ */
+function getScholarshipStatistics() {
+    $conn = getDatabaseConnection();
+    
+    $stats = [
+        'total' => 0,
+        'processed' => 0,
+        'pending' => 0,
+        'rejected' => 0
+    ];
+    
+    // Get total count
+    $result = $conn->query("SELECT COUNT(*) as count FROM scholarship_list");
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $stats['total'] = $row['count'];
+        // Since there's no status column, all applications are considered pending
+        $stats['pending'] = $row['count'];
+    }
+    
+    $conn->close();
+    
+    return $stats;
+}
+
+/**
+ * Delete scholarship application
+ * @param int $id Application ID
+ * @return array Result array
+ */
+function deleteScholarshipApplication($id) {
+    $conn = getDatabaseConnection();
+    
+    $sql = "DELETE FROM scholarship_list WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        $conn->close();
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $conn->error
+        ];
+    }
+    
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        $conn->close();
+        
+        if ($affected > 0) {
+            return [
+                'success' => true,
+                'message' => 'Application deleted successfully!'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Application not found.'
+            ];
+        }
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        $conn->close();
+        
+        return [
+            'success' => false,
+            'message' => 'Failed to delete application: ' . $error
+        ];
+    }
+}
+
+/**
+ * Save scholarship application
+ * @param array $data Application data
+ * @return array Result array
+ */
+function saveScholarshipApplication($data) {
+    $conn = getDatabaseConnection();
+    
+    // Validate required fields
+    if (empty($data['name']) || empty($data['institution_type'])) {
+        return [
+            'success' => false,
+            'message' => 'Name and Institution Type are required fields.'
+        ];
+    }
+    
+    // Validate email format if provided
+    if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        return [
+            'success' => false,
+            'message' => 'Invalid email format.'
+        ];
+    }
+    
+    // Sanitize inputs
+    $name = $conn->real_escape_string(trim($data['name']));
+    $email = $conn->real_escape_string(trim($data['email']));
+    $address = $conn->real_escape_string(trim($data['youraddress']));
+    $institution_type = $conn->real_escape_string(trim($data['institution_type']));
+    $institute_name = $conn->real_escape_string(trim($data['instituename']));
+    $phone = $conn->real_escape_string(trim($data['contact']));
+    
+    // Prepare SQL statement (removed status field)
+    $sql = "INSERT INTO scholarship_list (name, email, address, institution_type, institute_name, phone) 
+            VALUES (?, ?, ?, ?, ?, ?)";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        $conn->close();
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $conn->error
+        ];
+    }
+    
+    // Bind parameters
+    $stmt->bind_param("ssssss", $name, $email, $address, $institution_type, $institute_name, $phone);
+    
+    // Execute statement
+    if ($stmt->execute()) {
+        $application_id = $stmt->insert_id;
+        $stmt->close();
+        $conn->close();
+        
+        return [
+            'success' => true,
+            'message' => 'Scholarship application submitted successfully!',
+            'application_id' => $application_id
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        $conn->close();
+        
+        return [
+            'success' => false,
+            'message' => 'Failed to submit application: ' . $error
+        ];
+    }
+}
+
+/**
+ * Update scholarship application
+ * @param int $id Application ID
+ * @param array $data Updated data
+ * @return array Result array
+ */
+function updateScholarshipApplication($id, $data) {
+    $conn = getDatabaseConnection();
+    
+    // Validate required fields
+    if (empty($data['name']) || empty($data['institution_type'])) {
+        return [
+            'success' => false,
+            'message' => 'Name and Institution Type are required fields.'
+        ];
+    }
+    
+    // Validate email format if provided
+    if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        return [
+            'success' => false,
+            'message' => 'Invalid email format.'
+        ];
+    }
+    
+    // Sanitize inputs
+    $name = $conn->real_escape_string(trim($data['name']));
+    $email = $conn->real_escape_string(trim($data['email']));
+    $address = $conn->real_escape_string(trim($data['youraddress']));
+    $institution_type = $conn->real_escape_string(trim($data['institution_type']));
+    $institute_name = $conn->real_escape_string(trim($data['instituename']));
+    $phone = $conn->real_escape_string(trim($data['contact']));
+    
+    $sql = "UPDATE scholarship_list 
+            SET name = ?, email = ?, address = ?, institution_type = ?, 
+                institute_name = ?, phone = ? 
+            WHERE id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        $conn->close();
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $conn->error
+        ];
+    }
+    
+    $stmt->bind_param("ssssssi", $name, $email, $address, $institution_type, 
+                      $institute_name, $phone, $id);
+    
+    if ($stmt->execute()) {
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        $conn->close();
+        
+        return [
+            'success' => true,
+            'message' => 'Application updated successfully!',
+            'affected_rows' => $affected
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        $conn->close();
+        
+        return [
+            'success' => false,
+            'message' => 'Failed to update application: ' . $error
+        ];
+    }
+}
+
+
+
+
+function getTotalApplications() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    $result = $conn->query("SELECT COUNT(*) as count FROM scholarship_list");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get total count of active scholarship categories
+ */
+function getTotalScholarshipCategories() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    // Count distinct institution types from scholarship applications
+    $result = $conn->query("SELECT COUNT(DISTINCT institution_type) as count FROM scholarship_list WHERE institution_type IS NOT NULL AND institution_type != ''");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get total count of students
+ */
+function getTotalStudents() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    $result = $conn->query("SELECT COUNT(*) as count FROM scholarship_list");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get total donations count
+ */
+function getTotalDonationsCount() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    $result = $conn->query("SELECT COUNT(*) as count FROM donation_list");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get total donation amount
+ */
+function getTotalDonationAmount() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    $result = $conn->query("SELECT SUM(amount) as total FROM donation_list WHERE payment_status = 'completed'");
+    $total = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $total = $row['total'] ?? 0;
+    }
+    
+    $conn->close();
+    return $total;
+}
+
+/**
+ * Get pending applications count
+ */
+function getPendingApplicationsCount() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    // Since there's no status column, we'll consider recent applications as pending
+    $result = $conn->query("SELECT COUNT(*) as count FROM scholarship_list WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get processed applications count
+ */
+function getProcessedApplicationsCount() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    // Applications older than 30 days considered processed
+    $result = $conn->query("SELECT COUNT(*) as count FROM scholarship_list WHERE created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get approved scholarships count (simulated as 60% of total)
+ */
+function getApprovedScholarshipsCount() {
+    $total = getTotalApplications();
+    return floor($total * 0.6);
+}
+
+/**
+ * Get rejected applications count (simulated as 10% of total)
+ */
+function getRejectedApplicationsCount() {
+    $total = getTotalApplications();
+    return floor($total * 0.1);
+}
+
+/**
+ * Get active notices count
+ */
+function getActiveNoticesCount() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    $result = $conn->query("SELECT COUNT(*) as count FROM notices WHERE status = 'active'");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get upcoming activities count
+ */
+function getUpcomingActivitiesCount() {
+    $conn = getDatabaseConnection();
+    if (!$conn) return 0;
+    
+    $result = $conn->query("SELECT COUNT(*) as count FROM activities WHERE status = 'active'");
+    $count = 0;
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $count = $row['count'];
+    }
+    
+    $conn->close();
+    return $count;
+}
+
+/**
+ * Get recent donations for dashboard table
+ */
+function getRecentDonations($limit = 5) {
+    $conn = getDatabaseConnection();
+    if (!$conn) return [];
+    
+    $sql = "SELECT dl.*, dc.title as category_name 
+            FROM donation_list dl 
+            LEFT JOIN donation_categories dc ON dl.category_id = dc.id 
+            ORDER BY dl.created_at DESC 
+            LIMIT ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $donations = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $donations[] = $row;
+        }
+    }
+    
+    $stmt->close();
+    $conn->close();
+    return $donations;
+}
+
+/**
+ * Get dashboard statistics summary
+ */
+function getDashboardStats() {
+    return [
+        'total_applications' => getTotalApplications(),
+        'scholarship_categories' => getTotalScholarshipCategories(),
+        'total_awarded' => getApprovedScholarshipsCount(),
+        'total_students' => getTotalStudents(),
+        'total_donations' => getTotalDonationsCount(),
+        'donation_amount' => getTotalDonationAmount(),
+        'pending_applications' => getPendingApplicationsCount(),
+        'processed_applications' => getProcessedApplicationsCount(),
+        'approved_scholarships' => getApprovedScholarshipsCount(),
+        'rejected_applications' => getRejectedApplicationsCount(),
+        'active_notices' => getActiveNoticesCount(),
+        'upcoming_activities' => getUpcomingActivitiesCount()
+    ];
+}
+
+// ============================================
+// SLUG GENERATION AND VALIDATION FUNCTIONS
+// ============================================
+
+/**
+ * Generate a unique slug from text
+ * @param string $text The text to convert to slug
+ * @param string $table The table name (notices or activities)
+ * @param int|null $exclude_id ID to exclude when checking uniqueness (for updates)
+ * @return string Unique slug
+ */
+function generateUniqueSlug($text, $table, $exclude_id = null)
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) return slug($text);
+
+    $base_slug = slug($text);
+    $final_slug = $base_slug;
+    $counter = 1;
+
+    // Check if slug exists
+    while (true) {
+        $sql = "SELECT id FROM $table WHERE slug = ?";
+        if ($exclude_id !== null) {
+            $sql .= " AND id != ?";
+        }
+
+        $stmt = $conn->prepare($sql);
+        
+        if ($exclude_id !== null) {
+            $stmt->bind_param("si", $final_slug, $exclude_id);
+        } else {
+            $stmt->bind_param("s", $final_slug);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            break;
+        }
+
+        $final_slug = $base_slug . '-' . $counter;
+        $counter++;
+        $stmt->close();
+    }
+
+    mysqli_close($conn);
+    return $final_slug;
+}
+
+/**
+ * Validate and sanitize slug
+ * @param string $slug The slug to validate
+ * @return string Sanitized slug
+ */
+function validateSlug($slug)
+{
+    // Remove any invalid characters
+    $slug = preg_replace('/[^a-z0-9-]/', '', strtolower($slug));
+    // Remove multiple consecutive hyphens
+    $slug = preg_replace('/-+/', '-', $slug);
+    // Trim hyphens from start and end
+    return trim($slug, '-');
+}
+
+// ============================================
+// NOTICE SLUG FUNCTIONS
+// ============================================
+
+/**
+ * Get notice by slug
+ * @param string $slug The notice slug
+ * @return array|null Notice data or null if not found
+ */
+function getNoticeBySlug($slug)
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) return null;
+
+    $sql = "SELECT * FROM notices WHERE slug = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return null;
+    }
+
+    $stmt->bind_param("s", $slug);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $notice = null;
+    if ($result && $result->num_rows > 0) {
+        $notice = $result->fetch_assoc();
+    }
+
+    $stmt->close();
+    mysqli_close($conn);
+    return $notice;
+}
+
+/**
+ * Create notice with slug (updated version)
+ */
+/**
+ * Create notice with slug (updated version - backward compatible)
+ */
+function createNoticeWithSlug($data)
+{
+    $conn = getDatabaseConnection();
+
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection error.'
+        ];
+    }
+
+    // Generate unique slug
+    $slug = generateUniqueSlug($data['title'], 'notices');
+
+    $title = mysqli_real_escape_string($conn, $data['title']);
+    $description = mysqli_real_escape_string($conn, $data['description']);
+    $publish_date = mysqli_real_escape_string($conn, $data['publish_date']);
+    $duration = intval($data['duration']);
+    $type = mysqli_real_escape_string($conn, $data['type']);
+    $age_limit = !empty($data['age_limit']) ? intval($data['age_limit']) : 'NULL';
+    $category = mysqli_real_escape_string($conn, $data['category']);
+    $status = mysqli_real_escape_string($conn, $data['status']);
+
+    // Check if slug column exists
+    $check_column = mysqli_query($conn, "SHOW COLUMNS FROM notices LIKE 'slug'");
+    $slug_column_exists = mysqli_num_rows($check_column) > 0;
+
+    if ($slug_column_exists) {
+        // New version with slug column
+        $sql = "INSERT INTO notices (title, slug, description, publish_date, duration, type, age_limit, category, status) 
+                VALUES ('$title', '$slug', '$description', '$publish_date', $duration, '$type', $age_limit, '$category', '$status')";
+    } else {
+        // Old version without slug column
+        $sql = "INSERT INTO notices (title, description, publish_date, duration, type, age_limit, category, status) 
+                VALUES ('$title', '$description', '$publish_date', $duration, '$type', $age_limit, '$category', '$status')";
+    }
+
+    if (mysqli_query($conn, $sql)) {
+        $id = mysqli_insert_id($conn);
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Notice created successfully',
+            'id' => $id,
+            'slug' => $slug
+        ];
+    } else {
+        $error = mysqli_error($conn);
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to create notice: ' . $error
+        ];
+    }
+}
+
+/**
+ * Update notice with slug handling
+ */
+function updateNoticeWithSlug(int $id, array $data): array
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) return ['success' => false, 'message' => 'DB connection failed'];
+
+    // Get current notice to check if title changed
+    $current_notice = getNoticeById($id);
+    if (!$current_notice) {
+        mysqli_close($conn);
+        return ['success' => false, 'message' => 'Notice not found'];
+    }
+
+    // Generate new slug if title changed
+    $slug = $current_notice['slug'];
+    if ($current_notice['title'] !== $data['title']) {
+        $slug = generateUniqueSlug($data['title'], 'notices', $id);
+    }
+
+    $sql = "UPDATE notices SET
+                title = ?,
+                slug = ?,
+                description = ?,
+                publish_date = ?,
+                duration = ?,
+                type = ?,
+                category = ?,
+                status = ?,
+                age_limit = ?
+            WHERE id = ?";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        mysqli_close($conn);
+        return ['success' => false, 'message' => $conn->error];
+    }
+
+    $age_limit = ($data['age_limit'] === '' || $data['age_limit'] === null)
+        ? null
+        : (int)$data['age_limit'];
+
+    $stmt->bind_param(
+        "sssissssii",
+        $data['title'],
+        $slug,
+        $data['description'],
+        $data['publish_date'],
+        $data['duration'],
+        $data['type'],
+        $data['category'],
+        $data['status'],
+        $age_limit,
+        $id
+    );
+
+    if (!$stmt->execute()) {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return ['success' => false, 'message' => $error];
+    }
+
+    $stmt->close();
+    mysqli_close($conn);
+    return [
+        'success' => true,
+        'message' => 'Notice updated successfully',
+        'slug' => $slug
+    ];
+}
+
+/**
+ * Get active notices with slugs for frontend display
+ */
+function getActiveNoticesWithSlugs($limit = null)
+{
+    $conn = getDatabaseConnection();
+
+    $sql = "SELECT id, title, slug, description, publish_date, duration, type, category 
+            FROM notices 
+            WHERE status = 'active' 
+            ORDER BY publish_date DESC";
+    
+    if ($limit !== null) {
+        $sql .= " LIMIT " . intval($limit);
+    }
+
+    $result = mysqli_query($conn, $sql);
+
+    $notices = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $notices[] = $row;
+        }
+    }
+
+    mysqli_close($conn);
+    return $notices;
+}
+
+// ============================================
+// ACTIVITY SLUG FUNCTIONS
+// ============================================
+
+/**
+ * Get activity by slug
+ * @param string $slug The activity slug
+ * @return array|null Activity data or null if not found
+ */
+function getActivityBySlug($slug)
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) return null;
+
+    $sql = "SELECT * FROM activities WHERE slug = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return null;
+    }
+
+    $stmt->bind_param("s", $slug);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $activity = null;
+    if ($result && $result->num_rows > 0) {
+        $activity = $result->fetch_assoc();
+    }
+
+    $stmt->close();
+    mysqli_close($conn);
+    return $activity;
+}
+
+/**
+ * Create activity with slug (updated version)
+ */
+function createActivityWithSlug($data)
+{
+    $conn = getDatabaseConnection();
+
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection error.'
+        ];
+    }
+
+    // Validate required fields
+    $required_fields = ['title', 'objectives', 'short_description', 'description', 'type', 'status'];
+    foreach ($required_fields as $field) {
+        if (!isset($data[$field]) || empty(trim($data[$field]))) {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => ucfirst($field) . ' is required.'
+            ];
+        }
+    }
+
+    // Generate unique slug
+    $slug = generateUniqueSlug($data['title'], 'activities');
+
+    $sql = "INSERT INTO activities (title, slug, objectives, short_description, description, type, status, image, sections_data) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to prepare statement: ' . $conn->error
+        ];
+    }
+
+    $image = isset($data['image']) && !empty($data['image']) ? $data['image'] : null;
+    $sections_data = isset($data['sections_data']) && !empty($data['sections_data']) ? $data['sections_data'] : null;
+
+    $stmt->bind_param(
+        "sssssssss",
+        $data['title'],
+        $slug,
+        $data['objectives'],
+        $data['short_description'],
+        $data['description'],
+        $data['type'],
+        $data['status'],
+        $image,
+        $sections_data
+    );
+
+    if ($stmt->execute()) {
+        $id = $stmt->insert_id;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Activity created successfully',
+            'id' => $id,
+            'slug' => $slug
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to create activity: ' . $error
+        ];
+    }
+}
+
+/**
+ * Update activity with slug handling
+ */
+function updateActivityWithSlug(int $id, array $data): array
+{
+    $conn = getDatabaseConnection();
+    
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection failed'
+        ];
+    }
+
+    // Get current activity to check if title changed
+    $current_activity = getActivityById($id);
+    if (!$current_activity) {
+        mysqli_close($conn);
+        return ['success' => false, 'message' => 'Activity not found'];
+    }
+
+    // Generate new slug if title changed
+    $slug = $current_activity['slug'];
+    if ($current_activity['title'] !== $data['title']) {
+        $slug = generateUniqueSlug($data['title'], 'activities', $id);
+    }
+
+    $sql = "UPDATE activities SET
+                title = ?,
+                slug = ?,
+                objectives = ?,
+                short_description = ?,
+                description = ?,
+                type = ?,
+                status = ?,
+                image = ?,
+                sections_data = ?
+            WHERE id = ?";
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to prepare statement: ' . $conn->error
+        ];
+    }
+
+    $image = isset($data['image']) && !empty($data['image']) ? $data['image'] : null;
+    $sections_data = isset($data['sections_data']) && !empty($data['sections_data']) ? $data['sections_data'] : null;
+
+    $stmt->bind_param(
+        "sssssssssi",
+        $data['title'],
+        $slug,
+        $data['objectives'],
+        $data['short_description'],
+        $data['description'],
+        $data['type'],
+        $data['status'],
+        $image,
+        $sections_data,
+        $id
+    );
+
+    if ($stmt->execute()) {
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Activity updated successfully',
+            'slug' => $slug
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to update activity: ' . $error
+        ];
+    }
+}
+
+/**
+ * Get active activities with slugs for frontend display
+ */
+function getActiveActivitiesWithSlugs($limit = null, $type = null)
+{
+    $conn = getDatabaseConnection();
+
+    $sql = "SELECT id, title, slug, short_description, type, image, created_at 
+            FROM activities 
+            WHERE status = 'active'";
+    
+    if ($type !== null) {
+        $sql .= " AND type = '" . mysqli_real_escape_string($conn, $type) . "'";
+    }
+    
+    $sql .= " ORDER BY created_at DESC";
+    
+    if ($limit !== null) {
+        $sql .= " LIMIT " . intval($limit);
+    }
+
+    $result = mysqli_query($conn, $sql);
+
+    $activities = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $activities[] = $row;
+        }
+    }
+
+    mysqli_close($conn);
+    return $activities;
+}
+
+/**
+ * Search activities by slug pattern
+ */
+function searchActivitiesBySlug($search_term, $limit = 10)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT id, title, slug, short_description, type 
+            FROM activities 
+            WHERE slug LIKE ? AND status = 'active'
+            ORDER BY created_at DESC
+            LIMIT ?";
+    
+    $stmt = $conn->prepare($sql);
+    $search_pattern = '%' . slug($search_term) . '%';
+    $stmt->bind_param("si", $search_pattern, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $activities = [];
+    while ($row = $result->fetch_assoc()) {
+        $activities[] = $row;
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $activities;
+}
+
+/**
+ * Get related activities by type
+ */
+function getRelatedActivities($current_slug, $type, $limit = 3)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT id, title, slug, short_description, image 
+            FROM activities 
+            WHERE type = ? AND slug != ? AND status = 'active'
+            ORDER BY created_at DESC
+            LIMIT ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $type, $current_slug, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $activities = [];
+    while ($row = $result->fetch_assoc()) {
+        $activities[] = $row;
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $activities;
+}
+
+/**
+ * Check if slug exists in table
+ */
+function slugExists($slug, $table, $exclude_id = null)
+{
+    $conn = getDatabaseConnection();
+    
+    $sql = "SELECT id FROM $table WHERE slug = ?";
+    if ($exclude_id !== null) {
+        $sql .= " AND id != ?";
+    }
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($exclude_id !== null) {
+        $stmt->bind_param("si", $slug, $exclude_id);
+    } else {
+        $stmt->bind_param("s", $slug);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $exists = $result->num_rows > 0;
+    
+    $stmt->close();
+    mysqli_close($conn);
+    
+    return $exists;
+}
+
+// ============================================
+// DONATION CATEGORY SLUG FUNCTIONS
+// ============================================
+
+/**
+ * Get donation category by slug
+ * @param string $slug The category slug
+ * @return array|null Category data or null if not found
+ */
+function getDonationCategoryBySlug($slug)
+{
+    $conn = getDatabaseConnection();
+    if (!$conn) return null;
+
+    $sql = "SELECT * FROM donation_categories WHERE slug = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return null;
+    }
+
+    $stmt->bind_param("s", $slug);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $category = null;
+    if ($result && $result->num_rows > 0) {
+        $category = $result->fetch_assoc();
+    }
+
+    $stmt->close();
+    mysqli_close($conn);
+    return $category;
+}
+
+/**
+ * Create donation category with slug (updated version)
+ */
+/**
+ * Create donation category with slug (FIXED VERSION)
+ */
+function createDonationCategoryWithSlug($data, $file)
+{
+    $conn = getDatabaseConnection();
+
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection error.'
+        ];
+    }
+
+    // Validate required fields
+    if (empty($data['title']) || empty($data['description'])) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Title and description are required.'
+        ];
+    }
+
+    // Handle file upload
+    if (isset($file['image']) && $file['image']['error'] === 0) {
+        $upload_dir = '../uploads/donation-categories/';
+        
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+
+        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        $max_size = 5 * 1024 * 1024; // 5MB
+
+        if (!in_array($file['image']['type'], $allowed_types)) {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.'
+            ];
+        }
+
+        if ($file['image']['size'] > $max_size) {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => 'File size too large. Maximum 5MB allowed.'
+            ];
+        }
+
+        $file_extension = pathinfo($file['image']['name'], PATHINFO_EXTENSION);
+        $new_filename = 'category_' . time() . '_' . uniqid() . '.' . $file_extension;
+        $upload_path = $upload_dir . $new_filename;
+
+        if (!move_uploaded_file($file['image']['tmp_name'], $upload_path)) {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => 'Failed to upload image.'
+            ];
+        }
+
+        $image = $upload_path;
+    } else {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Image is required.'
+        ];
+    }
+
+    // Generate unique slug
+    $slug = generateUniqueSlug($data['title'], 'donation_categories');
+
+    // Get the next display order
+    $order_result = mysqli_query($conn, "SELECT MAX(display_order) as max_order FROM donation_categories");
+    $order_row = mysqli_fetch_assoc($order_result);
+    $next_order = ($order_row['max_order'] ?? 0) + 1;
+
+    // Prepare the SQL statement
+    $sql = "INSERT INTO donation_categories (title, slug, image, description, display_order, status) 
+            VALUES (?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to prepare statement: ' . $conn->error
+        ];
+    }
+
+    $status = 'active';
+
+    // FIXED: Changed 'sssis' to 'ssssis' (6 parameters)
+    // Parameters: title, slug, image, description, display_order, status
+    $stmt->bind_param(
+        "ssssis",
+        $data['title'],
+        $slug,
+        $image,
+        $data['description'],
+        $next_order,
+        $status
+    );
+
+    if ($stmt->execute()) {
+        $id = $stmt->insert_id;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Category added successfully',
+            'id' => $id,
+            'slug' => $slug
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        
+        // Delete uploaded file if database insert fails
+        if (file_exists($image)) {
+            unlink($image);
+        }
+        
+        return [
+            'success' => false,
+            'message' => 'Failed to create category: ' . $error
+        ];
+    }
+}
+
+/**
+ * Update donation category with slug handling
+ */
+function updateDonationCategoryWithSlug($id, $data, $file = null)
+{
+    $conn = getDatabaseConnection();
+    
+    if (!$conn) {
+        return [
+            'success' => false,
+            'message' => 'Database connection failed'
+        ];
+    }
+
+    // Get existing category data
+    $existing_category = getDonationCategoryById($id);
+    
+    if (!$existing_category) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Category not found'
+        ];
+    }
+
+    // Generate new slug if title changed
+    $slug = $existing_category['slug'];
+    if ($existing_category['title'] !== $data['title']) {
+        $slug = generateUniqueSlug($data['title'], 'donation_categories', $id);
+    }
+
+    $image = $existing_category['image'];
+
+    // Handle file upload if new file is provided
+    if (isset($file['image']) && $file['image']['error'] === 0) {
+        $upload_dir = '../uploads/donation-categories/';
+        
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+
+        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        $max_size = 5 * 1024 * 1024; // 5MB
+
+        if (!in_array($file['image']['type'], $allowed_types)) {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.'
+            ];
+        }
+
+        if ($file['image']['size'] > $max_size) {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => 'File size too large. Maximum 5MB allowed.'
+            ];
+        }
+
+        $file_extension = pathinfo($file['image']['name'], PATHINFO_EXTENSION);
+        $new_filename = 'category_' . time() . '_' . uniqid() . '.' . $file_extension;
+        $upload_path = $upload_dir . $new_filename;
+
+        if (move_uploaded_file($file['image']['tmp_name'], $upload_path)) {
+            // Delete old image if it's not a placeholder URL
+            if (file_exists($existing_category['image']) && strpos($existing_category['image'], 'placeholder') === false) {
+                unlink($existing_category['image']);
+            }
+            $image = $upload_path;
+        } else {
+            mysqli_close($conn);
+            return [
+                'success' => false,
+                'message' => 'Failed to upload new image.'
+            ];
+        }
+    }
+
+    $sql = "UPDATE donation_categories SET
+                title = ?,
+                slug = ?,
+                image = ?,
+                description = ?
+            WHERE id = ?";
+
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to prepare statement: ' . $conn->error
+        ];
+    }
+
+    $stmt->bind_param(
+        "ssssi",
+        $data['title'],
+        $slug,
+        $image,
+        $data['description'],
+        $id
+    );
+
+    if ($stmt->execute()) {
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => true,
+            'message' => 'Category updated successfully',
+            'slug' => $slug
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        mysqli_close($conn);
+        return [
+            'success' => false,
+            'message' => 'Failed to update category: ' . $error
+        ];
+    }
+}
+
+/**
+ * Get active donation categories with slugs for frontend display
+ */
+function getActiveDonationCategoriesWithSlugs()
+{
+    $conn = getDatabaseConnection();
+
+    $sql = "SELECT id, title, slug, image, description, display_order 
+            FROM donation_categories 
+            WHERE status = 'active' 
+            ORDER BY display_order ASC";
+    
+    $result = mysqli_query($conn, $sql);
+
+    $categories = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $categories[] = $row;
+        }
+    }
+
+    mysqli_close($conn);
+    return $categories;
+}
+
+/**
+ * Get donations by category slug
+ */
+function getDonationsByCategorySlug($slug, $filters = [])
+{
+    $conn = getDatabaseConnection();
+    
+    // First get the category ID from slug
+    $category = getDonationCategoryBySlug($slug);
+    
+    if (!$category) {
+        mysqli_close($conn);
+        return [];
+    }
+    
+    $sql = "SELECT dl.*, dc.title as category_name 
+            FROM donation_list dl 
+            LEFT JOIN donation_categories dc ON dl.category_id = dc.id 
+            WHERE dl.category_id = ?";
+    
+    $params = [$category['id']];
+    $types = "i";
+    
+    // Add additional filters
+    if (!empty($filters['payment_status'])) {
+        $sql .= " AND dl.payment_status = ?";
+        $params[] = $filters['payment_status'];
+        $types .= "s";
+    }
+    
+    $sql .= " ORDER BY dl.created_at DESC";
+    
+    if (!empty($filters['limit'])) {
+        $sql .= " LIMIT ?";
+        $params[] = intval($filters['limit']);
+        $types .= "i";
+    }
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $donations = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $donations[] = $row;
+        }
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $donations;
+}
+
+/**
+ * Get donation category statistics by slug
+ */
+function getDonationCategoryStatsBySlug($slug)
+{
+    $conn = getDatabaseConnection();
+    
+    $category = getDonationCategoryBySlug($slug);
+    
+    if (!$category) {
+        mysqli_close($conn);
+        return [
+            'total_donations' => 0,
+            'total_amount' => 0,
+            'avg_amount' => 0
+        ];
+    }
+    
+    $sql = "SELECT 
+                COUNT(*) as total_donations,
+                SUM(CASE WHEN payment_status = 'completed' THEN amount ELSE 0 END) as total_amount,
+                AVG(CASE WHEN payment_status = 'completed' THEN amount ELSE NULL END) as avg_amount
+            FROM donation_list 
+            WHERE category_id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $category['id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $stats = [
+        'total_donations' => 0,
+        'total_amount' => 0,
+        'avg_amount' => 0
+    ];
+    
+    if ($result) {
+        $stats = $result->fetch_assoc();
+    }
+    
+    $stmt->close();
+    mysqli_close($conn);
+    return $stats;
 }
 
 ?>

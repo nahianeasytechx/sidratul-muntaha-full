@@ -1,20 +1,24 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'View Activity';
+$page_title = 'View Project';
 require './components/header.php';
 protectPage();
 
-// Check if activity ID is provided
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: all-activities.php?error=Activity ID is required');
-    exit();
-}
+// Check if activity slug is provided - SLUG ONLY, NO ID FALLBACK
+$activity = null;
 
-$activity_id = intval($_GET['id']);
-$activity = getActivityById($activity_id);
+if (isset($_GET['slug']) && !empty($_GET['slug'])) {
+    // Get activity by slug
+    $slug = $_GET['slug'];
+    $activity = getActivityBySlug($slug);
 
-if (!$activity) {
-    header('Location: all-activities.php?error=Activity not found');
+    if (!$activity) {
+        echo "<script>window.location.href='all-projects.php?error=" . urlencode('Project not found') . "'</script>";
+        exit();
+    }
+} else {
+    // No slug provided - redirect with error
+    echo "<script>window.location.href='all-projects.php?error=" . urlencode('Project slug is required') . "'</script>";
     exit();
 }
 
@@ -87,8 +91,11 @@ $sections = [];
 if (!empty($activity['sections_data'])) {
     $sections = json_decode($activity['sections_data'], true) ?? [];
 }
-?>
 
+// Prepare URLs - use slug only
+$editUrl = "edit-project.php?slug=" . urlencode($activity['slug']);
+$deleteUrl = "delete-project.php?slug=" . urlencode($activity['slug']);
+?>
 <style>
     /* Page Header Styling */
     .page-header {
@@ -489,7 +496,7 @@ if (!empty($activity['sections_data'])) {
         margin-bottom: 1.5rem;
     }
 
-    .contact-section .row > div {
+    .contact-section .row>div {
         margin-bottom: 1rem;
     }
 
@@ -651,6 +658,7 @@ if (!empty($activity['sections_data'])) {
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -663,23 +671,29 @@ if (!empty($activity['sections_data'])) {
 
     /* Print Styles */
     @media print {
-        .page-header, .action-buttons-container, .btn-back, .btn-edit-header {
+
+        .page-header,
+        .action-buttons-container,
+        .btn-back,
+        .btn-edit-header {
             display: none !important;
         }
+
         .card {
             box-shadow: none !important;
             border: 1px solid #ddd !important;
         }
+
         body {
             background: white !important;
         }
+
         .content-text {
             font-size: 14px !important;
             line-height: 1.6 !important;
         }
     }
 </style>
-
 <div class="content-wrapper">
     <div class="view-activity">
         <!-- Page Header -->
@@ -691,7 +705,7 @@ if (!empty($activity['sections_data'])) {
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="all-activities.php" class="text-decoration-none">All Activities</a></li>
+                                <li class="breadcrumb-item"><a href="all-projects.php" class="text-decoration-none">All Projects</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">View Project</li>
                             </ol>
                         </nav>
@@ -699,11 +713,11 @@ if (!empty($activity['sections_data'])) {
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button class="btn btn-back" onclick="window.location.href='all-activities.php'">
+                    <button class="btn btn-back" onclick="window.location.href='all-projects.php'">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to List
                     </button>
-                    <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn btn-edit-header">
-                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit Activity
+                    <a href="<?= $editUrl ?>" class="btn btn-edit-header">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit Project
                     </a>
                 </div>
             </div>
@@ -714,10 +728,10 @@ if (!empty($activity['sections_data'])) {
         if (isset($_GET['success']) && $_GET['success'] == '1') {
             echo '<div class="message-box success">
                     <i class="fa-solid fa-circle-check"></i>
-                    Activity updated successfully!
+                    Project updated successfully!
                   </div>';
         }
-        
+
         if (isset($_GET['error'])) {
             echo '<div class="message-box error">
                     <i class="fa-solid fa-circle-exclamation"></i>
@@ -742,47 +756,54 @@ if (!empty($activity['sections_data'])) {
                                 </span>
                             </div>
                             <h2><?= htmlspecialchars($activity['title']) ?></h2>
-                            <div class="text-muted small">
+                            <div class="text-muted small mb-2">
                                 <i class="fa-solid fa-calendar-days me-1"></i> Created on: <?= date('F d, Y', strtotime($activity['created_at'])) ?>
                             </div>
                         </div>
                         <div class="activity-id">
-                            <div class="label">Activity ID</div>
-                            <div class="value">#ACT-<?= str_pad($activity['id'], 3, '0', STR_PAD_LEFT) ?></div>
+                            <div class="label">Project ID</div>
+                            <div class="value">#PRJ-<?= str_pad($activity['id'], 3, '0', STR_PAD_LEFT) ?></div>
                         </div>
                     </div>
                 </div>
-                                                        <!-- Activity Image -->
+
+                <!-- Activity Image -->
                 <?php if (!empty($activity['image'])): ?>
-                <div class="activity-image">
-                   <img src="../uploads/activities/<?= htmlspecialchars($activity['image']) ?>"
-     alt="<?= htmlspecialchars($activity['title']) ?>"
-     class="img-fluid">
-
-                    <div class="image-caption">
-                        <i class="fa-solid fa-image me-1"></i> <?= htmlspecialchars($activity['title']) ?>
+                    <div class="activity-image">
+                        <?php
+                        // Handle both old format (just filename) and new format (full path)
+                        $imagePath = (strpos($activity['image'], '../uploads/') === 0)
+                            ? $activity['image']
+                            : '../uploads/activities/' . $activity['image'];
+                        ?>
+                        <img src="<?= htmlspecialchars($imagePath) ?>"
+                            alt="<?= htmlspecialchars($activity['title']) ?>"
+                            class="img-fluid">
+                        <div class="image-caption">
+                            <i class="fa-solid fa-image me-1"></i> <?= htmlspecialchars($activity['title']) ?>
+                        </div>
                     </div>
-                </div>
                 <?php endif; ?>
-
-
 
                 <!-- Activity Description with formatted content -->
                 <div class="mb-4">
                     <h5 class="section-title">
                         <i class="fa-solid fa-circle-info"></i>
-                        Activity Description
+                        Project Description
                     </h5>
                     <div class="content-text">
                         <?php if (!empty($activity['objectives'])): ?>
+                            <h6>Objectives:</h6>
                             <?= nl2br(htmlspecialchars($activity['objectives'])) ?>
                         <?php endif; ?>
-                        
+
                         <?php if (!empty($activity['short_description'])): ?>
+                            <h6>Overview:</h6>
                             <p><?= nl2br(htmlspecialchars($activity['short_description'])) ?></p>
                         <?php endif; ?>
-                        
+
                         <?php if (!empty($activity['description'])): ?>
+                            <h6>Detailed Description:</h6>
                             <?= nl2br(htmlspecialchars($activity['description'])) ?>
                         <?php endif; ?>
                     </div>
@@ -790,63 +811,73 @@ if (!empty($activity['sections_data'])) {
 
                 <!-- Dynamic Sections Display -->
                 <?php if (!empty($sections) && is_array($sections)): ?>
-                <div class="mb-4">
-                    <?php foreach ($sections as $section): ?>
-                        <?php if (!empty($section['title']) && !empty($section['items']) && is_array($section['items'])): ?>
-                        <div class="mb-4">
-                            <h6 style="color: #1e293b; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.75rem;">
-                                <?= htmlspecialchars($section['title']) ?>:
-                            </h6>
-                            <ul style="padding-left: 1.5rem; margin-bottom: 1rem;">
-                                <?php foreach ($section['items'] as $item): ?>
-                                    <?php if (!empty($item)): ?>
-                                    <li style="margin-bottom: 0.5rem; color: #475569;">
-                                        <?= htmlspecialchars($item) ?>
-                                    </li>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
+                    <div class="mb-4">
+                        <h5 class="section-title mb-3">
+                            <i class="fa-solid fa-list-check"></i>
+                            Additional Information
+                        </h5>
+                        <?php foreach ($sections as $section): ?>
+                            <?php if (!empty($section['title']) && !empty($section['items']) && is_array($section['items'])): ?>
+                                <div class="dynamic-section-display">
+                                    <div class="section-display-header">
+                                        <div class="section-display-title">
+                                            <i class="fa-solid fa-list"></i>
+                                            <?= htmlspecialchars($section['title']) ?>
+                                        </div>
+                                    </div>
+                                    <div class="section-display-body">
+                                        <ul class="section-items-list">
+                                            <?php foreach ($section['items'] as $item): ?>
+                                                <?php if (!empty($item)): ?>
+                                                    <li>
+                                                        <i class="fa-solid fa-circle-check"></i>
+                                                        <span><?= htmlspecialchars($item) ?></span>
+                                                    </li>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Related Documents Section -->
                 <?php if (!empty($activity['attachments'])): ?>
-                <div class="mb-4">
-                    <h5 class="section-title">
-                        <i class="fa-solid fa-paperclip"></i>
-                        Related Documents
-                    </h5>
-                    <div class="row g-3">
-                        <?php 
-                        $attachments = json_decode($activity['attachments'], true);
-                        if (is_array($attachments)):
-                            foreach ($attachments as $attachment): 
-                        ?>
-                        <div class="col-md-6">
-                            <div class="attachment-item d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="file-icon">
-                                        <i class="fa-solid fa-file-pdf text-danger"></i>
+                    <div class="mb-4">
+                        <h5 class="section-title">
+                            <i class="fa-solid fa-paperclip"></i>
+                            Related Documents
+                        </h5>
+                        <div class="row g-3">
+                            <?php
+                            $attachments = json_decode($activity['attachments'], true);
+                            if (is_array($attachments)):
+                                foreach ($attachments as $attachment):
+                            ?>
+                                    <div class="col-md-6">
+                                        <div class="attachment-item d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="file-icon">
+                                                    <i class="fa-solid fa-file-pdf text-danger"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold"><?= htmlspecialchars($attachment['name'] ?? 'Document') ?></div>
+                                                    <div class="text-muted small"><?= htmlspecialchars($attachment['size'] ?? 'N/A') ?></div>
+                                                </div>
+                                            </div>
+                                            <a href="<?= htmlspecialchars($attachment['url'] ?? '#') ?>" class="btn btn-sm btn-outline-secondary" download>
+                                                <i class="fa-solid fa-download"></i> Download
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div class="fw-semibold"><?= htmlspecialchars($attachment['name'] ?? 'Document') ?></div>
-                                        <div class="text-muted small"><?= htmlspecialchars($attachment['size'] ?? 'N/A') ?></div>
-                                    </div>
-                                </div>
-                                <a href="<?= htmlspecialchars($attachment['url'] ?? '#') ?>" class="btn btn-sm btn-outline-secondary" download>
-                                    <i class="fa-solid fa-download"></i> Download
-                                </a>
-                            </div>
+                            <?php
+                                endforeach;
+                            endif;
+                            ?>
                         </div>
-                        <?php 
-                            endforeach;
-                        endif;
-                        ?>
                     </div>
-                </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -855,10 +886,12 @@ if (!empty($activity['sections_data'])) {
         <div class="action-buttons-container">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-danger" id="deleteBtn" data-id="<?= $activity['id'] ?>" data-title="<?= htmlspecialchars($activity['title']) ?>">
+                    <button class="btn btn-outline-danger" id="deleteBtn"
+                        data-slug="<?= htmlspecialchars($activity['slug']) ?>"
+                        data-title="<?= htmlspecialchars($activity['title']) ?>">
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
-                    <a href="edit-activity.php?id=<?= $activity['id'] ?>" class="btn btn-primary">
+                    <a href="<?= $editUrl ?>" class="btn btn-primary">
                         <i class="fa-solid fa-pen-to-square"></i> Edit Project
                     </a>
                 </div>
@@ -868,46 +901,48 @@ if (!empty($activity['sections_data'])) {
 </div>
 
 <script>
-document.getElementById('deleteBtn').addEventListener('click', function() {
-    const id = this.dataset.id;
-    const title = this.dataset.title;
-    
-    Swal.fire({
-        title: 'Are you sure?',
-        html: `<div style="text-align: center;">
+    document.getElementById('deleteBtn').addEventListener('click', function() {
+        const slug = this.dataset.slug;
+        const title = this.dataset.title;
+
+        const deleteUrl = `delete-project.php?slug=${encodeURIComponent(slug)}&from=view`;
+
+        Swal.fire({
+            title: 'Are you sure?',
+            html: `<div style="text-align: center;">
                   <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
-                  <p>You are about to delete the activity:</p>
+                  <p>You are about to delete the project:</p>
                   <p><strong>"${title}"</strong></p>
+                  <p class="text-muted" style="font-size: 12px;">Slug: ${slug}</p>
                   <p class="text-danger">This action cannot be undone!</p>
                </div>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true,
-        backdrop: true,
-        allowOutsideClick: false,
-        allowEscapeKey: true,
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            return new Promise((resolve) => {
-                // Redirect to delete page after confirmation
-                window.location.href = `delete-activity.php?id=${id}&from=view`;
-                resolve();
-            });
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // The redirection happens in preConfirm
-        }
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            backdrop: true,
+            allowOutsideClick: false,
+            allowEscapeKey: true,
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return new Promise((resolve) => {
+                    window.location.href = deleteUrl;
+                    resolve();
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // The redirection happens in preConfirm
+            }
+        });
     });
-});
 
-// Add print styles
-const style = document.createElement('style');
-style.textContent = `
+    // Add print styles
+    const style = document.createElement('style');
+    style.textContent = `
     @media print {
         .page-header, .action-buttons-container, .btn-back, .btn-edit-header {
             display: none !important;
@@ -925,7 +960,7 @@ style.textContent = `
         }
     }
 `;
-document.head.appendChild(style);
+    document.head.appendChild(style);
 </script>
 
 <?php require './components/footer.php'; ?>
