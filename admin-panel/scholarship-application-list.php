@@ -307,7 +307,7 @@ $rejectedCount = $statistics['rejected'];
     .action-buttons {
         display: flex;
         gap: 0.5rem;
-        flex-wrap: wrap;
+
     }
 
     .action-buttons .btn {

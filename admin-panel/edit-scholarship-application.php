@@ -3,7 +3,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Edit Scholarship Application';
 require './components/header.php';
 
-
 // Get application ID from URL
 $application_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -13,17 +12,52 @@ $application = getScholarshipApplicationById($application_id);
 // If application not found, redirect
 if (!$application) {
     $_SESSION['error_message'] = 'Application not found.';
-    echo"<script>scholarship-application-list.php</script> ";
+    echo "<script>window.location='scholarship-application-list.php'</script>";
+    exit;
+}
+
+// Handle document deletion
+if (isset($_POST['delete_document'])) {
+    $doc_id = intval($_POST['document_id']);
+    $result = deleteScholarshipDocument($doc_id);
+    
+    if ($result['success']) {
+        $_SESSION['success_message'] = 'Document deleted successfully.';
+    } else {
+        $_SESSION['error_message'] = $result['message'];
+    }
+    
+    echo "<script>window.location='edit-scholarship-application.php?id=" . $application_id . "'</script>";
+    exit;
+}
+
+// Handle new document upload
+if (isset($_POST['upload_documents']) && isset($_FILES['new_documents'])) {
+    $uploadResult = handleScholarshipDocumentsUpload($_FILES['new_documents'], $application_id);
+    
+    if ($uploadResult['success'] && !empty($uploadResult['uploaded'])) {
+        $docSaved = saveScholarshipDocuments($application_id, $uploadResult['uploaded']);
+        
+        if ($docSaved) {
+            $_SESSION['success_message'] = $uploadResult['count'] . ' document(s) uploaded successfully!';
+        } else {
+            $_SESSION['error_message'] = 'Failed to save documents to database.';
+        }
+    } elseif (!empty($uploadResult['errors'])) {
+        $_SESSION['error_message'] = 'Upload errors: ' . implode(', ', $uploadResult['errors']);
+    }
+    
+    echo "<script>window.location='edit-scholarship-application.php?id=" . $application_id . "'</script>";
     exit;
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
     $result = updateScholarshipApplication($application_id, $_POST);
     
     if ($result['success']) {
         $_SESSION['success_message'] = $result['message'];
-    echo"<script>scholarship-application-list.php</script> ";
+        echo "<script>window.location='scholarship-application-list.php'</script>";
         exit;
     } else {
         $_SESSION['error_message'] = $result['message'];
@@ -37,7 +71,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 ?>
 
 <style>
-    /* Page Header - Updated to match notices styling */
+    /* Previous styles remain the same... */
     .page-title-section {
         display: flex;
         align-items: center;
@@ -105,7 +139,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         color: white;
     }
 
-    /* Form Card Styling */
     .form-card {
         background: #fff;
         padding: 28px;
@@ -136,7 +169,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         margin: 0;
     }
 
-    /* Section Styling */
     .form-section {
         margin-bottom: 32px;
     }
@@ -162,7 +194,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         margin: 0;
     }
 
-    /* Form Styling */
     .form-label {
         font-weight: 600;
         color: #374151;
@@ -185,7 +216,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
     }
 
-    /* Button Styling */
     .btn-save {
         background: linear-gradient(135deg, #10b981, #059669);
         color: white;
@@ -245,29 +275,152 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         color: white;
     }
 
-    /* Form Validation */
-    .is-invalid {
-        border-color: #ef4444 !important;
-        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+    /* Documents Section Styles */
+    .documents-section {
+        background: #f8fafc;
+        padding: 24px;
+        border-radius: 16px;
+        border: 2px dashed #cbd5e1;
     }
 
-    .is-valid {
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1) !important;
+    .document-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
     }
 
-    .invalid-feedback {
-        color: #ef4444;
+    .document-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #10b981;
+        transform: translateY(-2px);
+    }
+
+    .document-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .document-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .document-icon.pdf { 
+        color: #dc2626; 
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+    }
+    .document-icon.doc { 
+        color: #2563eb; 
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    }
+    .document-icon.img { 
+        color: #059669; 
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    }
+
+    .document-details h6 {
+        margin: 0 0 4px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .document-details small {
+        color: #6b7280;
         font-size: 13px;
-        margin-top: 4px;
-        display: none;
     }
 
-    .is-invalid + .invalid-feedback {
-        display: block;
+    .document-actions {
+        display: flex;
+        gap: 8px;
     }
 
-    /* Alert Styling */
+    .btn-delete {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-download {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        color: white;
+    }
+
+    .upload-area {
+        border: 3px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 32px;
+        text-align: center;
+        background: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .upload-area:hover {
+        border-color: #8b5cf6;
+        background: #f8fafc;
+    }
+
+    .upload-area i {
+        font-size: 48px;
+        color: #cbd5e1;
+        margin-bottom: 12px;
+    }
+
+    .upload-area:hover i {
+        color: #8b5cf6;
+    }
+
+    .btn-upload {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-weight: 600;
+        margin-top: 16px;
+    }
+
     .alert {
         padding: 16px 20px;
         border-radius: 12px;
@@ -289,92 +442,60 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         color: #991b1b;
     }
 
-    /* Responsive */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+    }
+
     @media (max-width: 768px) {
-        .page-title-section {
+        .document-card {
             flex-direction: column;
+            gap: 12px;
             align-items: flex-start;
-            gap: 16px;
         }
 
-        .form-card {
-            padding: 20px;
-        }
-
-        .btn-save, .btn-cancel, .btn-reset {
+        .document-actions {
             width: 100%;
-            justify-content: center;
         }
 
-        .d-flex.gap-3 {
-            flex-direction: column;
-            gap: 12px !important;
+        .document-actions button,
+        .document-actions a {
+            flex: 1;
         }
-    }
-
-    @media (max-width: 576px) {
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .form-control, .form-select {
-            padding: 12px 14px;
-        }
-    }
-
-    /* Animation */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .form-card {
-        animation: fadeIn 0.5s ease;
     }
 </style>
 
-<!--------------------------->
-<!-- START MAIN AREA -->
-<!--------------------------->
 <div class="content-wrapper">
     <div class="col-lg-10 col-xl-9 mx-auto">
-    <div class="scholarship-application">
+        <div class="scholarship-application">
 
-        <!-- Page Title -->
-        <div class="page-title-section">
-            <div class="page-title-content">
-                <div class="icon-box">
-                    <i class="fa-solid fa-pen-to-square"></i>
+            <!-- Page Title -->
+            <div class="page-title-section">
+                <div class="page-title-content">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div>
+                        <h1>Edit Scholarship Application</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="scholarship-application-list.php">Applications</a></li>
+                                <li class="breadcrumb-item active">Edit</li>
+                            </ol>
+                        </nav>
+                    </div>
                 </div>
-                <div>
-                    <h1>Edit Scholarship Application</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="scholarship-application-list.php">Applications</a></li>
-                            <li class="breadcrumb-item active">Edit</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-            <a class="btn-back" href="scholarship-application-list.php">
-                <i class="fa-solid fa-arrow-left"></i> Back to List
-            </a>
-        </div>
-
-        <!-- Edit Form -->
-        <div class="form-card">
-            <div class="form-card-header">
-                <i class="fa-solid fa-pen-to-square"></i>
-                <h5>Edit Application Details - ID: <?= $application['id'] ?></h5>
+                <a class="btn-back" href="scholarship-application-list.php">
+                    <i class="fa-solid fa-arrow-left"></i> Back to List
+                </a>
             </div>
 
             <?php if ($success_message): ?>
@@ -391,113 +512,231 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             <?php endif; ?>
 
-            <form id="editApplicationForm" method="POST" action="">
-                <input type="hidden" name="application_id" value="<?= $application['id'] ?>">
-
-                <!-- Personal Information Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fa-solid fa-user"></i>
-                        <h6>Personal Information</h6>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($application['name']) ?>" required>
-                            <div class="invalid-feedback">Please enter the full name.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($application['email']) ?>" required>
-                            <div class="invalid-feedback">Please enter a valid email address.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="contact" name="contact" value="<?= htmlspecialchars($application['phone']) ?>" required>
-                            <div class="invalid-feedback">Please enter a valid phone number.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="youraddress" name="youraddress" value="<?= htmlspecialchars($application['address']) ?>" required>
-                            <div class="invalid-feedback">Please enter the address.</div>
-                        </div>
-                    </div>
+            <!-- Edit Form -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <h5>Edit Application Details - ID: <?= $application['id'] ?></h5>
                 </div>
 
-                <!-- Academic Information Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        <h6>Academic Information</h6>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="institution" class="form-label">Institution Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="instituename" name="instituename" value="<?= htmlspecialchars($application['institute_name']) ?>" required>
-                            <div class="invalid-feedback">Please enter institution name.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="type" class="form-label">Institution Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="institution_type" name="institution_type" required>
-                                <option value="">Select Type</option>
-                                <option value="hifz" <?= $application['institution_type'] === 'hifz' ? 'selected' : '' ?>>Hifz</option>
-                                <option value="program" <?= $application['institution_type'] === 'program' ? 'selected' : '' ?>>Program</option>
-                                <option value="school" <?= $application['institution_type'] === 'school' ? 'selected' : '' ?>>School</option>
-                                <option value="college" <?= $application['institution_type'] === 'college' ? 'selected' : '' ?>>College</option>
-                                <option value="university" <?= $application['institution_type'] === 'university' ? 'selected' : '' ?>>University</option>
-                                <option value="madrasha-program" <?= $application['institution_type'] === 'madrasha-program' ? 'selected' : '' ?>>Madrasha</option>
-                            </select>
-                            <div class="invalid-feedback">Please select institution type.</div>
-                        </div>
-                    </div>
-                </div>
+                <form id="editApplicationForm" method="POST" action="">
+                    <input type="hidden" name="application_id" value="<?= $application['id'] ?>">
 
-                <!-- Form Actions -->
-                <div class="d-flex gap-3 justify-content-end mt-4 pt-4 border-top">
-                    <a href="scholarship-application-list.php" class="btn-cancel">
-                        <i class="fa-solid fa-xmark"></i> Cancel
-                    </a>
-                    <button type="reset" class="btn-reset">
-                        <i class="fa-solid fa-rotate-left"></i> Reset
-                    </button>
-                    <button type="submit" class="btn-save">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="fa-solid fa-user"></i>
+                            <h6>Personal Information</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($application['name']) ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($application['email']) ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="contact" name="contact" value="<?= htmlspecialchars($application['phone']) ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="youraddress" name="youraddress" value="<?= htmlspecialchars($application['address']) ?>" required>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Application Info Card -->
-        <div class="form-card">
-            <div class="form-card-header">
-                <i class="fa-solid fa-info-circle"></i>
-                <h5>Application Information</h5>
+                    <!-- Academic Information Section -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            <h6>Academic Information</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="institution" class="form-label">Institution Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="instituename" name="instituename" value="<?= htmlspecialchars($application['institute_name']) ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type" class="form-label">Institution Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="institution_type" name="institution_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="hifz" <?= $application['institution_type'] === 'hifz' ? 'selected' : '' ?>>Hifz</option>
+                                    <option value="program" <?= $application['institution_type'] === 'program' ? 'selected' : '' ?>>Program</option>
+                                    <option value="school" <?= $application['institution_type'] === 'school' ? 'selected' : '' ?>>School</option>
+                                    <option value="college" <?= $application['institution_type'] === 'college' ? 'selected' : '' ?>>College</option>
+                                    <option value="university" <?= $application['institution_type'] === 'university' ? 'selected' : '' ?>>University</option>
+                                    <option value="madrasha-program" <?= $application['institution_type'] === 'madrasha-program' ? 'selected' : '' ?>>Madrasha</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex gap-3 justify-content-end mt-4 pt-4 border-top">
+                        <a href="scholarship-application-list.php" class="btn-cancel">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </a>
+                        <button type="reset" class="btn-reset">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                        <button type="submit" class="btn-save">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Application ID:</strong> #<?= $application['id'] ?></p>
-                    <p><strong>Submitted Date:</strong> <?= date('F d, Y', strtotime($application['created_at'])) ?></p>
+
+            <!-- Documents Section -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <h5>Submitted Documents (<?= count($application['documents']) ?>)</h5>
                 </div>
-                <div class="col-md-6">
-                    <p><strong>Last Modified:</strong> <?= date('F d, Y g:i A', strtotime($application['created_at'])) ?></p>
-                    <p><strong>Status:</strong> 
-                        <span class="badge bg-warning">Pending Review</span>
-                    </p>
+
+                <?php if (empty($application['documents'])): ?>
+                    <div class="empty-state">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <h5>No Documents Uploaded</h5>
+                        <p>Upload documents using the form below</p>
+                    </div>
+                <?php else: ?>
+                    <div class="documents-section">
+                        <?php foreach ($application['documents'] as $document): ?>
+                            <?php
+                            $iconClass = 'fa-file-lines';
+                            $iconType = 'doc';
+                            
+                            if ($document['document_type'] === 'pdf') {
+                                $iconClass = 'fa-file-pdf';
+                                $iconType = 'pdf';
+                            } elseif (in_array($document['document_type'], ['jpg', 'jpeg', 'png'])) {
+                                $iconClass = 'fa-file-image';
+                                $iconType = 'img';
+                            }
+                            
+                            $fileSize = $document['file_size'];
+                            if ($fileSize < 1024) {
+                                $sizeText = $fileSize . ' B';
+                            } elseif ($fileSize < 1024 * 1024) {
+                                $sizeText = round($fileSize / 1024, 2) . ' KB';
+                            } else {
+                                $sizeText = round($fileSize / (1024 * 1024), 2) . ' MB';
+                            }
+                            ?>
+                            
+                            <div class="document-card">
+                                <div class="document-info">
+                                    <div class="document-icon <?= $iconType ?>">
+                                        <i class="fa-solid <?= $iconClass ?>"></i>
+                                    </div>
+                                    <div class="document-details">
+                                        <h6><?= htmlspecialchars($document['document_original_name']) ?></h6>
+                                        <small>
+                                            <i class="fa-solid fa-weight-scale me-1"></i><?= $sizeText ?> • 
+                                            <i class="fa-solid fa-calendar me-1"></i><?= date('M j, Y', strtotime($document['uploaded_at'])) ?>
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="document-actions">
+                                    <a href="download-document.php?id=<?= $document['id'] ?>" 
+                                       class="btn-download">
+                                        <i class="fa-solid fa-download"></i> Download
+                                    </a>
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                        <input type="hidden" name="document_id" value="<?= $document['id'] ?>">
+                                        <button type="submit" name="delete_document" class="btn-delete">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Upload New Documents -->
+                <form method="POST" enctype="multipart/form-data" class="mt-4">
+                    <div class="section-header">
+                        <i class="fa-solid fa-upload"></i>
+                        <h6>Upload Additional Documents</h6>
+                    </div>
+                    
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <h5>Click to upload or drag and drop</h5>
+                        <p class="text-muted mb-0">PDF, DOC, DOCX, JPG, PNG (Max 5MB per file)</p>
+                    </div>
+                    
+                    <input type="file" 
+                           id="fileInput" 
+                           name="new_documents[]" 
+                           multiple 
+                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                           style="display: none;"
+                           onchange="showSelectedFiles(this)">
+                    
+                    <div id="selectedFiles" class="mt-3"></div>
+                    
+                    <div class="text-center">
+                        <button type="submit" name="upload_documents" class="btn-upload">
+                            <i class="fa-solid fa-upload me-2"></i> Upload Documents
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Application Info Card -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <h5>Application Information</h5>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Application ID:</strong> #<?= $application['id'] ?></p>
+                        <p><strong>Submitted Date:</strong> <?= date('F d, Y', strtotime($application['created_at'])) ?></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Last Modified:</strong> <?= date('F d, Y g:i A', strtotime($application['created_at'])) ?></p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge bg-warning text-dark">Pending Review</span>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
-
 </div>
-<!--------------------------->
-<!-- END MAIN AREA -->
-<!--------------------------->
 
 <script>
-// Form validation and submission
+function showSelectedFiles(input) {
+    const container = document.getElementById('selectedFiles');
+    container.innerHTML = '';
+    
+    if (input.files.length > 0) {
+        const fileList = document.createElement('div');
+        fileList.className = 'alert alert-info';
+        fileList.innerHTML = '<strong><i class="fa-solid fa-file me-2"></i>Selected files:</strong><ul class="mb-0 mt-2">';
+        
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const size = file.size < 1024 ? file.size + ' B' : 
+                        file.size < 1024 * 1024 ? (file.size / 1024).toFixed(2) + ' KB' : 
+                        (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            fileList.innerHTML += `<li>${file.name} (${size})</li>`;
+        }
+        
+        fileList.innerHTML += '</ul>';
+        container.appendChild(fileList);
+    }
+}
+
+// Form validation
 document.getElementById('editApplicationForm').addEventListener('submit', function(e) {
-    // Validate all required fields
     const requiredFields = this.querySelectorAll('[required]');
     let isValid = true;
     
@@ -507,7 +746,6 @@ document.getElementById('editApplicationForm').addEventListener('submit', functi
             isValid = false;
         } else {
             field.classList.remove('is-invalid');
-            field.classList.add('is-valid');
         }
     });
     
@@ -517,45 +755,9 @@ document.getElementById('editApplicationForm').addEventListener('submit', functi
         return;
     }
     
-    // Show confirmation dialog
     if (!confirm('Are you sure you want to save these changes?')) {
         e.preventDefault();
-        return;
     }
-});
-
-// Reset form confirmation
-document.querySelector('button[type="reset"]').addEventListener('click', function(e) {
-    if (!confirm('Are you sure you want to reset all changes?')) {
-        e.preventDefault();
-    } else {
-        // Clear validation classes on reset
-        const fields = document.querySelectorAll('.form-control, .form-select');
-        fields.forEach(field => {
-            field.classList.remove('is-invalid', 'is-valid');
-        });
-    }
-});
-
-// Real-time validation feedback
-const requiredFields = document.querySelectorAll('[required]');
-requiredFields.forEach(field => {
-    field.addEventListener('blur', function() {
-        if (this.value.trim() === '') {
-            this.classList.add('is-invalid');
-            this.classList.remove('is-valid');
-        } else {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
-    
-    field.addEventListener('input', function() {
-        if (this.value.trim() !== '') {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        }
-    });
 });
 </script>
 
