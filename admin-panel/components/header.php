@@ -1,13 +1,15 @@
 <?php
 session_start();
-// if (!isset($_SESSION['admin'])) {
-//     header("Location: login.php");
-//     exit();
-// }
-// database connection
-// include('database/dbConnection.php');
+// admin panel header 
+// Include functions for authentication check
+require_once __DIR__ . '/../../components/functions.php';
 
-$admin_username = $_SESSION['admin'] ?? 'Admin';
+// Protect the page - redirect to login if not authenticated
+protectPage();
+
+// Get current user info
+$current_user = getCurrentUser();
+$admin_username = $current_user['username'] ?? 'Admin';
 ?>
 <!DOCTYPE html>
 <html lang="en">

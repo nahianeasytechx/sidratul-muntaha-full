@@ -1,24 +1,24 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = 'Edit Notice: ' ;
+$page_title = 'Edit Notice: ';
 require './components/header.php';
 protectPage();
 
-// Check if notice ID is provided
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: all-notices.php?error=Notice ID is required');
+// Get notice by slug only - NO ID FALLBACK
+$notice = null;
+
+if (isset($_GET['slug']) && !empty($_GET['slug'])) {
+    $slug = $_GET['slug'];
+    $notice = getNoticeBySlug($slug);
+
+    if (!$notice) {
+        echo "<script>window.location.href='all-notice.php?error=" . urlencode('Notice not found') . "'</script>";
+        exit();
+    }
+} else {
+    echo "<script>window.location.href='all-notice.php?error=" . urlencode('Notice slug is required') . "'</script>";
     exit();
 }
-
-$notice_id = intval($_GET['id']);
-$notice = getNoticeById($notice_id);
-
-if (!$notice) {
-    header('Location: all-notices.php?error=Notice not found');
-    exit();
-}
-
-
 
 // Handle form submission
 $success_message = '';
@@ -39,15 +39,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
         'age_limit'    => $_POST['age_limit'] ?? null
     ];
 
-    $result = updateNotice($id, $updateData);
+    $result = updateNoticeWithSlug($id, $updateData);
 
     if ($result['success']) {
+        $redirectSlug = !empty($result['slug']) ? $result['slug'] : $notice['slug'];
+        $redirectUrl = "view-notice.php?slug=" . urlencode($redirectSlug);
 
-echo "<script>
-    window.location.href = 'all-notice.php?updated=1';
-</script>";
-exit;
-
+        echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                html: 'Notice updated successfully!<br><small class=\"text-muted\">Slug: " . htmlspecialchars($redirectSlug) . "</small>',
+                confirmButtonColor: '#10b981',
+                timer: 2000,
+                timerProgressBar: true,
+                willClose: () => {
+                    window.location.href = '" . $redirectUrl . "';
+                }
+            });
+        </script>";
+        exit;
     } else {
         $error_message = $result['message'];
     }
@@ -98,6 +109,22 @@ $current_date = new DateTime();
 
     .page-header .breadcrumb-item+.breadcrumb-item::before {
         color: rgba(255, 255, 255, 0.6);
+    }
+
+    .slug-info {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        color: white;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .slug-info code {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 4px 8px;
+        border-radius: 6px;
+        color: white;
     }
 
     /* Cancel Button in Header */
@@ -368,6 +395,7 @@ $current_date = new DateTime();
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -428,15 +456,19 @@ $current_date = new DateTime();
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="all-notices.php" class="text-decoration-none">All Notices</a></li>
+                                <li class="breadcrumb-item"><a href="all-notice.php" class="text-decoration-none">All Notices</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Edit Notice</li>
                             </ol>
                         </nav>
+                        <div class="slug-info">
+                            <i class="fa-solid fa-link me-1"></i>
+                            Current slug: <code><?= htmlspecialchars($notice['slug']) ?></code>
+                        </div>
                     </div>
                 </div>
 
                 <div class="d-flex gap-2">
-                    <a href="all-notices.php" class="btn btn-cancel-header">
+                    <a href="all-notice.php" class="btn btn-cancel-header">
                         <i class="fa-solid fa-xmark me-1"></i> Cancel
                     </a>
                 </div>
@@ -457,22 +489,8 @@ $current_date = new DateTime();
             </div>
         <?php endif; ?>
 
-        <!-- Debug Info (remove in production) -->
-        <?php if (isset($_POST) && !empty($_POST)): ?>
-            <div class="alert alert-info" role="alert">
-                <i class="fa-solid fa-bug"></i>
-                <strong>Debug Info:</strong><br>
-                <?php 
-                echo "Form submitted!<br>";
-                foreach ($_POST as $key => $value) {
-                    echo htmlspecialchars($key) . ": " . htmlspecialchars($value) . "<br>";
-                }
-                ?>
-            </div>
-        <?php endif; ?>
-
         <!-- Edit Form -->
-        <form method="POST" action="">
+        <form method="POST" action="" id="noticeForm">
             <input type="hidden" name="id" value="<?= $notice['id'] ?>">
 
             <div class="row g-4">
@@ -488,8 +506,9 @@ $current_date = new DateTime();
                         <div class="card-body">
                             <div class="mb-3">
                                 <label for="noticeTitle" class="form-label">Notice Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="noticeTitle" name="title" 
-                                       value="<?= htmlspecialchars($notice['title']) ?>" required>
+                                <input type="text" class="form-control" id="noticeTitle" name="title"
+                                    value="<?= htmlspecialchars($notice['title']) ?>" required>
+                                <small class="text-muted">Changing the title will update the URL slug</small>
                             </div>
 
                             <div class="mb-3 text-area-wrapper">
@@ -536,29 +555,29 @@ $current_date = new DateTime();
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="publishDate" class="form-label">Publish Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="publishDate" name="publish_date" 
-                                           value="<?= $notice['publish_date'] ?>" required>
+                                    <input type="date" class="form-control" id="publishDate" name="publish_date"
+                                        value="<?= $notice['publish_date'] ?>" required>
                                     <div class="form-text">Date when notice becomes visible</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="duration" class="form-label">Duration (Months) <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="duration" name="duration" 
-                                           value="<?= $notice['duration'] ?>" min="1" max="36" required>
+                                    <input type="number" class="form-control" id="duration" name="duration"
+                                        value="<?= $notice['duration'] ?>" min="1" max="36" required>
                                     <div class="form-text">How long the notice will remain active (1-36 months)</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="ageLimit" class="form-label">Age Limit (Optional)</label>
-                                    <input type="number" class="form-control" id="ageLimit" name="age_limit" 
-                                           value="<?= $notice['age_limit'] ?>" min="0" max="100">
+                                    <input type="number" class="form-control" id="ageLimit" name="age_limit"
+                                        value="<?= $notice['age_limit'] ?>" min="0" max="100">
                                     <div class="form-text">Minimum age requirement (leave empty for no restriction)</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="expiryDate" class="form-label">Calculated Expiry Date</label>
-                                    <input type="text" class="form-control" id="expiryDate" 
-                                           value="<?= $expiry_date->format('F d, Y') ?>" readonly style="background-color: #f8f9fa;">
+                                    <input type="text" class="form-control" id="expiryDate"
+                                        value="<?= $expiry_date->format('F d, Y') ?>" readonly style="background-color: #f8f9fa;">
                                     <div class="form-text">Auto-calculated based on publish date + duration</div>
                                 </div>
                             </div>
@@ -575,22 +594,21 @@ $current_date = new DateTime();
                         <div class="card-body">
                             <div class="alert alert-info">
                                 <i class="fa-solid fa-circle-info"></i>
-                                <strong>Current Status:</strong> 
-                                <span class="badge <?= 
-                                    $notice['status'] === 'Active' ? 'bg-success' : 
-                                    ($notice['status'] === 'Draft' ? 'bg-warning text-dark' : 'bg-danger')
-                                ?> ms-2">
+                                <strong>Current Status:</strong>
+                                <span class="badge <?=
+                                                    $notice['status'] === 'Active' ? 'bg-success' : ($notice['status'] === 'Draft' ? 'bg-warning text-dark' : 'bg-danger')
+                                                    ?> ms-2">
                                     <?= $notice['status'] ?>
                                 </span>
-                                <?php 
-                                if ($notice['status'] === 'Active' && $current_date > $expiry_date): 
+                                <?php
+                                if ($notice['status'] === 'Active' && $current_date > $expiry_date):
                                 ?>
                                     <span class="badge bg-danger ms-2">
                                         <i class="fa-solid fa-clock me-1"></i> Auto-Expired
                                     </span>
                                 <?php endif; ?>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -669,7 +687,11 @@ $current_date = new DateTime();
                             <button type="submit" name="save_draft" class="btn btn-outline-secondary w-100 mb-2">
                                 <i class="fa-solid fa-file-pen"></i> Save as Draft
                             </button>
-                            <button type="button" class="btn btn-outline-danger w-100" onclick="deleteNotice(<?= $notice['id'] ?>)">
+                            <button class="btn btn-sm btn-danger btn-delete-notice d-inline-flex align-items-center justify-content-center p-0"
+                                style="height: 32px; width: 32px; min-width: 32px;"
+                                title="Delete"
+                                data-slug="<?= htmlspecialchars($notice['slug']) ?>"
+                                data-title="<?= htmlspecialchars($notice['title']) ?>">
                                 <i class="fa-solid fa-trash"></i> Delete Notice
                             </button>
                         </div>
@@ -679,19 +701,18 @@ $current_date = new DateTime();
         </form>
     </div>
 </div>
-
 <script>
     // Character counter for description
     const descField = document.getElementById('noticeDescription');
     const charCounter = document.getElementById('charCounter');
-    
+
     // Initialize counter
     charCounter.textContent = `${descField.value.length} / 2000`;
-    
+
     descField.addEventListener('input', function() {
         const length = this.value.length;
         charCounter.textContent = `${length} / 2000`;
-        
+
         if (length > 2000) {
             charCounter.style.color = '#ef4444';
         } else if (length > 1800) {
@@ -709,12 +730,16 @@ $current_date = new DateTime();
     function updateExpiryDate() {
         const publishDate = new Date(publishDateInput.value);
         const duration = parseInt(durationInput.value) || 1;
-        
+
         if (publishDate && !isNaN(publishDate.getTime())) {
             const expiryDate = new Date(publishDate);
             expiryDate.setMonth(expiryDate.getMonth() + duration);
-            
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
             expiryDateInput.value = expiryDate.toLocaleDateString('en-US', options);
         }
     }
@@ -726,67 +751,54 @@ $current_date = new DateTime();
     const today = new Date().toISOString().split('T')[0];
     publishDateInput.setAttribute('min', today);
 
-    // Delete notice function
-    function deleteNotice(id) {
-        if (confirm('Are you sure you want to delete this notice? This action cannot be undone.')) {
-            window.location.href = `delete-notice.php?id=${id}&from=edit`;
-        }
+    // Delete notice function with slug
+    function deleteNotice(slug) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#10b981',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `delete-notice.php?slug=${encodeURIComponent(slug)}&from=edit`;
+            }
+        });
     }
 
-    // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const title = document.getElementById('noticeTitle').value.trim();
-        const description = document.getElementById('noticeDescription').value.trim();
-        const publishDate = document.getElementById('publishDate').value;
-        const duration = parseInt(document.getElementById('duration').value);
-        const type = document.getElementById('noticeType').value;
-        const category = document.getElementById('noticeCategory').value;
-        const status = document.getElementById('noticeStatus').value;
-        
-        let errors = [];
-        
-        if (title.length === 0) {
-            errors.push('Please enter a notice title');
+    // Form submission with confirmation
+    document.getElementById('noticeForm').addEventListener('submit', function(e) {
+        const form = this;
+        const submitButton = e.submitter;
+
+        if (!form.checkValidity()) {
+            return;
         }
-        
-        if (description.length === 0) {
-            errors.push('Please enter a notice description');
-        } else if (description.length > 2000) {
-            errors.push('Description must be 2000 characters or less');
-        }
-        
-        if (!publishDate) {
-            errors.push('Please select a publish date');
-        }
-        
-        if (duration < 1 || duration > 36) {
-            errors.push('Duration must be between 1 and 36 months');
-        }
-        
-        if (!type) {
-            errors.push('Please select a notice type');
-        }
-        
-        if (!category) {
-            errors.push('Please select a category');
-        }
-        
-        if (!status) {
-            errors.push('Please select a status');
-        }
-        
-        if (errors.length > 0) {
-            e.preventDefault();
-            alert(errors.join('\n'));
-            return false;
-        }
-        
-        // Show saving message
-        const submitBtn = e.submitter;
-        if (submitBtn.name === 'update' || submitBtn.name === 'save_draft') {
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
-            submitBtn.disabled = true;
-        }
+
+        e.preventDefault();
+
+        const actionText = submitButton.name === 'save_draft' ? 'save as draft' : 'update';
+
+        Swal.fire({
+            title: 'Update Notice?',
+            text: `Are you sure you want to ${actionText}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Yes, update it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Updating...';
+                form.submit();
+            }
+        });
     });
 </script>
 

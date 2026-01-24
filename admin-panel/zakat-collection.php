@@ -3,7 +3,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Zakat Collection List';
 require './components/header.php';
 
-// ✅ Sample Data Array (replace with DB data later)
+//  Sample Data Array (replace with DB data later)
 $donations = [
     ["id" => 1, "name" => "Md. Rahim Uddin", "phone" => "+880 1712-345678", "address" => "Mirpur, Dhaka", "amount" => 5000, "trx" => "TRX123456789", "category" => "education", "month" => "10"],
     ["id" => 2, "name" => "Fatima Khatun", "phone" => "+880 1812-987654", "address" => "Banani, Dhaka", "amount" => 10000, "trx" => "TRX987654321", "category" => "health", "month" => "10"],
@@ -16,7 +16,7 @@ $donations = [
     ["id" => 9, "name" => "Abdul Jabbar", "phone" => "+880 1612-852963", "address" => "Gazipur", "amount" => 20000, "trx" => "TRX852963147", "category" => "emergency", "month" => "09"],
 ];
 
-// ✅ Calculate stats
+//  Calculate stats
 $totalDonations = count($donations);
 $totalAmount = array_sum(array_column($donations, 'amount'));
 $thisMonth = date('m');
@@ -493,6 +493,9 @@ $totalDonors = count(array_unique(array_column($donations, 'name')));
 <!-- START MAIN AREA -->
 <!--------------------------->
 <div class="content-wrapper">
+         <div class="feature-alert alert alert-danger fs-1">
+    ⚠️ Feature in Progress
+</div>
     <div class="zakat-collection">
 
         <!-- Page Title -->

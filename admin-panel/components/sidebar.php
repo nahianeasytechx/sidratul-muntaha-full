@@ -41,16 +41,16 @@
     </li>
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#activities" aria-expanded="false" aria-controls="activities">
-        <span class="menu-title">Activities</span>
+        <span class="menu-title">Projects</span>
         <i class="mdi mdi-format-list-bulleted menu-icon"></i>
       </a>
       <div class="collapse" id="activities">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item">
-            <a class="nav-link" href="add-activity.php">Add Activity</a>
+            <a class="nav-link" href="add-project.php">Add Project</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="all-activities.php">All Activities </a>
+            <a class="nav-link" href="all-projects.php">All Projects </a>
           </li>
         </ul>
       </div>
@@ -63,11 +63,17 @@
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link" href="client-messages.php">
+        <span class="menu-title">Client Messages</span>
+        <i class="mdi mdi-message-badge-outline menu-icon"></i>
+      </a>
+    </li>
+    <!-- <li class="nav-item">
       <a class="nav-link" href="gallery.php">
         <span class="menu-title">Gallery</span>
         <i class="mdi mdi-tune-variant menu-icon"></i>
       </a>
-    </li>
+    </li> -->
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#donate" aria-expanded="false" aria-controls="notice">
         <span class="menu-title">Donation List</span>
@@ -81,9 +87,9 @@
           <li class="nav-item">
             <a class="nav-link" href="donation-categories.php">Donation Categories</a>
           </li>
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link" href="all-donation.php">All Donation </a>
-          </li>
+          </li> -->
         </ul>
       </div>
     </li>

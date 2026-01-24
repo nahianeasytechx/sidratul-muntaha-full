@@ -60,7 +60,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="course-lable">Mobile No. <span class="required-asterisk">*</span></label>
-                        <input type="text" class="course_input" id="donorPhoneNumber" placeholder="Phone" required="required">
+                        <input type="number" class="course_input" id="donorPhoneNumber" placeholder="Phone" required="required">
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -124,7 +124,7 @@
                         <div class="payment-method-card" onclick="selectPaymentMethod('sslcommerz')">
                             <input type="radio" name="donationPaymentMethod" id="sslcommerz" value="sslcommerz" required>
                             <label for="sslcommerz" style="cursor: pointer; margin: 0; font-weight: 600;">
-                                <img src="images/ssl logo.png" alt="SSL Commerz" class="payment-icon">
+                                <img src="<?php echo BASE_URL; ?>images/ssl logo.png" alt="SSL Commerz" class="payment-icon">
                                 <span>SSL Commerz</span>
                             </label>
                         </div>
@@ -132,7 +132,7 @@
                         <div class="payment-method-card" onclick="selectPaymentMethod('bkashPayment')">
                             <input type="radio" name="donationPaymentMethod" id="bkashPayment" value="bkash">
                             <label for="bkashPayment" style="cursor: pointer; margin: 0; font-weight: 600;">
-                                <img src="images/bkash.png" alt="bKash" class="payment-icon">
+                                <img src="<?php echo BASE_URL; ?>images/bkash.png" alt="bKash" class="payment-icon">
                                 <span>bKash</span>
                             </label>
                         </div>
@@ -140,7 +140,7 @@
                         <div class="payment-method-card" onclick="selectPaymentMethod('nagadPayment')">
                             <input type="radio" name="donationPaymentMethod" id="nagadPayment" value="nagad">
                             <label for="nagadPayment" style="cursor: pointer; margin: 0; font-weight: 600;">
-                                <img src="images/nogod.png" alt="Nagad" class="payment-icon">
+                                <img src="<?php echo BASE_URL; ?>images/nogod.png" alt="Nagad" class="payment-icon">
                                 <span>Nagad</span>
                             </label>
                         </div>
@@ -150,7 +150,7 @@
                         <div class="payment-method-card" onclick="selectPaymentMethod('paypalPayment')">
                             <input type="radio" name="donationPaymentMethod" id="paypalPayment" value="paypal">
                             <label for="paypalPayment" style="cursor: pointer; margin: 0; font-weight: 600;">
-                                <img src="images/paypal.png" alt="PayPal" class="payment-icon">
+                                <img src="<?php echo BASE_URL; ?>images/paypal.png" alt="PayPal" class="payment-icon">
                                 <span>PayPal</span>
                             </label>
                         </div>
@@ -182,6 +182,7 @@
 
 .join-bg {
     /* Mimics a modern "card" container */
+    background: linear-gradient(135deg, #05A657 0%, #038d47 100%);
     border-radius: var(--radius);
     box-shadow: var(--shadow-light);
     padding: 30px;

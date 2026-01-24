@@ -1,0 +1,42 @@
+RewriteEngine On
+RewriteBase /sites/Sidratul-Muntaha/
+
+# =====================================================
+#  REDIRECT OLD project-details.php?slug=xyz → /project/xyz
+# (THIS MUST COME FIRST)
+# =====================================================
+RewriteCond %{THE_REQUEST} \s/+sites/Sidratul-Muntaha/project-details\.php\?slug=([^\s&]+) [NC]
+RewriteRule ^ project/%1? [R=301,L]
+
+# =====================================================
+#  CLEAN PROJECT DETAILS URLs
+# /project/xyz → project-details.php?slug=xyz
+# =====================================================
+RewriteRule ^project/([a-zA-Z0-9-]+)$ project-details.php?slug=$1 [L,QSA]
+
+# =====================================================
+#  CLEAN NOTICE DETAILS URLs
+# =====================================================
+RewriteRule ^notice/([a-zA-Z0-9-]+)$ notice-details.php?slug=$1 [L,QSA]
+
+# =====================================================
+# REMOVE .php FROM OTHER FILES
+# =====================================================
+RewriteCond %{THE_REQUEST} \s/+sites/Sidratul-Muntaha/([^.]+)\.php [NC]
+RewriteCond %{REQUEST_URI} !project-details\.php [NC]
+RewriteRule ^ %1 [R=301,L]
+
+# =====================================================
+#  ROUTE EXTENSIONLESS URLs TO .php FILES
+# =====================================================
+RewriteCond %{REQUEST_URI} !^/uploads/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L,QSA]
+
+# =====================================================
+# SETTINGS
+# =====================================================
+DirectoryIndex index.php
+Options -Indexes

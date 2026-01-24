@@ -1,14 +1,63 @@
 <?php
 $page_title = 'Add Notice';
 require './components/header.php';
-protectPage(); // Protect this page - only logged in users can access
+protectPage();
 
 $current_page = basename($_SERVER['PHP_SELF']);
 
-?>
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Get form data
+  $title = trim($_POST['title']);
+  $description = trim($_POST['description']);
+  $publish_date = $_POST['publish_date'];
+  $duration = intval($_POST['duration']);
+  $type = $_POST['type'];
+  $age_limit = isset($_POST['age_limit']) && !empty($_POST['age_limit']) ? intval($_POST['age_limit']) : null;
+  $category = $_POST['category'];
+  $status = $_POST['status'];
 
-<style>
-  /* Modern Form Styles */
+  // Validate required fields
+  if (empty($title) || empty($description) || empty($publish_date) || empty($duration) || empty($type) || empty($category) || empty($status)) {
+    $error_message = 'All required fields must be filled!';
+  } else {
+    // Prepare data array
+    $noticeData = [
+      'title' => $title,
+      'description' => $description,
+      'publish_date' => $publish_date,
+      'duration' => $duration,
+      'type' => $type,
+      'category' => $category,
+      'status' => $status
+    ];
+
+    // Add age_limit only if provided
+    if ($age_limit !== null && $age_limit > 0) {
+      $noticeData['age_limit'] = $age_limit;
+    }
+
+    // Create notice with slug using the slug-aware function
+    $result = createNoticeWithSlug($noticeData);
+
+    if ($result['success']) {
+      echo '<div class="message-box success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Notice created successfully! Slug: ' . htmlspecialchars($result['slug']) . '
+                  </div>';
+
+      echo '<script>
+                    setTimeout(function() {
+                        window.location.href = "all-notice.php";
+                    }, 1500);
+                  </script>';
+    } else {
+      $error_message = $result['message'];
+    }
+  }
+}
+?>
+ <style>
   .notice-form-container {
     background: #fff;
     border-radius: 24px;
@@ -80,7 +129,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
   .modern-select,
   .modern-textarea {
     width: 100%;
-    padding: 9px 18px;
+    padding: 10px 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
@@ -107,7 +156,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
   .modern-textarea {
     resize: vertical;
-    min-height: 140px;
+    min-height: 120px;
     font-family: inherit;
   }
 
@@ -174,6 +223,156 @@ $current_page = basename($_SERVER['PHP_SELF']);
     transform: translateY(-2px);
   }
 
+  .dynamic-section {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dynamic-section:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    padding: 20px !important;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .section-title-input {
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .section-title-input:focus {
+    outline: none !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+  }
+
+  .card-body {
+    padding: 24px !important;
+    background: #fafbfc;
+  }
+
+  .items-list {
+    margin-bottom: 16px;
+  }
+
+  .item-row {
+    margin-bottom: 12px;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .input-group-text {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+  }
+
+  .input-group .form-control {
+    flex: 1;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+
+  .input-group .form-control:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  .btn-outline-danger {
+    background: #fff;
+    border: 2px solid #ef4444;
+    color: #ef4444;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    min-width: 48px;
+    height: 48px;
+  }
+
+  .btn-outline-danger:hover {
+    background: #ef4444;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  }
+
+  .btn-outline-primary {
+    background: #fff;
+    border: 2px solid #10b981;
+    color: #10b981;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background: #10b981;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px 28px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  }
+
+  input[type="file"] {
+    padding: 12px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  input[type="file"]:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+  }
+
   .message-box {
     padding: 15px;
     border-radius: 12px;
@@ -206,23 +405,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
       opacity: 0;
       transform: translateY(-10px);
     }
-
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
-  .char-counter {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    font-size: 12px;
-    color: #94a3b8;
-    font-weight: 500;
-  }
-
-  /* Responsive Design */
   @media (max-width: 768px) {
     .notice-form-container {
       padding: 28px 20px;
@@ -246,59 +434,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
     .btn-cancel {
       width: 100%;
     }
-  }
 
-  /* Animation */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
+    .card-header {
+      flex-direction: column;
+      gap: 12px;
     }
 
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    .section-title-input {
+      max-width: 100% !important;
     }
-  }
-
-  .notice-form-container {
-    animation: fadeInUp 0.6s ease;
-  }
-
-  .modern-form-group {
-    animation: fadeInUp 0.6s ease;
-    animation-fill-mode: both;
-  }
-
-  .modern-form-group:nth-child(1) {
-    animation-delay: 0.1s;
-  }
-
-  .modern-form-group:nth-child(2) {
-    animation-delay: 0.15s;
-  }
-
-  .modern-form-group:nth-child(3) {
-    animation-delay: 0.2s;
-  }
-
-  .modern-form-group:nth-child(4) {
-    animation-delay: 0.25s;
-  }
-
-  .modern-form-group:nth-child(5) {
-    animation-delay: 0.3s;
-  }
-
-  .modern-form-group:nth-child(6) {
-    animation-delay: 0.35s;
   }
 
   .icon-box {
     background-color: #059669 !important;
   }
 </style>
-
 <!--------------------------->
 <!-- START MAIN AREA -->
 <!--------------------------->
@@ -325,68 +475,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
           </div>
 
           <?php
-          // Handle form submission
-          if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Get form data
-            $title = trim($_POST['title']);
-            $description = trim($_POST['description']);
-            $publish_date = $_POST['publish_date'];
-            $duration = intval($_POST['duration']);
-            $type = $_POST['type'];
-            $age_limit = isset($_POST['age_limit']) && !empty($_POST['age_limit']) ? intval($_POST['age_limit']) : null;
-            $category = $_POST['category'];
-            $status = $_POST['status'];
-
-            // Validate required fields
-            if (empty($title) || empty($description) || empty($publish_date) || empty($duration) || empty($type) || empty($category) || empty($status)) {
-              echo '<div class="message-box error">
-                          <i class="fa-solid fa-circle-exclamation"></i>
-                          All required fields must be filled!
-                        </div>';
-            } else {
-              // Prepare data array
-              $noticeData = [
-                'title' => $title,
-                'description' => $description,
-                'publish_date' => $publish_date,
-                'duration' => $duration,
-                'type' => $type,
-                'category' => $category,
-                'status' => $status
-              ];
-
-              // Add age_limit only if provided
-              if ($age_limit !== null && $age_limit > 0) {
-                $noticeData['age_limit'] = $age_limit;
-              }
-
-              // Create notice using your function
-              $result = createNotice($noticeData);
-
-              if ($result['success']) {
-                echo "<script>
-
-        window.location.href = 'all-notice.php';
-    </script>";
-
-                echo '<div class="message-box success">
-                              <i class="fa-solid fa-circle-check"></i>
-                              Notice created successfully!' .  '
-                            </div>';
-
-                // Clear form after successful submission
-                echo '<script>
-                              setTimeout(function() {
-                                  document.getElementById("noticeForm").reset();
-                              }, 1000);
-                            </script>';
-              } else {
-                echo '<div class="message-box error">
-                              <i class="fa-solid fa-circle-exclamation"></i>
-                              Error: ' . htmlspecialchars($result['message']) . '
-                            </div>';
-              }
-            }
+          // Display error message if exists
+          if (isset($error_message)) {
+            echo '<div class="message-box error">
+                      <i class="fa-solid fa-circle-exclamation"></i>
+                      ' . htmlspecialchars($error_message) . '
+                    </div>';
           }
           ?>
 
@@ -398,6 +492,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
               <label><i class="fa-solid fa-heading"></i> Notice Title</label>
               <input type="text" name="title" class="modern-input" placeholder="Enter notice title..." required
                 value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>">
+              <small class="text-muted">A unique URL slug will be automatically generated from the title</small>
             </div>
 
             <!-- Publishing Date & Duration -->
@@ -453,7 +548,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <label><i class="fa-solid fa-toggle-on"></i> Status</label>
                 <select name="status" class="modern-select" required>
                   <option value="">Select Status</option>
-                  <option value="Active" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Active') ? 'selected' : 'selected'; ?>>Active</option>
+                  <option value="Active" <?php echo (!isset($_POST['status']) || $_POST['status'] == 'Active') ? 'selected' : ''; ?>>Active</option>
                   <option value="Expired" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Expired') ? 'selected' : ''; ?>>Expired</option>
                   <option value="Draft" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Draft') ? 'selected' : ''; ?>>Draft</option>
                 </select>
@@ -469,7 +564,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
             <!-- Form Actions -->
             <div class="form-actions">
-              <button type="button" class="btn-cancel" onclick="window.history.back()">
+              <button type="button" class="btn-cancel" onclick="window.location.href='all-notices.php'">
                 <i class="fa-solid fa-times"></i> Cancel
               </button>
               <button type="submit" class="btn-submit" name="submit_notice">
@@ -494,57 +589,71 @@ $current_page = basename($_SERVER['PHP_SELF']);
   const charCounter = document.getElementById('charCounter');
 
   // Initialize counter
-  charCounter.textContent = `${descField.value.length} / 500`;
+  if (descField && charCounter) {
+    charCounter.textContent = `${descField.value.length} / 500`;
 
-  descField.addEventListener('input', function() {
-    const length = this.value.length;
-    charCounter.textContent = `${length} / 500`;
+    descField.addEventListener('input', function() {
+      const length = this.value.length;
+      charCounter.textContent = `${length} / 500`;
 
-    if (length > 500) {
-      charCounter.style.color = '#ef4444';
-    } else if (length > 400) {
-      charCounter.style.color = '#f59e0b';
-    } else {
-      charCounter.style.color = '#94a3b8';
-    }
-  });
+      if (length > 500) {
+        charCounter.style.color = '#ef4444';
+      } else if (length > 400) {
+        charCounter.style.color = '#f59e0b';
+      } else {
+        charCounter.style.color = '#94a3b8';
+      }
+    });
+  }
 
   // Set minimum date to today
   const dateInput = document.querySelector('input[type="date"]');
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.setAttribute('min', today);
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
 
-  // Set default date to today if not already set
-  if (!dateInput.value) {
-    dateInput.value = today;
+    // Set default date to today if not already set
+    if (!dateInput.value) {
+      dateInput.value = today;
+    }
   }
 
   // Form validation before submit
-  document.getElementById('noticeForm').addEventListener('submit', function(e) {
-    const title = this.querySelector('input[name="title"]').value.trim();
-    const description = this.querySelector('textarea[name="description"]').value.trim();
+  const noticeForm = document.getElementById('noticeForm');
+  if (noticeForm) {
+    noticeForm.addEventListener('submit', function(e) {
+      const title = this.querySelector('input[name="title"]').value.trim();
+      const description = this.querySelector('textarea[name="description"]').value.trim();
 
-    if (title.length === 0) {
-      e.preventDefault();
-      alert('Please enter a notice title');
-      this.querySelector('input[name="title"]').focus();
-      return false;
-    }
+      if (title.length === 0) {
+        e.preventDefault();
+        alert('Please enter a notice title');
+        this.querySelector('input[name="title"]').focus();
+        return false;
+      }
 
-    if (description.length === 0) {
-      e.preventDefault();
-      alert('Please enter a notice description');
-      this.querySelector('textarea[name="description"]').focus();
-      return false;
-    }
+      if (description.length === 0) {
+        e.preventDefault();
+        alert('Please enter a notice description');
+        this.querySelector('textarea[name="description"]').focus();
+        return false;
+      }
 
-    if (description.length > 500) {
-      e.preventDefault();
-      alert('Description must be 500 characters or less');
-      this.querySelector('textarea[name="description"]').focus();
-      return false;
-    }
-  });
+      if (description.length > 500) {
+        e.preventDefault();
+        alert('Description must be 500 characters or less');
+        this.querySelector('textarea[name="description"]').focus();
+        return false;
+      }
+
+      // Show loading state
+      const submitBtn = this.querySelector('.btn-submit');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+      }
+    });
+  }
 </script>
 
 <?php require './components/footer.php'; ?>

@@ -28,8 +28,7 @@ foreach ($notices as $notice) {
 
 <!-- Add SweetAlert CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
-<style>
+  <style>
     /* Modern Stats Card Styles */
     .stats-card {
         position: relative;
@@ -187,7 +186,7 @@ foreach ($notices as $notice) {
         font-weight: 600;
         transition: all 0.3s ease;
     }
-    
+
     .btn-add-new:hover {
         transform: translateY(-3px);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
@@ -247,7 +246,7 @@ foreach ($notices as $notice) {
         padding: 1.2rem 1rem;
         border: none;
     }
-    
+
     .table thead th {
         background-color: #10b981 !important;
         color: #fff;
@@ -372,8 +371,15 @@ foreach ($notices as $notice) {
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* Responsive Design */
@@ -444,7 +450,6 @@ foreach ($notices as $notice) {
         animation: fadeIn 0.5s ease-out;
     }
 </style>
-
 <div class="content-wrapper">
     <div class="donation-list">
 
@@ -476,14 +481,14 @@ foreach ($notices as $notice) {
                     Notice operation completed successfully!
                   </div>';
         }
-        
+
         if (isset($_GET['error'])) {
             echo '<div class="message-box error">
                     <i class="fa-solid fa-circle-exclamation"></i>
                     Error: ' . htmlspecialchars($_GET['error']) . '
                   </div>';
         }
-        
+
         // Show info if no notices
         if ($totalNotices === 0) {
             echo '<div class="message-box info">
@@ -620,21 +625,21 @@ foreach ($notices as $notice) {
                     </thead>
                     <tbody>
                         <?php if ($totalNotices > 0): ?>
-                            <?php foreach ($notices as $index => $notice): 
+                            <?php foreach ($notices as $index => $notice):
                                 // Calculate expiry date
                                 $publishDate = new DateTime($notice['publish_date']);
                                 $expiryDate = clone $publishDate;
                                 $expiryDate->modify("+{$notice['duration']} months");
                                 $expiryDateFormatted = $expiryDate->format('Y-m-d');
-                                
+
                                 // Check if notice is auto-expired
                                 $isAutoExpired = ($notice['status'] === 'Active' && $currentDate > $expiryDateFormatted);
-                                
+
                                 // Determine badge color based on status
                                 $statusBadgeColor = '';
                                 $statusIcon = '';
                                 $statusText = $notice['status'];
-                                
+
                                 if ($isAutoExpired) {
                                     $statusBadgeColor = 'danger';
                                     $statusIcon = 'clock';
@@ -652,102 +657,145 @@ foreach ($notices as $notice) {
                                     $statusBadgeColor = 'secondary';
                                     $statusIcon = 'question-circle';
                                 }
-                                
+
                                 // Type badge color
                                 $typeBadgeColor = '';
                                 switch ($notice['type']) {
-                                    case 'Urgent': $typeBadgeColor = 'danger'; break;
-                                    case 'General': $typeBadgeColor = 'primary'; break;
-                                    case 'Info': $typeBadgeColor = 'info'; break;
-                                    case 'Announcement': $typeBadgeColor = 'purple'; break;
-                                    default: $typeBadgeColor = 'secondary';
+                                    case 'Urgent':
+                                        $typeBadgeColor = 'danger';
+                                        break;
+                                    case 'General':
+                                        $typeBadgeColor = 'primary';
+                                        break;
+                                    case 'Info':
+                                        $typeBadgeColor = 'info';
+                                        break;
+                                    case 'Announcement':
+                                        $typeBadgeColor = 'purple';
+                                        break;
+                                    default:
+                                        $typeBadgeColor = 'secondary';
                                 }
-                                
+
                                 // Category badge color
                                 $categoryBadgeColor = '';
                                 switch ($notice['category']) {
-                                    case 'Education': $categoryBadgeColor = 'success'; break;
-                                    case 'Scholarship': $categoryBadgeColor = 'info'; break;
-                                    case 'Health': $categoryBadgeColor = 'danger'; break;
-                                    case 'Events': $categoryBadgeColor = 'purple'; break;
-                                    case 'General': $categoryBadgeColor = 'secondary'; break;
-                                    default: $categoryBadgeColor = 'secondary';
+                                    case 'Education':
+                                        $categoryBadgeColor = 'success';
+                                        break;
+                                    case 'Scholarship':
+                                        $categoryBadgeColor = 'info';
+                                        break;
+                                    case 'Health':
+                                        $categoryBadgeColor = 'danger';
+                                        break;
+                                    case 'Events':
+                                        $categoryBadgeColor = 'purple';
+                                        break;
+                                    case 'General':
+                                        $categoryBadgeColor = 'secondary';
+                                        break;
+                                    default:
+                                        $categoryBadgeColor = 'secondary';
                                 }
                             ?>
-                            <tr data-type="<?= $notice['type'] ?>" data-status="<?= $notice['status'] ?>" 
-                                data-category="<?= $notice['category'] ?>" data-title="<?= strtolower($notice['title']) ?>"
-                                data-expiry="<?= $expiryDateFormatted ?>">
-                                <td>
-                                    <div><?= $index + 1 ?></div>
-                                </td>
-                                <td>
-                                    <strong style="color: #2c3e50;"><?= htmlspecialchars($notice['title']) ?></strong>
-                                </td>
-                                <td>
-                                    <small style="color: #94a3b8;">
-                                        <?= htmlspecialchars(substr($notice['description'], 0, 80)) ?>
-                                        <?= strlen($notice['description']) > 80 ? '...' : '' ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-<?= $typeBadgeColor ?>">
-                                        <i class="fa-solid fa-tag me-1"></i>
-                                        <?= htmlspecialchars($notice['type']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-<?= $categoryBadgeColor ?>">
-                                        <i class="fa-solid fa-folder me-1"></i>
-                                        <?= htmlspecialchars($notice['category']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-<?= $statusBadgeColor ?>">
-                                        <i class="fa-solid fa-<?= $statusIcon ?> me-1"></i>
-                                        <?= $statusText ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <small style="color: #64748b;">
-                                        <i class="fa-solid fa-calendar me-1"></i>
-                                        <?= date('M d, Y', strtotime($notice['publish_date'])) ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <small style="color: #64748b;">
-                                        <i class="fa-solid fa-clock me-1"></i>
-                                        <?= $notice['duration'] ?> months
-                                        <?php if ($isAutoExpired): ?>
-                                            <br><small class="text-danger">(Expired: <?= date('M d, Y', strtotime($expiryDateFormatted)) ?>)</small>
+                                <tr data-type="<?= $notice['type'] ?>" data-status="<?= $notice['status'] ?>"
+                                    data-category="<?= $notice['category'] ?>" data-title="<?= strtolower($notice['title']) ?>"
+                                    data-expiry="<?= $expiryDateFormatted ?>">
+                                    <td>
+                                        <div><?= $index + 1 ?></div>
+                                    </td>
+                                    <td>
+                                        <strong style="color: #2c3e50;"><?= htmlspecialchars($notice['title']) ?></strong>
+                                        <?php if (!empty($notice['slug'])): ?>
+                                            <br><small class="text-muted" style="font-size: 11px;">
+                                                <i class="fa-solid fa-link"></i> <?= htmlspecialchars($notice['slug']) ?>
+                                            </small>
                                         <?php endif; ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <small style="color: #64748b;">
-                                        <i class="fa-solid fa-user me-1"></i>
-                                        <?= !empty($notice['age_limit']) ? $notice['age_limit'] : 'N/A' ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <a href="view-notice.php?id=<?= $notice['id'] ?>" class="btn btn-sm btn-info d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="View Details">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="edit-notice.php?id=<?= $notice['id'] ?>" class="btn btn-sm btn-warning d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Edit">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-danger btn-delete-notice d-inline-flex align-items-center justify-content-center p-0" 
-                                            style="height: 32px; width: 32px; min-width: 32px;" 
-                                            title="Delete"
-                                            data-id="<?= $notice['id'] ?>"
-                                            data-title="<?= htmlspecialchars($notice['title']) ?>">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td>
+                                        <small style="color: #94a3b8;">
+                                            <?= htmlspecialchars(substr($notice['description'], 0, 80)) ?>
+                                            <?= strlen($notice['description']) > 80 ? '...' : '' ?>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<?= $typeBadgeColor ?>">
+                                            <i class="fa-solid fa-tag me-1"></i>
+                                            <?= htmlspecialchars($notice['type']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<?= $categoryBadgeColor ?>">
+                                            <i class="fa-solid fa-folder me-1"></i>
+                                            <?= htmlspecialchars($notice['category']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-<?= $statusBadgeColor ?>">
+                                            <i class="fa-solid fa-<?= $statusIcon ?> me-1"></i>
+                                            <?= $statusText ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small style="color: #64748b;">
+                                            <i class="fa-solid fa-calendar me-1"></i>
+                                            <?= date('M d, Y', strtotime($notice['publish_date'])) ?>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small style="color: #64748b;">
+                                            <i class="fa-solid fa-clock me-1"></i>
+                                            <?= $notice['duration'] ?> months
+                                            <?php if ($isAutoExpired): ?>
+                                                <br><small class="text-danger">(Expired: <?= date('M d, Y', strtotime($expiryDateFormatted)) ?>)</small>
+                                            <?php endif; ?>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small style="color: #64748b;">
+                                            <i class="fa-solid fa-user me-1"></i>
+                                            <?= !empty($notice['age_limit']) ? $notice['age_limit'] : 'N/A' ?>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($notice['slug'])): ?>
+                                            <a href="view-notice.php?slug=<?= urlencode($notice['slug']) ?>" class="btn btn-sm btn-info d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="View Details">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-warning" title="No slug available">
+                                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($notice['slug'])): ?>
+                                            <a href="edit-notice.php?slug=<?= urlencode($notice['slug']) ?>" class="btn btn-sm btn-warning d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Edit">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-warning" title="No slug available">
+                                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($notice['slug'])): ?>
+                                            <button class="btn btn-sm btn-danger btn-delete-notice d-inline-flex align-items-center justify-content-center p-0"
+                                                style="height: 32px; width: 32px; min-width: 32px;"
+                                                title="Delete"
+                                                data-slug="<?= htmlspecialchars($notice['slug']) ?>"
+                                                data-title="<?= htmlspecialchars($notice['title']) ?>">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        <?php else: ?>
+                                            <span class="text-warning" title="No slug available">
+                                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
@@ -772,124 +820,136 @@ foreach ($notices as $notice) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Filtering functionality
-    const searchInput = document.getElementById("searchInput");
-    const typeFilter = document.getElementById("typeFilter");
-    const statusFilter = document.getElementById("statusFilter");
-    const categoryFilter = document.getElementById("categoryFilter");
-    const sortFilter = document.getElementById("sortFilter");
-    const rows = document.querySelectorAll("#noticeTable tbody tr");
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filtering functionality
+        const searchInput = document.getElementById("searchInput");
+        const typeFilter = document.getElementById("typeFilter");
+        const statusFilter = document.getElementById("statusFilter");
+        const categoryFilter = document.getElementById("categoryFilter");
+        const sortFilter = document.getElementById("sortFilter");
+        const rows = document.querySelectorAll("#noticeTable tbody tr");
 
-    function filterTable() {
-        const search = searchInput.value.toLowerCase();
-        const type = typeFilter.value;
-        const status = statusFilter.value;
-        const category = categoryFilter.value;
+        function filterTable() {
+            const search = searchInput.value.toLowerCase();
+            const type = typeFilter.value;
+            const status = statusFilter.value;
+            const category = categoryFilter.value;
 
-        rows.forEach(row => {
-            if (row.cells.length <= 1) return; // Skip the "no notices" row
-            
-            const title = row.dataset.title;
-            const rowType = row.dataset.type;
-            const rowStatus = row.dataset.status;
-            const rowCategory = row.dataset.category;
-            let visible = true;
+            rows.forEach(row => {
+                if (row.cells.length <= 1) return; // Skip the "no notices" row
 
-            if (search && !title.includes(search)) visible = false;
-            if (type !== "all" && rowType !== type) visible = false;
-            if (status !== "all" && rowStatus !== status) visible = false;
-            if (category !== "all" && rowCategory !== category) visible = false;
+                const title = row.dataset.title;
+                const rowType = row.dataset.type;
+                const rowStatus = row.dataset.status;
+                const rowCategory = row.dataset.category;
+                let visible = true;
 
-            row.style.display = visible ? "" : "none";
-        });
-    }
+                if (search && !title.includes(search)) visible = false;
+                if (type !== "all" && rowType !== type) visible = false;
+                if (status !== "all" && rowStatus !== status) visible = false;
+                if (category !== "all" && rowCategory !== category) visible = false;
 
-    function sortTable() {
-        const sortValue = sortFilter.value;
-        const tbody = document.querySelector("#noticeTable tbody");
-        const rowsArr = Array.from(tbody.querySelectorAll("tr"));
-        
-        // Filter out the "no notices" row
-        const validRows = rowsArr.filter(row => row.cells.length > 1);
-        
-        validRows.sort((a, b) => {
-            const aDate = new Date(a.querySelector('td:nth-child(7) small')?.textContent.replace('Expired: ', '').split(', ')[1] || '');
-            const bDate = new Date(b.querySelector('td:nth-child(7) small')?.textContent.replace('Expired: ', '').split(', ')[1] || '');
-            const aExpiry = a.dataset.expiry;
-            const bExpiry = b.dataset.expiry;
-            
-            if (sortValue === "oldest") {
-                return aDate - bDate;
-            }
-            if (sortValue === "expiring") {
-                // Sort by expiry date (soonest first)
-                const now = new Date();
-                const aTime = new Date(aExpiry) - now;
-                const bTime = new Date(bExpiry) - now;
-                return aTime - bTime;
-            }
-            // newest first (default)
-            return bDate - aDate;
-        });
+                row.style.display = visible ? "" : "none";
+            });
+        }
 
-        // Reorder rows in the table
-        validRows.forEach(row => tbody.appendChild(row));
-    }
+        function sortTable() {
+            const sortValue = sortFilter.value;
+            const tbody = document.querySelector("#noticeTable tbody");
+            const rowsArr = Array.from(tbody.querySelectorAll("tr"));
 
-    // SweetAlert Delete Confirmation
-    const deleteButtons = document.querySelectorAll('.btn-delete-notice');
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const id = this.dataset.id;
-            const title = this.dataset.title;
-            const deleteUrl = `delete-notice.php?id=${id}`;
-            
-            Swal.fire({
-                title: 'Are you sure?',
-                html: `<div style="text-align: center;">
+            // Filter out the "no notices" row
+            const validRows = rowsArr.filter(row => row.cells.length > 1);
+
+            validRows.sort((a, b) => {
+                const aDate = new Date(a.querySelector('td:nth-child(7) small')?.textContent.replace('Expired: ', '').split(', ')[1] || '');
+                const bDate = new Date(b.querySelector('td:nth-child(7) small')?.textContent.replace('Expired: ', '').split(', ')[1] || '');
+                const aExpiry = a.dataset.expiry;
+                const bExpiry = b.dataset.expiry;
+
+                if (sortValue === "oldest") {
+                    return aDate - bDate;
+                }
+                if (sortValue === "expiring") {
+                    // Sort by expiry date (soonest first)
+                    const now = new Date();
+                    const aTime = new Date(aExpiry) - now;
+                    const bTime = new Date(bExpiry) - now;
+                    return aTime - bTime;
+                }
+                // newest first (default)
+                return bDate - aDate;
+            });
+
+            // Reorder rows in the table
+            validRows.forEach(row => tbody.appendChild(row));
+        }
+
+        // SweetAlert Delete Confirmation
+        const deleteButtons = document.querySelectorAll('.btn-delete-notice');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const slug = this.dataset.slug;
+                const title = this.dataset.title;
+
+                // Only proceed if slug exists
+                if (!slug) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'This notice does not have a slug and cannot be deleted.',
+                        icon: 'error',
+                        confirmButtonColor: '#6b7280'
+                    });
+                    return;
+                }
+
+                const deleteUrl = `delete-notice.php?slug=${encodeURIComponent(slug)}`;
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    html: `<div style="text-align: center;">
                           <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
                           <p>You are about to delete the notice:</p>
                           <p><strong>"${title}"</strong></p>
+                          <p class="text-muted" style="font-size: 12px;">Slug: ${slug}</p>
                           <p class="text-danger">This action cannot be undone!</p>
                        </div>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel',
-                reverseButtons: true,
-                backdrop: true,
-                allowOutsideClick: false,
-                allowEscapeKey: true,
-                showLoaderOnConfirm: true,
-                preConfirm: () => {
-                    return new Promise((resolve) => {
-                        // Redirect to delete page after confirmation
-                        window.location.href = deleteUrl;
-                        resolve();
-                    });
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // The redirection happens in preConfirm
-                }
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    backdrop: true,
+                    allowOutsideClick: false,
+                    allowEscapeKey: true,
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return new Promise((resolve) => {
+                            window.location.href = deleteUrl;
+                            resolve();
+                        });
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // The redirection happens in preConfirm
+                    }
+                });
             });
         });
-    });
 
-    // Event listeners for filters
-    [searchInput, typeFilter, statusFilter, categoryFilter].forEach(el => el.addEventListener("input", filterTable));
-    sortFilter.addEventListener("change", sortTable);
-    
-    // Add print styles
-    const style = document.createElement('style');
-    style.textContent = `
+        // Event listeners for filters
+        [searchInput, typeFilter, statusFilter, categoryFilter].forEach(el => el.addEventListener("input", filterTable));
+        sortFilter.addEventListener("change", sortTable);
+
+        // Add print styles
+        const style = document.createElement('style');
+        style.textContent = `
         @media print {
             .page-header, .filter-card, .bulk-actions,
             .dataTables_length, .dataTables_filter, .dataTables_info,
@@ -921,8 +981,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     `;
-    document.head.appendChild(style);
-});
+        document.head.appendChild(style);
+    });
 </script>
 
 <?php require './components/footer.php'; ?>
+
+
+  

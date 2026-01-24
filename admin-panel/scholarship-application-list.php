@@ -1,27 +1,17 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Scholarship Application List';
-require './components/header.php';
 
-// ✅ Scholarship Application Data (replace with DB data later)
-$applications = [
-    ["id" => 1, "name" => "Md. Rahim Uddin", "phone" => "+880 1712-345678", "email" => "rahim.uddin@email.com", "address" => "Mirpur, Dhaka", "institution" => "Dhaka College", "type" => "college", "status" => "pending", "applied_date" => "2024-10-15"],
-    ["id" => 2, "name" => "Fatima Khatun", "phone" => "+880 1812-987654", "email" => "fatima.k@email.com", "address" => "Banani, Dhaka", "institution" => "Dhaka University", "type" => "university", "status" => "processed", "applied_date" => "2024-10-12"],
-    ["id" => 3, "name" => "Kamal Hossain", "phone" => "+880 1912-456789", "email" => "kamal.h@email.com", "address" => "Chittagong", "institution" => "Jamia Islamia Madrasa", "type" => "hifz", "status" => "processed", "applied_date" => "2024-09-28"],
-    ["id" => 4, "name" => "Ayesha Siddika", "phone" => "+880 1612-789456", "email" => "ayesha.s@email.com", "address" => "Uttara, Dhaka", "institution" => "Uttara High School", "type" => "school", "status" => "rejected", "applied_date" => "2024-08-20"],
-    ["id" => 5, "name" => "Ibrahim Khan", "phone" => "+880 1512-321654", "email" => "ibrahim.k@email.com", "address" => "Rajshahi", "institution" => "Islamic Foundation", "type" => "program", "status" => "pending", "applied_date" => "2024-09-15"],
-    ["id" => 6, "name" => "Nasrin Akter", "phone" => "+880 1712-654321", "email" => "nasrin.a@email.com", "address" => "Barisal", "institution" => "Barisal Cadet College", "type" => "college", "status" => "processed", "applied_date" => "2024-08-10"],
-    ["id" => 7, "name" => "Mizanur Rahman", "phone" => "+880 1812-147258", "email" => "mizan.r@email.com", "address" => "Sylhet", "institution" => "Sylhet Engineering College", "type" => "university", "status" => "pending", "applied_date" => "2024-07-25"],
-    ["id" => 8, "name" => "Sultana Begum", "phone" => "+880 1912-963852", "email" => "sultana.b@email.com", "address" => "Khulna", "institution" => "Darul Quran Madrasa", "type" => "hifz", "status" => "processed", "applied_date" => "2024-10-05"],
-    ["id" => 9, "name" => "Abdul Jabbar", "phone" => "+880 1612-852963", "email" => "abdul.j@email.com", "address" => "Gazipur", "institution" => "Gazipur High School", "type" => "school", "status" => "rejected", "applied_date" => "2024-09-18"],
-    ["id" => 10, "name" => "Rahima Sultana", "phone" => "+880 1712-456123", "email" => "rahima.s@email.com", "address" => "Dhanmondi, Dhaka", "institution" => "Islamic Studies Program", "type" => "program", "status" => "pending", "applied_date" => "2024-10-20"],
-];
+require "./components/header.php";
+// Get all scholarship applications from database
+$applications = getAllScholarshipApplications();
 
-// ✅ Statistics
-$totalApplications = count($applications);
-$processedCount = count(array_filter($applications, fn($a) => $a['status'] === 'processed'));
-$pendingCount = count(array_filter($applications, fn($a) => $a['status'] === 'pending'));
-$rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'rejected'));
+// Get statistics
+$statistics = getScholarshipStatistics();
+$totalApplications = $statistics['total'];
+$processedCount = $statistics['processed'];
+$pendingCount = $statistics['pending'];
+$rejectedCount = $statistics['rejected'];
 ?>
 
 <style>
@@ -230,12 +220,12 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
     }
 
     .table-header {
-     background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, #10b981, #059669);
     }
 
     .table-header th {
         font-weight: 700;
-        color: #2c3e50;
+        color: white;
         text-transform: uppercase;
         font-size: 0.85rem;
         letter-spacing: 0.5px;
@@ -248,7 +238,9 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
         border-bottom: 1px solid #f1f5f9;
     }
 
-
+    .table tbody tr:hover {
+        background-color: #f8fafc;
+    }
 
     .table tbody td {
         padding: 1rem;
@@ -289,6 +281,28 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
         background: linear-gradient(135deg, #6b7280, #4b5563) !important;
     }
 
+    /* Document Count Badge */
+    .document-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .document-count i {
+        font-size: 0.7rem;
+    }
+
+    .document-count.no-docs {
+        background: linear-gradient(135deg, #94a3b8, #64748b);
+        opacity: 0.6;
+    }
+
     /* Action Buttons */
     .action-buttons {
         display: flex;
@@ -323,31 +337,22 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
         background: linear-gradient(135deg, #ef4444, #dc2626);
     }
 
-    /* User Avatar & ID Badge - Success Green */
-    .user-id-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        border-radius: 50%;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
     }
 
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    .empty-state i {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        color: #cbd5e1;
+    }
+
+    .empty-state h4 {
+        color: #475569;
+        margin-bottom: 0.5rem;
     }
 
     /* Responsive Design */
@@ -420,6 +425,7 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
 </style>
 
 <div class="content-wrapper">
+
     <div class="donation-list">
 
         <!-- Page Header -->
@@ -442,7 +448,7 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
             </div>
         </div>
 
-        <!--  Statistics Cards -->
+        <!-- Statistics Cards -->
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
                 <div class="stats-card stats-gradient-primary">
@@ -493,10 +499,10 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
             </div>
         </div>
 
-        <!-- ✅ Filters -->
+        <!-- Filters -->
         <div class="filter-card">
             <div class="filter-title mb-3">
-              Filters & Search
+                <i class="fa-solid fa-filter me-2"></i>Filters & Search
             </div>
             <div class="row g-3">
                 <div class="col-md-3">
@@ -506,10 +512,10 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
                     <select class="form-select" id="typeFilter">
                         <option value="all">All Types</option>
                         <option value="hifz">Hifz</option>
-                        <option value="program">Program</option>
                         <option value="school">School</option>
                         <option value="college">College</option>
                         <option value="university">University</option>
+                        <option value="madrasha-program">Madrasha</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -537,86 +543,111 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
         <!-- Application Table -->
         <div class="table-container mt-4">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="applicationTable">
-                    <thead class="table-header">
-                        <tr class="bg-success">
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Contact</th>
-                            <th>Email</th>
-                            <th>Address</th>
-                            <th>Institution</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Applied Date</th>
-                            <th colspan="5">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($applications as $app): ?>
-                            <tr data-type="<?= $app['type'] ?>" data-status="<?= $app['status'] ?>" data-name="<?= strtolower($app['name']) ?>" data-institution="<?= strtolower($app['institution']) ?>">
-                                <td>
-                                    <div>
-                                        <?= $app['id'] ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <strong style="color: #2c3e50;"><?= htmlspecialchars($app['name']) ?></strong>
-                                    </div>
-                                </td>
-                                <td><small style="color: #64748b;"><?= htmlspecialchars($app['phone']) ?></small></td>
-                                <td><small style="color: #64748b;"><?= htmlspecialchars($app['email']) ?></small></td>
-                                <td><small style="color: #64748b;"><?= htmlspecialchars($app['address']) ?></small></td>
-                                <td><small style="color: #64748b;"><?= htmlspecialchars($app['institution']) ?></small></td>
-                                <td>
-                                    <span class="badge bg-<?=
-                                                            $app['type'] === 'hifz' ? 'success' : ($app['type'] === 'program' ? 'info' : ($app['type'] === 'school' ? 'primary' : ($app['type'] === 'college' ? 'warning text-dark' : 'secondary')))
-                                                            ?>">
-                                        <i class="fa-solid fa-tag me-1"></i>
-                                        <?= ucfirst($app['type']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-<?=
-                                                            $app['status'] === 'processed' ? 'success' : ($app['status'] === 'pending' ? 'warning text-dark' : 'danger')
-                                                            ?>">
-                                        <i class="fa-solid fa-<?=
-                                                                $app['status'] === 'processed' ? 'check-circle' : ($app['status'] === 'pending' ? 'clock' : 'times-circle')
-                                                                ?> me-1"></i>
-                                        <?= ucfirst($app['status']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <small style="color: #64748b;">
-                                        <i class="fa-solid fa-calendar me-1"></i>
-                                        <?= date('M d, Y', strtotime($app['applied_date'])) ?>
-                                    </small>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                <td>
-                                    <a href="view-application.php?id=<?= $app['id'] ?>" class="btn btn-sm btn-info d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="View Details">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="edit-scholarship-application.php?id=<?= $app['id'] ?>" class="btn btn-sm btn-warning d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Edit">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
-                                </td>
-                                <?php  ?>
-                                <td>
-                                    <button onclick="deleteApplication(<?= $app['id'] ?>)" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-0" style="height: 32px; width: 32px; min-width: 32px;" title="Delete">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </td>
-            </div>
-            </td>
-            </tr>
-        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <?php if (count($applications) > 0): ?>
+                    <table class="table table-hover align-middle mb-0" id="applicationTable">
+                        <thead class="table-header">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Institution</th>
+                                <th>Type</th>
+                                <th>Documents</th>
+                                <th>Applied Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($applications as $app): ?>
+                                <tr data-type="<?= htmlspecialchars($app['type']) ?>"
+                                    data-status="pending"
+                                    data-name="<?= strtolower(htmlspecialchars($app['name'])) ?>"
+                                    data-institution="<?= strtolower(htmlspecialchars($app['institution'])) ?>">
+                                    <td>
+                                        <div><strong>#<?= $app['id'] ?></strong></div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong style="color: #2c3e50;"><?= htmlspecialchars($app['name']) ?></strong>
+                                        </div>
+                                    </td>
+                                    <td><small style="color: #64748b;"><?= htmlspecialchars($app['phone']) ?></small></td>
+                                    <td><small style="color: #64748b;"><?= htmlspecialchars($app['email']) ?></small></td>
+                                    <td><small style="color: #64748b;"><?= htmlspecialchars($app['address']) ?></small></td>
+                                    <td><small style="color: #64748b;"><?= htmlspecialchars($app['institution']) ?></small></td>
+                                    <td>
+                                        <?php
+                                        $typeClass = 'secondary';
+
+                                        if ($app['type'] === 'hifz') {
+                                            $typeClass = 'success';
+                                        } elseif ($app['type'] === 'school') {
+                                            $typeClass = 'primary';
+                                        } elseif ($app['type'] === 'college') {
+                                            $typeClass = 'warning text-dark';
+                                        } elseif ($app['type'] === 'university') {
+                                            $typeClass = 'info';
+                                        } elseif ($app['type'] === 'madrasha-program') {
+                                            $typeClass = 'secondary';
+                                        }
+                                        ?>
+                                        <span class="badge bg-<?php echo $typeClass; ?>">
+                                            <i class="fa-solid fa-tag me-1"></i>
+                                            <?php echo ucfirst(htmlspecialchars($app['type'])); ?>
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <?php
+                                        $docCount = isset($app['document_count']) ? (int)$app['document_count'] : 0;
+                                        ?>
+                                        <span class="document-count <?= $docCount === 0 ? 'no-docs' : '' ?>"
+                                            title="<?= $docCount ?> document(s) uploaded">
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                            <span><?= $docCount ?></span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small style="color: #64748b;">
+                                            <i class="fa-solid fa-calendar me-1"></i>
+                                            <?= date('M d, Y', strtotime($app['applied_date'])) ?>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="view-application.php?id=<?= $app['id'] ?>"
+                                                class="btn btn-sm btn-info"
+                                                title="View Details">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                            <a href="edit-scholarship-application.php?id=<?= $app['id'] ?>"
+                                                class="btn btn-sm btn-warning"
+                                                title="Edit">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                            <button onclick="deleteApplication(<?= $app['id'] ?>)"
+                                                class="btn btn-sm btn-danger"
+                                                title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <h4>No Applications Found</h4>
+                        <p>There are currently no scholarship applications in the system.</p>
+                        <a href="../scholarship.php" class="btn btn-add-new mt-3">
+                            <i class="fa-solid fa-plus me-2"></i>Add First Application
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -661,8 +692,8 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
         const rowsArr = Array.from(tbody.querySelectorAll("tr"));
 
         rowsArr.sort((a, b) => {
-            const aId = parseInt(a.children[0].innerText.trim());
-            const bId = parseInt(b.children[0].innerText.trim());
+            const aId = parseInt(a.children[0].innerText.trim().replace('#', ''));
+            const bId = parseInt(b.children[0].innerText.trim().replace('#', ''));
             const aName = a.dataset.name;
             const bName = b.dataset.name;
 
@@ -679,20 +710,10 @@ $rejectedCount = count(array_filter($applications, fn($a) => $a['status'] === 'r
     [searchInput, typeFilter, statusFilter, institutionFilter].forEach(el => el.addEventListener("input", filterTable));
     sortFilter.addEventListener("change", sortTable);
 
-    function updateStatus(id, newStatus) {
-        const statusText = newStatus === 'processed' ? 'approve' : 'reject';
-        if (confirm(`Are you sure you want to ${statusText} application #${id}?`)) {
-            alert(`Application #${id} has been ${newStatus}!`);
-            // Here you would make an AJAX call to update the database
-            location.reload(); // Reload to show updated status
-        }
-    }
-
     function deleteApplication(id) {
-        if (confirm(`Are you sure you want to delete application #${id}? This action cannot be undone.`)) {
-            alert(`Application #${id} deleted successfully!`);
-            // Here you would make an AJAX call to delete from database
-            location.reload();
+        if (confirm(`Are you sure you want to delete application #${id}?\n\nThis will also delete all associated documents.\nThis action cannot be undone.`)) {
+            // Make AJAX call to delete
+            window.location.href = `delete-scholarship.php?id=${id}`;
         }
     }
 </script>

@@ -3,35 +3,37 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = 'Edit Scholarship Application';
 require './components/header.php';
 
+
 // Get application ID from URL
 $application_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// ✅ Sample application data (replace with DB query later)
-$application = [
-    "id" => $application_id,
-    "name" => "Md. Rahim Uddin",
-    "phone" => "+880 1712-345678",
-    "email" => "rahim.uddin@email.com",
-    "address" => "Mirpur, Dhaka",
-    "institution" => "Dhaka College",
-    "type" => "college",
-    "status" => "pending",
-    "applied_date" => "2024-10-15",
-    "father_name" => "Md. Karim Uddin",
-    "mother_name" => "Amena Begum",
-    "date_of_birth" => "2005-03-15",
-    "gender" => "male",
-    "class_year" => "HSC 1st Year",
-    "gpa" => "5.00",
-    "family_income" => "15000",
-    "notes" => "Excellent student with financial need. Active in extracurricular activities."
-];
+// Fetch application from database
+$application = getScholarshipApplicationById($application_id);
 
 // If application not found, redirect
 if (!$application) {
-    header("Location: scholarship-application-list.php");
+    $_SESSION['error_message'] = 'Application not found.';
+    echo"<script>scholarship-application-list.php</script> ";
     exit;
 }
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $result = updateScholarshipApplication($application_id, $_POST);
+    
+    if ($result['success']) {
+        $_SESSION['success_message'] = $result['message'];
+    echo"<script>scholarship-application-list.php</script> ";
+        exit;
+    } else {
+        $_SESSION['error_message'] = $result['message'];
+    }
+}
+
+// Display messages if any
+$success_message = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : '';
+$error_message = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : '';
+unset($_SESSION['success_message'], $_SESSION['error_message']);
 ?>
 
 <style>
@@ -243,96 +245,6 @@ if (!$application) {
         color: white;
     }
 
-    /* History Card */
-    .history-card {
-        background: #fff;
-        padding: 28px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .history-card-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #f1f5f9;
-    }
-
-    .history-card-header i {
-        font-size: 20px;
-        color: #64748b;
-    }
-
-    .history-card-header h6 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    /* Timeline Styling */
-    .timeline {
-        position: relative;
-        padding-left: 20px;
-    }
-
-    .timeline-item {
-        padding: 16px 0 16px 20px;
-        border-left: 2px solid #e2e8f0;
-        position: relative;
-        margin-bottom: 8px;
-    }
-
-    .timeline-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .timeline-item::before {
-        content: '';
-        position: absolute;
-        left: -7px;
-        top: 20px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #8b5cf6;
-        border: 2px solid #fff;
-        box-shadow: 0 0 0 2px #8b5cf6;
-    }
-
-    .timeline-item:last-child::before {
-        background: #10b981;
-        box-shadow: 0 0 0 2px #10b981;
-    }
-
-    /* Badge Styling */
-    .badge-modern {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .badge-success {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-    }
-
-    .badge-info {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-    }
-
-    .badge-warning {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #92400e;
-    }
-
     /* Form Validation */
     .is-invalid {
         border-color: #ef4444 !important;
@@ -355,6 +267,28 @@ if (!$application) {
         display: block;
     }
 
+    /* Alert Styling */
+    .alert {
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .page-title-section {
@@ -363,7 +297,7 @@ if (!$application) {
             gap: 16px;
         }
 
-        .form-card, .history-card {
+        .form-card {
             padding: 20px;
         }
 
@@ -402,7 +336,7 @@ if (!$application) {
         }
     }
 
-    .form-card, .history-card {
+    .form-card {
         animation: fadeIn 0.5s ease;
     }
 </style>
@@ -422,6 +356,13 @@ if (!$application) {
                 </div>
                 <div>
                     <h1>Edit Scholarship Application</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="scholarship-application-list.php">Applications</a></li>
+                            <li class="breadcrumb-item active">Edit</li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
             <a class="btn-back" href="scholarship-application-list.php">
@@ -433,10 +374,24 @@ if (!$application) {
         <div class="form-card">
             <div class="form-card-header">
                 <i class="fa-solid fa-pen-to-square"></i>
-                <h5>Edit Application Details</h5>
+                <h5>Edit Application Details - ID: <?= $application['id'] ?></h5>
             </div>
 
-            <form id="editApplicationForm" method="POST" action="update-application.php">
+            <?php if ($success_message): ?>
+                <div class="alert alert-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <?= htmlspecialchars($success_message) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($error_message): ?>
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <?= htmlspecialchars($error_message) ?>
+                </div>
+            <?php endif; ?>
+
+            <form id="editApplicationForm" method="POST" action="">
                 <input type="hidden" name="application_id" value="<?= $application['id'] ?>">
 
                 <!-- Personal Information Section -->
@@ -458,53 +413,13 @@ if (!$application) {
                         </div>
                         <div class="col-md-6">
                             <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($application['phone']) ?>" required>
+                            <input type="tel" class="form-control" id="contact" name="contact" value="<?= htmlspecialchars($application['phone']) ?>" required>
                             <div class="invalid-feedback">Please enter a valid phone number.</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="date_of_birth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?= $application['date_of_birth'] ?>" required>
-                            <div class="invalid-feedback">Please select date of birth.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
-                            <select class="form-select" id="gender" name="gender" required>
-                                <option value="">Select Gender</option>
-                                <option value="male" <?= $application['gender'] === 'male' ? 'selected' : '' ?>>Male</option>
-                                <option value="female" <?= $application['gender'] === 'female' ? 'selected' : '' ?>>Female</option>
-                                <option value="other" <?= $application['gender'] === 'other' ? 'selected' : '' ?>>Other</option>
-                            </select>
-                            <div class="invalid-feedback">Please select gender.</div>
-                        </div>
-                        <div class="col-md-6">
                             <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="address" name="address" value="<?= htmlspecialchars($application['address']) ?>" required>
+                            <input type="text" class="form-control" id="youraddress" name="youraddress" value="<?= htmlspecialchars($application['address']) ?>" required>
                             <div class="invalid-feedback">Please enter the address.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Family Information Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fa-solid fa-people-roof"></i>
-                        <h6>Family Information</h6>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="father_name" class="form-label">Father's Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="father_name" name="father_name" value="<?= htmlspecialchars($application['father_name']) ?>" required>
-                            <div class="invalid-feedback">Please enter father's name.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="mother_name" class="form-label">Mother's Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="mother_name" name="mother_name" value="<?= htmlspecialchars($application['mother_name']) ?>" required>
-                            <div class="invalid-feedback">Please enter mother's name.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="family_income" class="form-label">Monthly Family Income (৳) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="family_income" name="family_income" value="<?= $application['family_income'] ?>" required>
-                            <div class="invalid-feedback">Please enter family income.</div>
                         </div>
                     </div>
                 </div>
@@ -518,68 +433,21 @@ if (!$application) {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="institution" class="form-label">Institution Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="institution" name="institution" value="<?= htmlspecialchars($application['institution']) ?>" required>
+                            <input type="text" class="form-control" id="instituename" name="instituename" value="<?= htmlspecialchars($application['institute_name']) ?>" required>
                             <div class="invalid-feedback">Please enter institution name.</div>
                         </div>
                         <div class="col-md-6">
                             <label for="type" class="form-label">Institution Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="type" name="type" required>
+                            <select class="form-select" id="institution_type" name="institution_type" required>
                                 <option value="">Select Type</option>
-                                <option value="hifz" <?= $application['type'] === 'hifz' ? 'selected' : '' ?>>Hifz</option>
-                                <option value="program" <?= $application['type'] === 'program' ? 'selected' : '' ?>>Program</option>
-                                <option value="school" <?= $application['type'] === 'school' ? 'selected' : '' ?>>School</option>
-                                <option value="college" <?= $application['type'] === 'college' ? 'selected' : '' ?>>College</option>
-                                <option value="university" <?= $application['type'] === 'university' ? 'selected' : '' ?>>University</option>
+                                <option value="hifz" <?= $application['institution_type'] === 'hifz' ? 'selected' : '' ?>>Hifz</option>
+                                <option value="program" <?= $application['institution_type'] === 'program' ? 'selected' : '' ?>>Program</option>
+                                <option value="school" <?= $application['institution_type'] === 'school' ? 'selected' : '' ?>>School</option>
+                                <option value="college" <?= $application['institution_type'] === 'college' ? 'selected' : '' ?>>College</option>
+                                <option value="university" <?= $application['institution_type'] === 'university' ? 'selected' : '' ?>>University</option>
+                                <option value="madrasha-program" <?= $application['institution_type'] === 'madrasha-program' ? 'selected' : '' ?>>Madrasha</option>
                             </select>
                             <div class="invalid-feedback">Please select institution type.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="class_year" class="form-label">Class/Year <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="class_year" name="class_year" value="<?= htmlspecialchars($application['class_year']) ?>" placeholder="e.g., Class 10, HSC 1st Year, 3rd Semester" required>
-                            <div class="invalid-feedback">Please enter class/year.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="gpa" class="form-label">Last GPA/Result <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="gpa" name="gpa" value="<?= htmlspecialchars($application['gpa']) ?>" placeholder="e.g., 5.00, 4.50" required>
-                            <div class="invalid-feedback">Please enter GPA/result.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Application Status Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                        <h6>Application Status</h6>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="pending" <?= $application['status'] === 'pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="processed" <?= $application['status'] === 'processed' ? 'selected' : '' ?>>Processed</option>
-                                <option value="rejected" <?= $application['status'] === 'rejected' ? 'selected' : '' ?>>Rejected</option>
-                            </select>
-                            <div class="invalid-feedback">Please select status.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="applied_date" class="form-label">Applied Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="applied_date" name="applied_date" value="<?= $application['applied_date'] ?>" required>
-                            <div class="invalid-feedback">Please select applied date.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Additional Notes Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fa-solid fa-note-sticky"></i>
-                        <h6>Additional Information</h6>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label for="notes" class="form-label">Notes/Remarks</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="4" placeholder="Add any additional notes or remarks about this application..."><?= htmlspecialchars($application['notes']) ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -599,27 +467,22 @@ if (!$application) {
             </form>
         </div>
 
-        <!-- Application History Card -->
-        <div class="history-card">
-            <div class="history-card-header">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <h6>Application History</h6>
+        <!-- Application Info Card -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="fa-solid fa-info-circle"></i>
+                <h5>Application Information</h5>
             </div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <span class="badge-modern badge-success">Created</span>
-                    <span class="ms-2 text-muted">October 15, 2024 at 10:30 AM</span>
-                    <p class="mb-0 mt-1 text-muted">Application submitted by applicant</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Application ID:</strong> #<?= $application['id'] ?></p>
+                    <p><strong>Submitted Date:</strong> <?= date('F d, Y', strtotime($application['created_at'])) ?></p>
                 </div>
-                <div class="timeline-item">
-                    <span class="badge-modern badge-info">Updated</span>
-                    <span class="ms-2 text-muted">October 20, 2024 at 02:15 PM</span>
-                    <p class="mb-0 mt-1 text-muted">Status changed to pending review</p>
-                </div>
-                <div class="timeline-item">
-                    <span class="badge-modern badge-warning">Modified</span>
-                    <span class="ms-2 text-muted">October 25, 2024 at 09:45 AM</span>
-                    <p class="mb-0 mt-1 text-muted">Contact information updated</p>
+                <div class="col-md-6">
+                    <p><strong>Last Modified:</strong> <?= date('F d, Y g:i A', strtotime($application['created_at'])) ?></p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-warning">Pending Review</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -634,8 +497,6 @@ if (!$application) {
 <script>
 // Form validation and submission
 document.getElementById('editApplicationForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
     // Validate all required fields
     const requiredFields = this.querySelectorAll('[required]');
     let isValid = true;
@@ -651,19 +512,15 @@ document.getElementById('editApplicationForm').addEventListener('submit', functi
     });
     
     if (!isValid) {
+        e.preventDefault();
         alert('Please fill in all required fields.');
         return;
     }
     
     // Show confirmation dialog
-    if (confirm('Are you sure you want to save these changes?')) {
-        // Here you would normally submit the form via AJAX or regular form submission
-        alert('Application updated successfully!');
-        // window.location.href = 'scholarship-application-list.php';
-        
-        // For now, just show success message
-        // In production, uncomment the line below to submit the form
-        // this.submit();
+    if (!confirm('Are you sure you want to save these changes?')) {
+        e.preventDefault();
+        return;
     }
 });
 

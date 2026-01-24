@@ -23,8 +23,8 @@
 <!-- Mobile Menu -->
 <div class="menu menu_mm modern_mobile_menu overflow-y-scroll">
 	<div class="menu_header d-flex align-items-center justify-content-between">
-		<a href="index.php" class="d-flex align-items-center logo_container">
-			<img src="images/final-logo.png" alt="Sidratul Muntaha" class="menu_logo">
+		<a href="<?php echo BASE_URL; ?>" class="d-flex align-items-center logo_container">
+			<img src="<?php echo BASE_URL; ?>images/final-logo.png" alt="Sidratul Muntaha" class="menu_logo">
 			<!-- <p class="mobile_nav_title mb-0 ms-2 fw-semibold text-dark">
 				<b>Sidratul</b><br><b>Muntaha</b>
 			</p> -->
@@ -38,17 +38,17 @@
 
 	<nav class="menu_nav">
 		<ul class="menu_list">
-			<li><a href="index.php">Home</a></li>
-			<li><a href="about.php">About</a></li>
-			<li><a href="projects.php">Our Projects</a></li>
-			<li><a href="gallery.php">Gallery</a></li>
-			<li><a href="contact.php">Contact</a></li>
-			<li><a href="notice.php">Notice</a></li>
+			<li><a href="<?php echo BASE_URL; ?>">Home</a></li>
+			<li><a href="<?php echo BASE_URL; ?>about">About</a></li>
+			<li><a href="<?php echo BASE_URL; ?>projects">Our Projects</a></li>
+			<li><a href="<?php echo BASE_URL; ?>gallery">Gallery</a></li>
+			<li><a href="<?php echo BASE_URL; ?>contact">Contact</a></li>
+			<li><a href="<?php echo BASE_URL; ?>notice">Notice</a></li>
 		</ul>
 
 		<div class="menu_buttons mt-3">
-			<a href="zakat-calculator.php" class="menu_btn secondary_btn text-uppercase">Zakat Calculator</a>
-			<a href="donate.php" class="menu_btn primary_btn text-uppercase">Donate</a>
+			<a href="<?php echo BASE_URL; ?>zakat-calculator" class="menu_btn secondary_btn text-uppercase">Zakat Calculator</a>
+			<a href="<?php echo BASE_URL; ?>donate" class="menu_btn primary_btn text-uppercase">Donate</a>
 		</div>
 	</nav>
 

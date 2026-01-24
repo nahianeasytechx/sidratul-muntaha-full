@@ -1,4 +1,4 @@
-        <!-- Navbar -->
+<!-- Navbar -->
         <style>
         	.main_nav li a,
         	.nav-donate-btn {
@@ -44,10 +44,10 @@
         			<div class="col">
         				<div class=" header_content d-flex flex-col align-items-center justify-content-between">
         					<div class="logo_container">
-        						<a href="index.php">
+        						<a href="<?php echo BASE_URL; ?>">
         							<div class="logo_content mt-1">
         								<div class="logo_img">
-        									<img src="images/sidratul logo.png" alt="sidratul logo.png">
+        									<img src="<?php echo BASE_URL; ?>images/sidratul logo.png" alt="sidratul logo.png">
         								</div>
 
         							</div>
@@ -61,7 +61,7 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="index.php">home</a>
+        								<a href="<?php echo BASE_URL; ?>">home</a>
         							</li>
         							<li
         								<?php
@@ -69,7 +69,7 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="about.php">About us</a>
+        								<a href="<?php echo BASE_URL; ?>about">About us</a>
         							</li>
         							<li
         								<?php
@@ -77,7 +77,7 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="projects.php">Our Projects</a>
+        								<a href="<?php echo BASE_URL; ?>projects">Our Projects</a>
         							</li>
 
         							<li
@@ -86,7 +86,7 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="contact.php">Contact Us</a>
+        								<a href="<?php echo BASE_URL; ?>contact">Contact Us</a>
         							</li>
 
         							<li
@@ -95,14 +95,14 @@
 											echo 'class="active"';
 										}
 										?>>
-        								<a href="notice.php">Notice</a>
+        								<a href="<?php echo BASE_URL; ?>notice">Notice</a>
         							</li>
 
         						</ul>
 
 
         						<div class="donate-btn-section d-lg-none">
-        							<a href="zakat-calculator.php" class="nav-donate-btn">Zakat Calculator</a>
+        							<a href="<?php echo BASE_URL; ?>zakat-calculator" class="nav-donate-btn">Zakat Calculator</a>
         						</div>
 
         						<!-- Hamburger -->
@@ -123,10 +123,10 @@
 
         					<div class="d-flex ">
         						<div class="d-none d-lg-block mt-2 ">
-        							<a href="zakat-calculator.php" class="active text-decoration-none nav-zakat-btn">Zakat Calculator </a>
+        							<a href="<?php echo BASE_URL; ?>zakat-calculator" class="active text-decoration-none nav-zakat-btn">Zakat Calculator </a>
         						</div>
         						<div class="donate-btn-section d-none d-lg-block">
-        							<a href="donate.php" class="nav-donate-btn">Donate</a>
+        							<a href="<?php echo BASE_URL; ?>donate" class="nav-donate-btn">Donate</a>
         						</div>
         					</div>
         				</div>
